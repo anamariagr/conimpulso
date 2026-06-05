@@ -1,0 +1,117 @@
+# ============================================
+# GENERAL
+# ============================================
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+*~
+
+# IDE / Editor
+.idea/
+.vscode/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# Project-local run/config dirs (logs only)
+.run/
+.claude/
+
+# OS
+.directory
+
+# ============================================
+# BACKEND (Laravel)
+# ============================================
+backend/vendor/
+backend/node_modules/
+
+# Environment files (NEVER commit secrets)
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/.env.staging
+
+# Public storage symlink target (keep dir, ignore generated content)
+backend/public/storage
+backend/public/hot
+backend/public/build
+
+# Storage (keep dirs, ignore generated files)
+backend/storage/*.key
+backend/storage/logs/*
+backend/storage/framework/cache/data/*
+backend/storage/framework/cache/export/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/framework/testing/*
+backend/storage/app/public/*
+backend/storage/app/private/*
+backend/storage/app/tmp/*
+backend/storage/debugbar/*
+
+# Bootstrap cache
+backend/bootstrap/cache/*
+!backend/bootstrap/cache/.gitkeep
+
+# Test artifacts
+backend/.phpunit.result.cache
+backend/.phpunit.cache
+backend/coverage/
+backend/html/
+
+# Laravel specific
+backend/Homestead.json
+backend/Homestead.yaml
+backend/auth.json
+backend/npm-debug.log
+backend/yarn-error.log
+backend/.vagrant/
+
+# ============================================
+# FRONTEND (React + Vite)
+# ============================================
+frontend-client/node_modules/
+frontend-client/dist/
+frontend-client/dist-ssr/
+frontend-client/.vite/
+frontend-client/*.local
+frontend-client/coverage/
+frontend-client/.env.local
+frontend-client/.env.*.local
+
+frontend-admin/node_modules/
+frontend-admin/dist/
+frontend-admin/dist-ssr/
+frontend-admin/.vite/
+frontend-admin/*.local
+frontend-admin/coverage/
+frontend-admin/.env.local
+frontend-admin/.env.*.local
+
+# ============================================
+# MOBILE (React Native / Expo)
+# ============================================
+mobile/node_modules/
+mobile/dist/
+mobile/.expo/
+mobile.expo/
+mobile/.expo-shared/
+mobile/web-build/
+mobile/.env.local
+mobile/.env.*.local
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/ios/build/
+mobile/ios/Pods/
+mobile/ios/*.xcworkspace
+mobile/ios/*.xcuserdata
+
+# ============================================
+# DOCKER / DEPLOYMENT (artifacts only)
+# ============================================
+docker/*.pid
+*.pidfile

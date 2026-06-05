@@ -1,0 +1,166 @@
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuthStore } from '../../stores/authStore';
+import {
+  LayoutDashboard,
+  Users,
+  Store,
+  Package,
+  Grid3X3,
+  Settings,
+  LogOut,
+  Bell,
+  Search,
+  Menu,
+  X,
+  ChevronRight,
+  Layout,
+} from 'lucide-react';
+
+const adminMenuItems = [
+  { name: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
+  { name: 'Editor de Inicio', icon: Layout, path: '/admin/homepage-editor' },
+  { name: 'Usuarios', icon: Users, path: '/admin/users' },
+  { name: 'Tiendas', icon: Store, path: '/admin/shops' },
+  { name: 'Productos', icon: Package, path: '/admin/products' },
+  { name: 'Categorías', icon: Grid3X3, path: '/admin/categories' },
+  { name: 'Configuración', icon: Settings, path: '/admin/settings' },
+];
+
+export default function AdminLayout() {
+  const { user, logout, isSuperAdmin } = useAuthStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const isActive = (path) => {
+    if (path === '/admin') {
+      return location.pathname === '/admin';
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  if (!isSuperAdmin()) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-2">Acceso Denegado</h1>
+          <p className="text-gray-600">No tienes permisos para acceder al panel de administración.</p>
+          <Link to="/dashboard" className="btn-primary mt-4 inline-block">
+            Volver al Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <aside
+        className={`${
+          sidebarOpen ? 'w-64' : 'w-20'
+        } bg-primary text-white flex flex-col transition-all duration-300`}
+      >
+        {/* Logo */}
+        <div className="p-6 border-b border-gray-800 flex items-center justify-between">
+          <Link to="/admin" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
+              <span className="text-primary font-bold text-xl">N</span>
+            </div>
+            {sidebarOpen && (
+              <span className="font-bold text-xl">NexusLab Admin</span>
+            )}
+          </Link>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4">
+          <ul className="space-y-1">
+            {adminMenuItems.map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-accent text-primary font-semibold'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  {sidebarOpen && <span>{item.name}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* User section */}
+        <div className="p-4 border-t border-gray-800">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-primary font-bold">
+                {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+              </span>
+            </div>
+            {sidebarOpen && (
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-white truncate">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+              </div>
+            )}
+            <button
+              onClick={handleLogout}
+              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  className="input-field pl-10 w-full"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors relative">
+                <Bell className="w-5 h-5 text-gray-600" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-6 bg-gray-50">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}

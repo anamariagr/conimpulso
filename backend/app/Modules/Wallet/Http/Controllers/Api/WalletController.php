@@ -1,0 +1,242 @@
+<?php
+
+namespace App\Modules\Wallet\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Modules\Wallet\Models\Wallet;
+use App\Modules\Wallet\Models\WalletTransaction;
+use App\Modules\Wallet\Models\WalletTopUp;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class WalletController extends Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $request->user()->id],
+            ['balance' => 0, 'currency' => 'USD']
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $wallet,
+        ]);
+    }
+
+    public function transactions(Request $request): JsonResponse
+    {
+        $wallet = Wallet::where('user_id', $request->user()->id)->first();
+
+        if (!$wallet) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
+        $query = WalletTransaction::where('wallet_id', $wallet->id)
+            ->orderBy('created_at', 'desc');
+
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
+        }
+
+        $perPage = min($request->get('per_page', 20), 100);
+        $transactions = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $transactions->items(),
+            'meta' => [
+                'current_page' => $transactions->currentPage(),
+                'last_page' => $transactions->lastPage(),
+                'per_page' => $transactions->perPage(),
+                'total' => $transactions->total(),
+            ],
+        ]);
+    }
+
+    public function topUpRequest(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'amount' => ['required', 'numeric', 'min:1', 'max:1000000'],
+            'payment_method' => ['required', 'string', 'max:50'],
+            'payment_reference' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $request->user()->id],
+            ['balance' => 0, 'currency' => 'USD']
+        );
+
+        $topUp = WalletTopUp::create([
+            'user_id' => $request->user()->id,
+            'wallet_id' => $wallet->id,
+            'amount' => $request->amount,
+            'payment_method' => $request->payment_method,
+            'payment_reference' => $request->payment_reference,
+            'status' => 'pending',
+        ]);
+
+        return $this->successResponse($topUp, 'Solicitud de recarga creada. Pendiente de verificación.', 201);
+    }
+
+    public function myTopUps(Request $request): JsonResponse
+    {
+        $topUps = WalletTopUp::where('user_id', $request->user()->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $topUps->items(),
+        ]);
+    }
+
+    public function debit(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'description' => ['required', 'string', 'max:255'],
+            'type' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $wallet = Wallet::where('user_id', $request->user()->id)->first();
+
+        if (!$wallet) {
+            return $this->errorResponse('Wallet not found', 404);
+        }
+
+        $amount = (float) $request->amount;
+
+        if (!$wallet->canDebit($amount)) {
+            return $this->errorResponse('Insufficient balance', 400);
+        }
+
+        $wallet->debit($amount, $request->description, $request->type ?? 'debit');
+
+        return $this->successResponse($wallet, 'Débito realizado');
+    }
+
+    public function credit(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'description' => ['required', 'string', 'max:255'],
+            'type' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $request->user()->id],
+            ['balance' => 0, 'currency' => 'USD']
+        );
+
+        $wallet->credit(
+            (float) $request->amount,
+            $request->description,
+            $request->type ?? 'credit'
+        );
+
+        return $this->successResponse($wallet, 'Crédito realizado');
+    }
+
+    public function stats(Request $request): JsonResponse
+    {
+        $wallet = Wallet::where('user_id', $request->user()->id)->first();
+
+        $stats = [
+            'balance' => $wallet ? (float) $wallet->balance : 0,
+            'total_deposits' => WalletTransaction::where('user_id', $request->user()->id)
+                ->where('type', 'deposit')
+                ->where('status', 'completed')
+                ->sum('amount'),
+            'total_withdrawals' => WalletTransaction::where('user_id', $request->user()->id)
+                ->where('type', 'withdrawal')
+                ->where('status', 'completed')
+                ->sum('amount'),
+            'total_spent' => WalletTransaction::where('user_id', $request->user()->id)
+                ->whereIn('type', ['purchase', 'service', 'ad'])
+                ->where('status', 'completed')
+                ->sum('amount'),
+            'pending_top_ups' => WalletTopUp::where('user_id', $request->user()->id)
+                ->pending()
+                ->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats,
+        ]);
+    }
+
+    // Admin: Approve/reject top-up
+    public function approveTopUp(Request $request, int $id): JsonResponse
+    {
+        $topUp = WalletTopUp::findOrFail($id);
+
+        if ($topUp->status !== 'pending') {
+            return $this->errorResponse('Top-up already processed', 422);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'action' => ['required', 'in:approve,reject'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        if ($request->action === 'approve') {
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $topUp->user_id],
+                ['balance' => 0, 'currency' => 'USD']
+            );
+
+            $wallet->credit($topUp->amount, 'Top-up approved: ' . $topUp->payment_reference, 'deposit');
+
+            $topUp->update([
+                'status' => 'approved',
+                'wallet_id' => $wallet->id,
+                'verified_at' => now(),
+                'verified_by' => $request->user()->id,
+            ]);
+
+            return $this->successResponse($topUp, 'Top-up approved and credited');
+        } else {
+            $topUp->update([
+                'status' => 'rejected',
+                'verified_at' => now(),
+                'verified_by' => $request->user()->id,
+            ]);
+
+            return $this->successResponse($topUp, 'Top-up rejected');
+        }
+    }
+
+    public function pendingTopUps(): JsonResponse
+    {
+        $topUps = WalletTopUp::with('user')
+            ->pending()
+            ->orderBy('created_at', 'asc')
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $topUps->items(),
+        ]);
+    }
+}
