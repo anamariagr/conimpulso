@@ -16,4 +16,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/wallet/pending-topups', [WalletController::class, 'pendingTopUps']);
     Route::post('/admin/wallet/topups/{id}/approve', [WalletController::class, 'approveTopUp']);
+    Route::get('/admin/wallet/users', [WalletController::class, 'adminListUsers']);
+    Route::post('/admin/wallet/users/{userId}/credit', [WalletController::class, 'adminCredit']);
+    Route::post('/admin/wallet/users/{userId}/debit', [WalletController::class, 'adminDebit']);
 });

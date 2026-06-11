@@ -22,7 +22,7 @@ export default function StorePage() {
         </div>
         <h2 className="text-xl font-semibold text-primary mb-2">Aún no tienes una tienda</h2>
         <p className="text-gray-500 mb-6 max-w-md mx-auto">
-          Crea tu tienda en NexusLab para empezar a vender tus productos o servicios. Personalízala a tu gusto y llega a miles de compradores.
+          Crea tu tienda en ConImpulso para empezar a vender tus productos o servicios. Personalízala a tu gusto y llega a miles de compradores.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link

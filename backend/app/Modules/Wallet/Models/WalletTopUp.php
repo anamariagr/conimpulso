@@ -42,4 +42,19 @@ class WalletTopUp extends Model
     {
         return $this->belongsTo(\App\Modules\Auth\Models\User::class, 'verified_by');
     }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('status', 'rejected');
+    }
 }

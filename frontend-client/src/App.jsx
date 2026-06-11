@@ -36,6 +36,12 @@ import AIInsightsPage from './pages/ai/AIInsightsPage';
 import APIDocumentationPage from './pages/api/APIDocumentationPage';
 import UserSettingsPage from './pages/settings/UserSettingsPage';
 import VendorDashboardPage from './pages/vendor/VendorDashboardPage';
+import NewProductGatePage from './pages/dashboard/NewProductGatePage';
+import CreateShopPage from './pages/dashboard/CreateShopPage';
+import CreateProductPage from './pages/dashboard/CreateProductPage';
+
+import BlogPage from './pages/public/BlogPage';
+import BlogPostPage from './pages/public/BlogPostPage';
 
 // Admin pages
 import HomepageEditorPage from './pages/admin/HomepageEditorPage';
@@ -45,6 +51,8 @@ import ShopsView from './pages/admin/ShopsView';
 import ProductsView from './pages/admin/ProductsView';
 import CategoriesView from './pages/admin/CategoriesView';
 import SettingsView from './pages/admin/SettingsView';
+import WalletView from './pages/admin/WalletView';
+import BlogView from './pages/admin/BlogView';
 
 import './index.css';
 
@@ -81,6 +89,8 @@ function App() {
             <Route path="products" element={<ProductsPage />} />
             <Route path="services" element={<ServicesPage />} />
             <Route path="stores" element={<StoresPage />} />
+            <Route path="blog" element={<BlogPage />} />
+            <Route path="blog/:slug" element={<BlogPostPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
             <Route
@@ -104,9 +114,13 @@ function App() {
           >
             <Route index element={<DashboardPage />} />
             <Route path="products" element={<ProductsListPage />} />
+            <Route path="products/new" element={<NewProductGatePage />} />
+            <Route path="products/create" element={<CreateProductPage />} />
             <Route path="orders" element={<OrdersListPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="store" element={<StorePage />} />
+            <Route path="store/new" element={<CreateShopPage />} />
+            <Route path="store/edit" element={<CreateShopPage />} />
             <Route path="b2b" element={<B2BProfilesPage />} />
             <Route path="leads" element={<LeadsPage />} />
             <Route path="messages" element={<MessagesPage />} />
@@ -193,6 +207,8 @@ function App() {
             <Route path="products" element={<ProductsView />} />
             <Route path="categories" element={<CategoriesView />} />
             <Route path="settings" element={<SettingsView />} />
+            <Route path="wallet" element={<WalletView />} />
+            <Route path="blog" element={<BlogView />} />
           </Route>
         </Routes>
       </BrowserRouter>

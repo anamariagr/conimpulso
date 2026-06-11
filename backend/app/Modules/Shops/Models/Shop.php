@@ -40,6 +40,7 @@ class Shop extends Model
         'views',
         'followers',
         'settings',
+        'story',
     ];
 
     protected function casts(): array
@@ -52,6 +53,7 @@ class Shop extends Model
             'payment_methods' => 'array',
             'shipping_methods' => 'array',
             'settings' => 'array',
+            'story' => 'array',
             'is_verified' => 'boolean',
             'is_featured' => 'boolean',
             'latitude' => 'decimal:8',
@@ -138,7 +140,7 @@ class Shop extends Model
 
     public function getTotalSalesAttribute(): int
     {
-        return $this->products()->sum('sales_count') + $this->services()->sum('sales_count');
+        return (int) $this->products()->sum('sales_count') + (int) $this->services()->sum('bookings_count');
     }
 
     public function isOwnedBy(User $user): bool

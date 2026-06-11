@@ -89,7 +89,7 @@ export default function LoginPage() {
       <div className="card max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-primary mb-2">Iniciar sesión</h1>
-          <p className="text-text-secondary">Bienvenido de nuevo a NexusLab</p>
+          <p className="text-text-secondary">Bienvenido de nuevo a ConImpulso</p>
         </div>
 
         {/* Error Alert */}

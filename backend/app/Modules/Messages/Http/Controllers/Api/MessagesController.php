@@ -62,12 +62,31 @@ class MessagesController extends Controller
             return $this->errorResponse('Validation failed', 422, $validator->errors());
         }
 
-        if ($request->receiver_id === $request->user()->id) {
+        $sender = $request->user();
+        $receiver = \App\Modules\Auth\Models\User::findOrFail($request->receiver_id);
+
+        if ($request->receiver_id === $sender->id) {
             return $this->errorResponse('No puedes enviarte un mensaje a ti mismo', 422);
         }
 
+        if (!$sender->canSendMessages()) {
+            return $this->errorResponse(
+                'Tu mensajería está deshabilitada. Contacta al administrador.',
+                403,
+                ['messaging_enabled' => false, 'reason' => $sender->messaging_disabled_reason]
+            );
+        }
+
+        if (!$receiver->canReceiveMessages()) {
+            return $this->errorResponse(
+                'El destinatario no puede recibir mensajes actualmente',
+                403,
+                ['recipient_messaging_enabled' => false]
+            );
+        }
+
         $data = [
-            'sender_id' => $request->user()->id,
+            'sender_id' => $sender->id,
             'receiver_id' => $request->receiver_id,
             'subject' => $request->subject,
             'body' => $request->body,

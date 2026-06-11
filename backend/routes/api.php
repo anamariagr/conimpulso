@@ -17,6 +17,7 @@ use App\Modules\Advertising\Http\Controllers\Api\AdvertisingController;
 use App\Modules\AI\Http\Controllers\Api\AIController;
 use App\Modules\API\Http\Controllers\Api\APIController;
 use App\Http\Controllers\Api\MediaUploadController;
+use App\Modules\Blog\Http\Controllers\Api\BlogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +48,10 @@ Route::prefix('auth')->group(function () {
         Route::post('/email/resend', [AuthController::class, 'resendVerification']);
     });
 });
+
+// Blog – public
+Route::get('/blog', [BlogController::class, 'index']);
+Route::get('/blog/{slug}', [BlogController::class, 'show']);
 
 // Public routes
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -96,7 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // User
 
     // Shops
-    Route::get('/my/shop', [ShopController::class, 'myShop']);
+    Route::get('/my/shops', [ShopController::class, 'myShops']);
     Route::post('/shops', [ShopController::class, 'store']);
     Route::put('/shops/{id}', [ShopController::class, 'update']);
     Route::delete('/shops/{id}', [ShopController::class, 'destroy']);
@@ -273,8 +278,23 @@ Route::middleware('auth:sanctum')->group(function () {
 // Public API
 Route::get('/advertising/featured', [AdvertisingController::class, 'featuredProducts']);
 
+// Authenticated messaging helpers
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/auth/users/available', [App\Modules\Auth\Http\Controllers\Api\AuthController::class, 'availableForMessaging']);
+});
+
 // Homepage Module Routes (Admin - no auth for testing)
-Route::prefix('admin')->group(function () {
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::get('/dashboard/stats', [App\Modules\Admin\Http\Controllers\Api\DashboardController::class, 'stats']);
+
+    // Admin users management (messaging enable/disable)
+    Route::get('/users', [App\Modules\Auth\Http\Controllers\Api\AdminUserController::class, 'index']);
+    Route::get('/users/messaging-stats', [App\Modules\Auth\Http\Controllers\Api\AdminUserController::class, 'messagingStats']);
+    Route::get('/users/{id}', [App\Modules\Auth\Http\Controllers\Api\AdminUserController::class, 'show']);
+    Route::put('/users/{id}', [App\Modules\Auth\Http\Controllers\Api\AdminUserController::class, 'update']);
+    Route::post('/users/{id}/enable-messaging', [App\Modules\Auth\Http\Controllers\Api\AdminUserController::class, 'enableMessaging']);
+    Route::post('/users/{id}/disable-messaging', [App\Modules\Auth\Http\Controllers\Api\AdminUserController::class, 'disableMessaging']);
+
     Route::get('/homepage/banners', [App\Modules\Homepage\Http\Controllers\Api\HomepageController::class, 'banners']);
     Route::post('/homepage/banners', [App\Modules\Homepage\Http\Controllers\Api\HomepageController::class, 'createBanner']);
     Route::put('/homepage/banners/{id}', [App\Modules\Homepage\Http\Controllers\Api\HomepageController::class, 'updateBanner']);
@@ -291,6 +311,22 @@ Route::prefix('admin')->group(function () {
     Route::put('/homepage/layout/sections', [App\Modules\Homepage\Http\Controllers\Api\HomepageController::class, 'updateLayoutSections']);
 
     Route::get('/homepage/available-types', [App\Modules\Homepage\Http\Controllers\Api\HomepageController::class, 'availableTypes']);
+
+    // Admin blog management
+    Route::get('/blog', [BlogController::class, 'adminIndex']);
+    Route::post('/blog', [BlogController::class, 'adminCreate']);
+    Route::put('/blog/{id}', [BlogController::class, 'adminUpdate']);
+    Route::delete('/blog/{id}', [BlogController::class, 'adminDelete']);
+
+    // Admin shops management
+    Route::get('/shops', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'adminIndex']);
+    Route::post('/shops', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'adminStore']);
+    Route::put('/shops/{id}/approve', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'approve']);
+    Route::put('/shops/{id}/reject', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'reject']);
+    Route::put('/shops/{id}/suspend', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'suspend']);
+    Route::put('/shops/{id}/featured', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'toggleFeatured']);
+    Route::put('/shops/{id}/verified', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'toggleVerified']);
+    Route::put('/shops/{id}', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'adminUpdate']);
 });
 
 Route::get('/homepage/active', [App\Modules\Homepage\Http\Controllers\Api\HomepageController::class, 'activeLayout']);

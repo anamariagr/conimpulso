@@ -15,7 +15,7 @@ export default function AnalyticsPage() {
         </div>
         <h2 className="text-xl font-semibold text-primary mb-2">Aún no hay datos de analíticas</h2>
         <p className="text-gray-500 mb-6 max-w-md mx-auto">
-          Las analíticas se generarán automáticamente cuando tengas productos, pedidos y visitantes. Empieza a construir tu presencia en NexusLab para ver métricas.
+          Las analíticas se generarán automáticamente cuando tengas productos, pedidos y visitantes. Empieza a construir tu presencia en ConImpulso para ver métricas.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link

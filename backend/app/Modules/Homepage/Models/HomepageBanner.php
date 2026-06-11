@@ -23,6 +23,10 @@ class HomepageBanner extends Model
         'target_audience', // all, vendors, buyers
         'clicks_count',
         'impressions_count',
+        'vendor_title',
+        'vendor_description',
+        'buyer_title',
+        'buyer_description',
     ];
 
     protected $casts = [

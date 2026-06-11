@@ -9,9 +9,9 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-                <span className="text-primary font-bold text-xl">N</span>
+                <span className="text-primary font-bold text-xl">C</span>
               </div>
-              <span className="font-bold text-xl">NexusLab</span>
+              <span className="font-bold text-xl">ConImpulso</span>
             </div>
             <p className="text-gray-400 text-sm">
               El marketplace de productores directos, fabricantes y artesanos.
@@ -50,7 +50,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-          <p>&copy; {new Date().getFullYear()} NexusLab. Todos los derechos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} ConImpulso. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

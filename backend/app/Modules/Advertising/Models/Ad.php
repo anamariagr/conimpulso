@@ -47,4 +47,9 @@ class Ad extends Model
     {
         return $this->belongsTo(\App\Modules\Shops\Models\Shop::class);
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 }

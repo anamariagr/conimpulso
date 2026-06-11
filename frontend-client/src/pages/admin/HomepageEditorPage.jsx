@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Eye, EyeOff, Save, Plus, Pencil, Trash2, X, ExternalLink,
-  Layout, Image as ImageIcon, Video, FileText, CheckCircle, AlertCircle, Edit
+  Layout, Image as ImageIcon, Video, FileText, CheckCircle, AlertCircle, Edit, Upload, FolderOpen
 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -58,12 +58,23 @@ export default function HomepageEditorPage() {
 
   // Form states
   const [bannerForm, setBannerForm] = useState({
-    title: '', subtitle: '', media_type: 'image', media_url: '', link_url: '', link_text: '', position: 'hero', is_active: false
+    title: '', subtitle: '', media_type: 'image', media_url: '', link_url: '', link_text: '', position: 'hero', is_active: false,
+    vendor_title: '', vendor_description: '', buyer_title: '', buyer_description: '',
   });
   const [sectionForm, setSectionForm] = useState({
     name: '', type: 'featured_products', title: '', subtitle: '', layout: 'grid', columns: 4,
     background_color: '#ffffff', padding_top: 16, padding_bottom: 16, is_active: true
   });
+
+  // Banner media upload states
+  const [mediaInputType, setMediaInputType] = useState('file');
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [mediaUploadError, setMediaUploadError] = useState('');
+  const [uploadedFileName, setUploadedFileName] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
+  const modalId = useRef(Date.now());
 
   useEffect(() => {
     loadData();
@@ -144,16 +155,124 @@ export default function HomepageEditorPage() {
 
   const showBannerForm = (position) => {
     setEditingBanner(null);
+    modalId.current = Date.now();
+    setMediaInputType('file');
+    setMediaUploadError('');
+    setUploadedFileName('');
+    setUploadProgress(0);
     setBannerForm({
-      title: '', subtitle: '', media_type: 'image', media_url: '', link_url: '', link_text: '', position, is_active: false
+      title: '', subtitle: '', media_type: 'video', media_url: '', link_url: '', link_text: '', position, is_active: false,
+      vendor_title: '', vendor_description: '', buyer_title: '', buyer_description: '',
     });
     setShowBannerModal(true);
   };
 
   const editBanner = (banner) => {
     setEditingBanner(banner.id);
+    modalId.current = Date.now();
+    // Auto-detect: if media_url is an external URL (YouTube, http...) use URL mode
+    const isExternalUrl = banner.media_url && banner.media_url.startsWith('http');
+    setMediaInputType(isExternalUrl ? 'url' : 'file');
+    setMediaUploadError('');
+    setUploadedFileName('');
+    setUploadProgress(0);
     setBannerForm({ ...banner });
     setShowBannerModal(true);
+  };
+
+  const getAcceptTypes = () => {
+    if (bannerForm.media_type === 'video') return 'video/*';
+    if (bannerForm.media_type === 'gif') return 'image/gif';
+    return 'image/*';
+  };
+
+  const getDropzoneHint = () => {
+    if (bannerForm.media_type === 'video') return 'MP4, WebM u OGG · máximo 100 MB';
+    if (bannerForm.media_type === 'gif') return 'GIF animado';
+    return 'JPG, PNG, GIF, WebP o SVG';
+  };
+
+  const openFilePicker = () => {
+    const el = document.getElementById('media-file-input-' + modalId.current);
+    if (el) el.click();
+    else if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleMediaFileUpload = async (file) => {
+    if (!file) return;
+
+    const maxSize = 100 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setMediaUploadError(`El archivo es demasiado grande (${(file.size / 1024 / 1024).toFixed(1)} MB). Máximo 100 MB.`);
+      return;
+    }
+
+    if (bannerForm.media_type === 'video' && !file.type.startsWith('video/')) {
+      setMediaUploadError('Por favor selecciona un archivo de video válido (mp4, webm, ogg).');
+      return;
+    }
+    if (bannerForm.media_type === 'image' && !file.type.startsWith('image/')) {
+      setMediaUploadError('Por favor selecciona un archivo de imagen válido.');
+      return;
+    }
+
+    setUploadingMedia(true);
+    setUploadProgress(0);
+    setMediaUploadError('');
+    setUploadedFileName('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', bannerForm.media_type);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.post('/media/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        onUploadProgress: (progressEvent) => {
+          const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(pct);
+        }
+      });
+
+      if (response.data.success) {
+        setBannerForm((prev) => ({ ...prev, media_url: response.data.data.url }));
+        setUploadedFileName(file.name);
+      }
+    } catch (error) {
+      setMediaUploadError(error.response?.data?.message || 'Error al subir archivo');
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    handleMediaFileUpload(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleMediaFileUpload(file);
+  };
+
+  const clearUploadedFile = () => {
+    setUploadedFileName('');
+    setBannerForm((prev) => ({ ...prev, media_url: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const onMediaTypeChange = (newType) => {
+    setBannerForm((prev) => ({ ...prev, media_type: newType, media_url: '' }));
+    setUploadedFileName('');
+    setMediaUploadError('');
+    setUploadProgress(0);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const saveBanner = async () => {
@@ -174,7 +293,11 @@ export default function HomepageEditorPage() {
       window.dispatchEvent(new Event('homepage-updated'));
     } catch (error) {
       console.error('Error saving banner:', error);
-      toast.error('Error al guardar banner');
+      const msg = error.response?.data?.message
+        || (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(' ') : null)
+        || error.message
+        || 'Error al guardar banner';
+      toast.error(msg);
     }
   };
 
@@ -583,12 +706,13 @@ export default function HomepageEditorPage() {
 
       {/* Banner Modal */}
       {showBannerModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg flex flex-col" style={{ maxHeight: '85vh' }}>
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 flex-shrink-0">
               <h3 className="text-lg font-bold">{editingBanner ? 'Editar Banner' : 'Nuevo Banner'}</h3>
               <button onClick={() => setShowBannerModal(false)}><X className="w-5 h-5" /></button>
             </div>
+            <div className="overflow-y-auto flex-1 p-6 pt-4">
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Título</label>
@@ -609,26 +733,146 @@ export default function HomepageEditorPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">URL de Imagen/Video</label>
-                <input
-                  type="url"
-                  value={bannerForm.media_url}
-                  onChange={e => setBannerForm({ ...bannerForm, media_url: e.target.value })}
-                  className="input-field w-full"
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
                 <label className="block text-sm font-medium mb-1">Tipo de Media</label>
                 <select
                   value={bannerForm.media_type}
-                  onChange={e => setBannerForm({ ...bannerForm, media_type: e.target.value })}
+                  onChange={e => onMediaTypeChange(e.target.value)}
                   className="input-field w-full"
                 >
                   <option value="image">Imagen</option>
                   <option value="video">Video</option>
                   <option value="gif">GIF</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Media</label>
+                <div className="flex gap-4 mb-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="mediaInputType"
+                      checked={mediaInputType === 'file'}
+                      onChange={() => setMediaInputType('file')}
+                      className="text-yellow-500"
+                    />
+                    <span className="text-sm">Subir archivo desde la PC</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="mediaInputType"
+                      checked={mediaInputType === 'url'}
+                      onChange={() => setMediaInputType('url')}
+                      className="text-yellow-500"
+                    />
+                    <span className="text-sm">URL externa</span>
+                  </label>
+                </div>
+
+                {mediaInputType === 'url' ? (
+                  <input
+                    type="url"
+                    value={bannerForm.media_url}
+                    onChange={e => setBannerForm({ ...bannerForm, media_url: e.target.value })}
+                    className="input-field w-full"
+                    placeholder="https://www.youtube.com/watch?v=... o URL directa de imagen/video"
+                  />
+                ) : (
+                  <div
+                    className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 p-4 transition-colors"
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                    style={isDragging ? { borderColor: '#FFD700', background: '#FEF3C7' } : {}}
+                  >
+                    <input
+                      id={`media-file-input-${modalId.current}`}
+                      ref={fileInputRef}
+                      type="file"
+                      accept={getAcceptTypes()}
+                      onChange={handleFileChange}
+                      className="sr-only-file-input"
+                    />
+                    {!uploadedFileName && !bannerForm.media_url && !uploadingMedia && (
+                      <div className="text-center py-4">
+                        <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600 font-medium mb-1">
+                          Arrastra tu archivo aquí
+                        </p>
+                        <p className="text-xs text-gray-500 mb-3">
+                          {getDropzoneHint()}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={openFilePicker}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                        >
+                          <FolderOpen className="w-4 h-4" />
+                          Explorar PC
+                        </button>
+                      </div>
+                    )}
+
+                    {uploadingMedia && (
+                      <div className="py-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-gray-700 font-medium">Subiendo archivo...</span>
+                          <span className="text-sm text-yellow-600 font-semibold">{uploadProgress}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-yellow-400 transition-all"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {(uploadedFileName || bannerForm.media_url) && !uploadingMedia && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="truncate">{uploadedFileName || 'Archivo actual'}</span>
+                        </div>
+                        <div className="bg-black rounded-lg overflow-hidden">
+                          {bannerForm.media_type === 'image' || bannerForm.media_type === 'gif' ? (
+                            <img
+                              src={bannerForm.media_url}
+                              alt=""
+                              className="w-full h-40 object-cover"
+                            />
+                          ) : (
+                            <video
+                              src={bannerForm.media_url}
+                              className="w-full h-40 object-cover bg-black"
+                              controls
+                              muted
+                            />
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={openFilePicker}
+                            className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                          >
+                            Cambiar archivo
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearUploadedFile}
+                            className="text-xs px-3 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100"
+                          >
+                            Quitar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {mediaUploadError && (
+                  <div className="mt-2 text-sm text-red-500">{mediaUploadError}</div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">URL de Link (opcional)</label>
@@ -658,8 +902,65 @@ export default function HomepageEditorPage() {
                   Banner Activo
                 </label>
               </div>
+
+              {/* Role-specific text — only for hero banners */}
+              {(bannerForm.position === 'hero' || !bannerForm.position) && (
+                <div className="border-t border-gray-100 pt-4 space-y-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Texto por rol (opcional)</p>
+                  <p className="text-xs text-gray-400 -mt-2">Si se llena, reemplaza el título/descripción general según quién visita el sitio.</p>
+
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-semibold text-yellow-700 flex items-center gap-1">🏪 Para vendedores</p>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Título</label>
+                      <input
+                        type="text"
+                        value={bannerForm.vendor_title || ''}
+                        onChange={e => setBannerForm({ ...bannerForm, vendor_title: e.target.value })}
+                        className="input-field w-full text-sm"
+                        placeholder="Ej: Tu tienda, tu precio, tus reglas"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+                      <textarea
+                        value={bannerForm.vendor_description || ''}
+                        onChange={e => setBannerForm({ ...bannerForm, vendor_description: e.target.value })}
+                        className="input-field w-full text-sm"
+                        rows={2}
+                        placeholder="Ej: Vende directo a compradores reales sin intermediarios..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-semibold text-blue-700 flex items-center gap-1">🛍️ Para compradores</p>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Título</label>
+                      <input
+                        type="text"
+                        value={bannerForm.buyer_title || ''}
+                        onChange={e => setBannerForm({ ...bannerForm, buyer_title: e.target.value })}
+                        className="input-field w-full text-sm"
+                        placeholder="Ej: Compra directo al que lo hace"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+                      <textarea
+                        value={bannerForm.buyer_description || ''}
+                        onChange={e => setBannerForm({ ...bannerForm, buyer_description: e.target.value })}
+                        className="input-field w-full text-sm"
+                        rows={2}
+                        placeholder="Ej: Descubre productos únicos hechos a mano..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex gap-3 mt-6">
+            </div>
+            <div className="flex gap-3 p-6 pt-4 border-t border-gray-100 flex-shrink-0">
               <button onClick={() => setShowBannerModal(false)} className="flex-1 py-2 border rounded-lg">Cancelar</button>
               <button onClick={saveBanner} className="flex-1 py-2 bg-accent text-primary font-semibold rounded-lg">Guardar</button>
             </div>

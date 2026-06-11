@@ -148,7 +148,7 @@ export default function OnboardingPage() {
           <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
             <Check className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-primary mb-2">¡Bienvenido a NexusLab!</h1>
+          <h1 className="text-2xl font-bold text-primary mb-2">¡Bienvenido a ConImpulso!</h1>
           <p className="text-text-secondary mb-8">
             Tu cuenta ha sido configurada correctamente. Ahora puedes empezar a explorar y usar la plataforma.
           </p>

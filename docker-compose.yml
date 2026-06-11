@@ -14,9 +14,9 @@ services:
       - ./docker/php/php.ini:/usr/local/etc/php/php.ini
     environment:
       - PHP_OPCACHE_ENABLE=1
-      - PHP_MEMORY_LIMIT=256M
-      - PHP_UPLOAD_MAX_FILESIZE=50M
-      - PHP_POST_MAX_SIZE=50M
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_UPLOAD_MAX_FILESIZE=100M
+      - PHP_POST_MAX_SIZE=110M
     networks:
       - nexuslab-network
     depends_on:

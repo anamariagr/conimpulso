@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Shops\Models\Shop;
 use App\Modules\Shops\Models\Category;
 use App\Modules\Shops\Models\ShopReview;
+use App\Modules\Blog\Services\BlogPostGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -99,15 +100,26 @@ class ShopController extends Controller
             'category_ids.*' => ['integer', 'exists:categories,id'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],
+            'story' => ['required', 'array'],
+            'story.what_we_do'    => ['required', 'string', 'max:200'],
+            'story.founded_year'  => ['required', 'string', 'max:10'],
+            'story.why_started'   => ['required', 'string', 'max:300'],
+            'story.location'      => ['required', 'string', 'max:100'],
+            'story.differentiator'=> ['required', 'string', 'max:300'],
         ]);
 
         if ($validator->fails()) {
             return $this->errorResponse('Validation failed', 422, $validator->errors());
         }
 
-        $shop = new Shop($validator->validated());
+        $validated = $validator->validated();
+        $story = $validated['story'];
+        unset($validated['story']);
+
+        $shop = new Shop($validated);
         $shop->user_id = $request->user()->id;
-        $shop->status = 'pending';
+        $shop->status  = 'pending';
+        $shop->story   = $story;
         $shop->save();
 
         // Attach categories
@@ -123,6 +135,18 @@ class ShopController extends Controller
         }
 
         $shop->load(['categories', 'tags', 'user']);
+
+        // Auto-generate blog post
+        try {
+            (new BlogPostGeneratorService())->generateForShop([
+                'id'          => $shop->id,
+                'name'        => $shop->name,
+                'city'        => $shop->city,
+                'cover_image' => $shop->logo,
+            ], $story);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Blog post generation failed for shop', ['id' => $shop->id, 'error' => $e->getMessage()]);
+        }
 
         return $this->successResponse($shop, 'Tienda creada exitosamente. Pendiente de aprobación.', 201);
     }
@@ -222,6 +246,19 @@ class ShopController extends Controller
         $shop->delete();
 
         return $this->successResponse(null, 'Tienda eliminada exitosamente');
+    }
+
+    public function myShops(Request $request): JsonResponse
+    {
+        $shops = Shop::where('user_id', $request->user()->id)
+            ->withCount(['products', 'services'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $shops,
+        ]);
     }
 
     // Admin methods
@@ -330,6 +367,65 @@ class ShopController extends Controller
         $shop->save();
 
         return $this->successResponse($shop, $shop->is_verified ? 'Tienda verificada' : 'Verificación removida');
+    }
+
+    public function adminStore(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id'     => ['required', 'integer', 'exists:users,id'],
+            'name'        => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'city'        => ['nullable', 'string', 'max:100'],
+            'phone'       => ['nullable', 'string', 'max:20'],
+            'email'       => ['nullable', 'email', 'max:255'],
+            'status'      => ['sometimes', 'in:active,inactive,pending,suspended,draft'],
+            'is_featured' => ['sometimes', 'boolean'],
+            'is_verified' => ['sometimes', 'boolean'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $shop = new Shop();
+        $shop->user_id     = $request->user_id;
+        $shop->name        = $request->name;
+        $shop->slug        = Str::slug($request->name) . '-' . uniqid();
+        $shop->description = $request->description;
+        $shop->city        = $request->city;
+        $shop->phone       = $request->phone;
+        $shop->email       = $request->email;
+        $shop->status      = $request->get('status', 'active');
+        $shop->is_featured = $request->boolean('is_featured', false);
+        $shop->is_verified = $request->boolean('is_verified', false);
+        $shop->save();
+
+        $shop->load('user');
+
+        return $this->successResponse($shop, 'Tienda creada exitosamente', 201);
+    }
+
+    public function adminUpdate(Request $request, int $id): JsonResponse
+    {
+        $shop = Shop::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'name'        => ['sometimes', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'status'      => ['sometimes', 'in:active,inactive,pending,suspended,rejected,draft'],
+            'city'        => ['sometimes', 'nullable', 'string', 'max:100'],
+            'is_featured' => ['sometimes', 'boolean'],
+            'is_verified' => ['sometimes', 'boolean'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $shop->fill($request->only(['name', 'description', 'status', 'city', 'is_featured', 'is_verified']));
+        $shop->save();
+
+        return $this->successResponse($shop->fresh(), 'Tienda actualizada');
     }
 
     // Categories

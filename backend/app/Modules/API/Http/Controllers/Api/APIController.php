@@ -15,7 +15,7 @@ class APIController extends Controller
     public function info(): JsonResponse
     {
         return response()->json([
-            'name' => 'NexusLab API',
+            'name' => 'ConImpulso API',
             'version' => 'v1',
             'status' => 'active',
             'endpoints' => [

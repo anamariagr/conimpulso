@@ -159,6 +159,9 @@ class AuthController extends Controller
                     'avatar' => $user->avatar,
                     'status' => $user->status,
                     'email_verified_at' => $user->email_verified_at,
+                    'messaging_enabled' => (bool) $user->messaging_enabled,
+                    'messaging_disabled_reason' => $user->messaging_disabled_reason,
+                    'messaging_disabled_at' => $user->messaging_disabled_at,
                     'roles' => $user->getRoleNames(),
                     'permissions' => $user->getDirectPermissions()->pluck('name'),
                     'created_at' => $user->created_at,
@@ -225,6 +228,31 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Verification email sent',
+        ]);
+    }
+
+    public function availableForMessaging(Request $request): JsonResponse
+    {
+        $search = $request->get('search');
+
+        $query = User::query()
+            ->where('id', '!=', $request->user()->id)
+            ->where('messaging_enabled', true);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->orderBy('name')
+            ->limit(50)
+            ->get(['id', 'name', 'email', 'avatar', 'status', 'messaging_enabled']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $users,
         ]);
     }
 }

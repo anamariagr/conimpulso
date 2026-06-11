@@ -26,5 +26,8 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::post('/email/resend', [AuthController::class, 'resendVerification']);
+
+        // Available users for messaging (only those with messaging enabled)
+        Route::get('/users/available', [AuthController::class, 'availableForMessaging']);
     });
 });

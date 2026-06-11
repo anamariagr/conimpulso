@@ -3,6 +3,7 @@
 namespace App\Modules\Wallet\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Auth\Models\User;
 use App\Modules\Wallet\Models\Wallet;
 use App\Modules\Wallet\Models\WalletTransaction;
 use App\Modules\Wallet\Models\WalletTopUp;
@@ -238,5 +239,99 @@ class WalletController extends Controller
             'success' => true,
             'data' => $topUps->items(),
         ]);
+    }
+
+    public function adminListUsers(Request $request): JsonResponse
+    {
+        $query = User::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->with(['wallet'])
+            ->orderBy('name')
+            ->paginate(20);
+
+        $data = $users->getCollection()->map(function ($user) {
+            return [
+                'id'      => $user->id,
+                'name'    => $user->name,
+                'email'   => $user->email,
+                'balance' => $user->wallet ? (float) $user->wallet->balance : 0,
+                'currency' => $user->wallet?->currency ?? 'USD',
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+            'meta'    => [
+                'current_page' => $users->currentPage(),
+                'last_page'    => $users->lastPage(),
+                'total'        => $users->total(),
+            ],
+        ]);
+    }
+
+    public function adminCredit(Request $request, int $userId): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'amount'      => ['required', 'numeric', 'min:0.01'],
+            'description' => ['required', 'string', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $user = User::findOrFail($userId);
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $user->id],
+            ['balance' => 0, 'currency' => 'USD']
+        );
+
+        $wallet->credit((float) $request->amount, $request->description, 'admin_credit');
+
+        return $this->successResponse([
+            'user_id' => $user->id,
+            'name'    => $user->name,
+            'balance' => (float) $wallet->fresh()->balance,
+        ], 'Saldo acreditado correctamente');
+    }
+
+    public function adminDebit(Request $request, int $userId): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'amount'      => ['required', 'numeric', 'min:0.01'],
+            'description' => ['required', 'string', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $user = User::findOrFail($userId);
+        $wallet = Wallet::where('user_id', $user->id)->first();
+
+        if (!$wallet) {
+            return $this->errorResponse('El usuario no tiene billetera', 404);
+        }
+
+        if (!$wallet->canDebit((float) $request->amount)) {
+            return $this->errorResponse('Saldo insuficiente para realizar el débito', 400);
+        }
+
+        $wallet->debit((float) $request->amount, $request->description, 'admin_debit');
+
+        return $this->successResponse([
+            'user_id' => $user->id,
+            'name'    => $user->name,
+            'balance' => (float) $wallet->fresh()->balance,
+        ], 'Saldo debitado correctamente');
     }
 }

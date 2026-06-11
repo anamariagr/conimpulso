@@ -96,7 +96,7 @@ export default function RegisterPage() {
       <div className="card max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-primary mb-2">Crear cuenta</h1>
-          <p className="text-text-secondary">Únete a NexusLab y empieza a explorar</p>
+          <p className="text-text-secondary">Únete a ConImpulso y empieza a explorar</p>
         </div>
 
         {/* Error Alert */}
@@ -178,7 +178,7 @@ export default function RegisterPage() {
                 className={`input-field pl-12 pr-12 py-3 rounded-lg transition-all ${
                   fieldErrors.password ? 'border-2 border-red-500 bg-red-50' : 'border border-gray-300'
                 }`}
-                placeholder="Ej: NexusLab2024!"
+                placeholder="Ej: ConImpulso2024!"
               />
               <button
                 type="button"

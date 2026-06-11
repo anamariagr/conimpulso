@@ -43,7 +43,7 @@ export default function OrdersListPage() {
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <h3 className="font-semibold text-primary mb-2">🚚 Logística integrada</h3>
-          <p className="text-sm text-gray-500">Gestiona envíos directamente desde NexusLab con nuestras intégraciones de logística.</p>
+          <p className="text-sm text-gray-500">Gestiona envíos directamente desde ConImpulso con nuestras intégraciones de logística.</p>
         </div>
       </div>
     </div>

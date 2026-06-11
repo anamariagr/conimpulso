@@ -22,7 +22,7 @@ export default function ProductsListPage() {
         </div>
         <h2 className="text-xl font-semibold text-primary mb-2">Aún no hay productos</h2>
         <p className="text-gray-500 mb-6 max-w-md mx-auto">
-          Comienza a vender tus productos en NexusLab. Añade tu primer producto para empezar a recibir pedidos.
+          Comienza a vender tus productos en ConImpulso. Añade tu primer producto para empezar a recibir pedidos.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link

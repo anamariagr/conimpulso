@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Truck, Users, Star, Zap, Globe, Mail, ShoppingBag, MapPin, CheckCircle, X } from 'lucide-react';
+import { ArrowRight, Shield, Truck, Users, Star, Zap, Globe, Mail, ShoppingBag, MapPin, CheckCircle, X, Store } from 'lucide-react';
 import api from '../../services/api';
+import { useAuthStore } from '../../stores/authStore';
 
 // Helper to get category icon
 const getCategoryIcon = (name) => {
@@ -42,46 +43,108 @@ const getShopLogo = (shop) => {
 };
 
 // Section renderers
-const HeroSection = ({ heroBanner }) => (
+const getYouTubeEmbedUrl = (url) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+  if (!match) return null;
+  return `https://www.youtube.com/embed/${match[1]}?autoplay=1&mute=1&loop=1&playlist=${match[1]}&controls=0&modestbranding=1&showinfo=0`;
+};
+
+const HERO_CONTENT = {
+  vendor: {
+    badge: '✦ Para vendedores',
+    title: 'Tu tienda,',
+    accent: 'tu precio, tus reglas',
+    description: 'Vende directo a compradores reales sin intermediarios. Crea tu tienda gratis, sube tus productos y empieza a vender hoy.',
+    cta: { label: 'Crear mi tienda', to: '/dashboard/store/new', icon: <Store className="w-5 h-5" /> },
+    secondary: { label: 'Ver mi dashboard', to: '/dashboard' },
+  },
+  buyer: {
+    badge: '✦ Para compradores',
+    title: 'Compra directo',
+    accent: 'al que lo hace',
+    description: 'Descubre productos únicos hechos a mano por emprendedores latinoamericanos. Cada compra apoya un sueño real.',
+    cta: { label: 'Explorar productos', to: '/products', icon: <ShoppingBag className="w-5 h-5" /> },
+    secondary: { label: 'Ver tiendas', to: '/stores' },
+  },
+  guest: {
+    badge: null,
+    title: 'Compra directo',
+    accent: 'al que lo hace',
+    description: 'Descubre productos únicos hechos a mano por emprendedores latinoamericanos. Cada compra apoya un sueño real.',
+    cta: { label: 'Empezar ahora', to: '/register', icon: <ArrowRight className="w-5 h-5" /> },
+    secondary: { label: 'Ver tiendas', to: '/stores' },
+  },
+};
+
+const HeroSection = ({ heroBanner }) => {
+  const { isAuthenticated, isVendor } = useAuthStore();
+  const youtubeEmbed = heroBanner?.media_type === 'video' ? getYouTubeEmbedUrl(heroBanner?.media_url) : null;
+
+  const roleKey = !isAuthenticated ? 'guest' : isVendor() ? 'vendor' : 'buyer';
+  const content = HERO_CONTENT[roleKey];
+
+  // Role-specific text from DB takes priority, then generic banner title, then hardcoded default
+  const title = (roleKey === 'vendor' ? heroBanner?.vendor_title : heroBanner?.buyer_title)
+    || heroBanner?.title
+    || content.title;
+  const accent = title === content.title ? content.accent : '';
+  const description = (roleKey === 'vendor' ? heroBanner?.vendor_description : heroBanner?.buyer_description)
+    || heroBanner?.description
+    || content.description;
+
+  return (
   <section className="relative bg-primary min-h-[600px] flex items-center">
     <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary-light opacity-90"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/50 to-transparent z-10"></div>
       {heroBanner?.media_url ? (
-        heroBanner.media_type === 'video' ? (
+        youtubeEmbed ? (
+          <iframe
+            src={youtubeEmbed}
+            className="absolute inset-0 w-full h-full"
+            style={{ border: 'none', pointerEvents: 'none', transform: 'scale(1.1)' }}
+            allow="autoplay; muted"
+            title="banner"
+          />
+        ) : heroBanner.media_type === 'video' ? (
           <video src={heroBanner.media_url} autoPlay muted loop className="w-full h-full object-cover" />
         ) : (
-          <img src={heroBanner.media_url} alt={heroBanner.title || ''} className="w-full h-full object-cover" />
+          <img src={heroBanner.media_url} alt={title} className="w-full h-full object-cover" />
         )
       ) : (
         <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1920&q=80" alt="" className="w-full h-full object-cover" />
       )}
     </div>
-    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
       <div className="max-w-2xl">
+        {content.badge && (
+          <div className="inline-flex items-center gap-2 bg-accent/20 text-yellow-300 border border-accent/30 rounded-full px-4 py-1.5 text-sm font-medium mb-5">
+            {content.badge}
+          </div>
+        )}
         <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-          {heroBanner?.title || 'El marketplace de'} <span className="text-accent">{heroBanner?.subtitle || 'productores reales'}</span>
+          {title} {accent && <span className="text-accent">{accent}</span>}
         </h1>
-        <p className="text-xl text-gray-300 mb-8">
-          {heroBanner?.subtitle || 'Conecta directamente con fabricantes, artesanos y negocios locales. Compra directo al fabricante sin intermediarios.'}
-        </p>
+        <p className="text-xl text-gray-300 mb-8">{description}</p>
         <div className="flex flex-col sm:flex-row gap-4">
           {heroBanner?.link_url ? (
             <a href={heroBanner.link_url} className="btn-primary flex items-center justify-center gap-2">
-              {heroBanner.link_text || 'Empezar ahora'} <ArrowRight className="w-5 h-5" />
+              {heroBanner.link_text || content.cta.label} <ArrowRight className="w-5 h-5" />
             </a>
           ) : (
-            <Link to="/register" className="btn-primary flex items-center justify-center gap-2">
-              Empezar ahora <ArrowRight className="w-5 h-5" />
+            <Link to={content.cta.to} className="btn-primary flex items-center justify-center gap-2">
+              {content.cta.label} {content.cta.icon}
             </Link>
           )}
-          <Link to="/stores" className="btn-outline border-white text-white hover:bg-white hover:text-primary flex items-center justify-center gap-2">
-            Ver tiendas <Globe className="w-5 h-5" />
+          <Link to={content.secondary.to} className="btn-outline border-white text-white hover:bg-white hover:text-primary flex items-center justify-center gap-2">
+            {content.secondary.label} <Globe className="w-5 h-5" />
           </Link>
         </div>
       </div>
     </div>
   </section>
-);
+  );
+};
 
 const StatsSection = () => (
   <section className="bg-accent py-8">
@@ -377,7 +440,7 @@ const FeaturesSection = () => (
   <section className="py-16 bg-primary text-white">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold mb-4">¿Por qué elegir NexusLab?</h2>
+        <h2 className="text-3xl font-bold mb-4">¿Por qué elegir ConImpulso?</h2>
         <p className="text-gray-400">La plataforma diseñada para productores reales</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -404,7 +467,7 @@ const CTASection = () => (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
       <h2 className="text-3xl font-bold text-primary mb-4">¿Tienes un negocio o fabricas productos?</h2>
       <p className="text-primary/70 text-lg mb-8">
-        Únete a miles de productores que ya están vendiendo en NexusLab.
+        Únete a miles de productores que ya están vendiendo en ConImpulso.
         Sin comisiones el primer mes.
       </p>
       <Link to="/register" className="btn-secondary inline-flex items-center gap-2">

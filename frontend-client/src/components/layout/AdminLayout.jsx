@@ -15,6 +15,8 @@ import {
   X,
   ChevronRight,
   Layout,
+  Wallet,
+  BookOpen,
 } from 'lucide-react';
 
 const adminMenuItems = [
@@ -24,6 +26,8 @@ const adminMenuItems = [
   { name: 'Tiendas', icon: Store, path: '/admin/shops' },
   { name: 'Productos', icon: Package, path: '/admin/products' },
   { name: 'Categorías', icon: Grid3X3, path: '/admin/categories' },
+  { name: 'Saldo / Wallet', icon: Wallet, path: '/admin/wallet' },
+  { name: 'Blog', icon: BookOpen, path: '/admin/blog' },
   { name: 'Configuración', icon: Settings, path: '/admin/settings' },
 ];
 
@@ -71,10 +75,10 @@ export default function AdminLayout() {
         <div className="p-6 border-b border-gray-800 flex items-center justify-between">
           <Link to="/admin" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-              <span className="text-primary font-bold text-xl">N</span>
+              <span className="text-primary font-bold text-xl">C</span>
             </div>
             {sidebarOpen && (
-              <span className="font-bold text-xl">NexusLab Admin</span>
+              <span className="font-bold text-xl">ConImpulso Admin</span>
             )}
           </Link>
           <button

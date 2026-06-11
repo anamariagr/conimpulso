@@ -39,6 +39,7 @@ class Product extends Model
         'allow_quotation',
         'allow_custom_order',
         'settings',
+        'story',
     ];
 
     protected function casts(): array
@@ -51,6 +52,7 @@ class Product extends Model
             'attributes' => 'array',
             'tags' => 'array',
             'settings' => 'array',
+            'story' => 'array',
             'price' => 'decimal:2',
             'price_wholesale' => 'decimal:2',
             'weight' => 'decimal:2',

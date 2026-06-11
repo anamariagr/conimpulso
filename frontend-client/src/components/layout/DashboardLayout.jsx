@@ -92,10 +92,10 @@ export default function DashboardLayout() {
         <div className="p-4 border-b border-gray-800">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="text-primary font-bold text-xl">N</span>
+              <span className="text-primary font-bold text-xl">C</span>
             </div>
             {sidebarOpen && (
-              <span className="font-bold text-xl whitespace-nowrap">NexusLab</span>
+              <span className="font-bold text-xl whitespace-nowrap">ConImpulso</span>
             )}
           </Link>
         </div>

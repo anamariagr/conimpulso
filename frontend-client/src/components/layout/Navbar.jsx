@@ -34,9 +34,9 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-              <span className="text-primary font-bold text-xl">N</span>
+              <span className="text-primary font-bold text-xl">C</span>
             </div>
-            <span className="text-primary font-bold text-xl hidden sm:block">NexusLab</span>
+            <span className="text-primary font-bold text-xl hidden sm:block">IMPULSO</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -49,6 +49,9 @@ export default function Navbar() {
             </Link>
             <Link to="/services" className="text-primary hover:text-accent transition-colors font-medium">
               Servicios
+            </Link>
+            <Link to="/blog" className="text-primary hover:text-accent transition-colors font-medium">
+              Blog
             </Link>
           </nav>
 
@@ -204,6 +207,13 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
               >
                 Servicios
+              </Link>
+              <Link
+                to="/blog"
+                className="px-4 py-2 text-primary hover:bg-gray-50 rounded-lg font-medium"
+                onClick={() => setMobileOpen(false)}
+              >
+                Blog
               </Link>
 
               {isAuthenticated ? (

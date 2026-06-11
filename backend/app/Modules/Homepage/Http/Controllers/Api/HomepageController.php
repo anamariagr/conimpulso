@@ -85,9 +85,14 @@ class HomepageController extends Controller
         $banner = HomepageBanner::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'title' => 'string|max:255',
-            'media_type' => 'in:image,video,gif',
-            'position' => 'in:hero,floating_left,floating_right,sidebar,between_sections,popup',
+            'title'               => 'nullable|string|max:255',
+            'subtitle'            => 'nullable|string|max:255',
+            'media_type'          => 'nullable|in:image,video,gif',
+            'position'            => 'nullable|in:hero,floating_left,floating_right,sidebar,between_sections,popup',
+            'vendor_title'        => 'nullable|string|max:255',
+            'vendor_description'  => 'nullable|string',
+            'buyer_title'         => 'nullable|string|max:255',
+            'buyer_description'   => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -101,6 +106,7 @@ class HomepageController extends Controller
             'title', 'subtitle', 'media_type', 'media_url', 'mobile_media_url',
             'link_url', 'link_text', 'position', 'is_active', 'starts_at',
             'expires_at', 'order', 'target_audience',
+            'vendor_title', 'vendor_description', 'buyer_title', 'buyer_description',
         ]));
 
         return response()->json([

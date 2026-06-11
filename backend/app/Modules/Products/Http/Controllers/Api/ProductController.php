@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Products\Models\Product;
 use App\Modules\Products\Models\ProductVariant;
 use App\Modules\Products\Models\ProductReview;
+use App\Modules\Blog\Services\BlogPostGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -139,6 +140,12 @@ class ProductController extends Controller
             'is_featured' => ['nullable', 'boolean'],
             'allow_quotation' => ['nullable', 'boolean'],
             'allow_custom_order' => ['nullable', 'boolean'],
+            'story' => ['required', 'array'],
+            'story.materials' => ['required', 'string', 'max:200'],
+            'story.process' => ['required', 'string', 'max:100'],
+            'story.time' => ['required', 'string', 'max:50'],
+            'story.ideal_for' => ['required', 'string', 'max:200'],
+            'story.unique' => ['required', 'string', 'max:300'],
             'category_ids' => ['nullable', 'array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
             'variants' => ['nullable', 'array'],
@@ -155,12 +162,14 @@ class ProductController extends Controller
 
         $data = $validator->validated();
         $categoryIds = $data['category_ids'] ?? [];
-        $variants = $data['variants'] ?? [];
-        unset($data['category_ids'], $data['variants']);
+        $variants    = $data['variants'] ?? [];
+        $story       = $data['story'] ?? [];
+        unset($data['category_ids'], $data['variants'], $data['story']);
 
         $product = new Product($data);
         $product->shop_id = $request->shop_id;
-        $product->status = $data['status'] ?? 'draft';
+        $product->status  = $data['status'] ?? 'draft';
+        $product->story   = $story;
         $product->save();
 
         // Attach categories
@@ -174,6 +183,21 @@ class ProductController extends Controller
         }
 
         $product->load(['categories', 'variants', 'shop']);
+
+        // Auto-generate blog post
+        try {
+            $coverImage = !empty($product->images) ? $product->images[0] : null;
+            (new BlogPostGeneratorService())->generateForProduct([
+                'id'          => $product->id,
+                'name'        => $product->name,
+                'price'       => $product->price,
+                'stock'       => $product->stock,
+                'city'        => $product->shop?->city,
+                'cover_image' => $coverImage,
+            ], $story);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Blog post generation failed for product', ['id' => $product->id, 'error' => $e->getMessage()]);
+        }
 
         return $this->successResponse($product, 'Producto creado exitosamente', 201);
     }

@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('shop_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->nullable()->constrained()->onDelete('set_null');
+            $table->foreignId('product_id')->nullable()->constrained()->onDelete('set null');
             $table->enum('status', ['draft', 'negotiation', 'contract_sent', 'accepted', 'in_production', 'completed', 'cancelled'])->default('draft');
             $table->json('requirements');
             $table->decimal('budget', 12, 2)->nullable();
