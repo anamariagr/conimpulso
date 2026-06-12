@@ -7,8 +7,10 @@ use App\Modules\Auth\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -253,6 +255,84 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'data' => $users,
+        ]);
+    }
+
+    public function googleAuth(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'credential' => ['required', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'Token requerido'], 422);
+        }
+
+        // Verify token with Google
+        $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+            'id_token' => $request->credential,
+        ]);
+
+        if (!$response->successful()) {
+            return response()->json(['success' => false, 'message' => 'Token de Google inválido'], 401);
+        }
+
+        $googleUser = $response->json();
+
+        // Validate audience matches our client ID
+        $clientId = config('services.google.client_id');
+        if ($clientId && $googleUser['aud'] !== $clientId) {
+            return response()->json(['success' => false, 'message' => 'Token no autorizado'], 401);
+        }
+
+        $email = $googleUser['email'] ?? null;
+        $googleId = $googleUser['sub'] ?? null;
+
+        if (!$email || !$googleId) {
+            return response()->json(['success' => false, 'message' => 'No se pudo obtener el email de Google'], 422);
+        }
+
+        // Find or create user
+        $user = User::where('google_id', $googleId)->orWhere('email', $email)->first();
+
+        if ($user) {
+            // Link google_id if not set
+            if (!$user->google_id) {
+                $user->update(['google_id' => $googleId]);
+            }
+            if ($user->status === 'suspended') {
+                return response()->json(['success' => false, 'message' => 'Cuenta suspendida'], 403);
+            }
+        } else {
+            $user = User::create([
+                'name'              => $googleUser['name'] ?? $email,
+                'email'             => $email,
+                'google_id'         => $googleId,
+                'avatar'            => $googleUser['picture'] ?? null,
+                'email_verified_at' => now(),
+                'password'          => Hash::make(Str::random(32)),
+                'status'            => 'active',
+            ]);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login con Google exitoso',
+            'data' => [
+                'user' => [
+                    'id'                => $user->id,
+                    'name'              => $user->name,
+                    'email'             => $user->email,
+                    'avatar'            => $user->avatar,
+                    'status'            => $user->status,
+                    'email_verified_at' => $user->email_verified_at,
+                    'roles'             => $user->getRoleNames(),
+                ],
+                'token'      => $token,
+                'token_type' => 'Bearer',
+            ],
         ]);
     }
 }

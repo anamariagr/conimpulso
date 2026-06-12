@@ -20,6 +20,7 @@ class User extends Authenticatable
         'avatar',
         'status',
         'email_verified_at',
+        'google_id',
         'messaging_enabled',
         'messaging_disabled_reason',
         'messaging_disabled_at',

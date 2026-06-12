@@ -7,7 +7,8 @@ use App\Modules\Auth\Http\Controllers\Api\PasswordResetController;
 Route::prefix('auth')->group(function () {
     // Public routes
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth'); // 10 per minute
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth');
+    Route::post('/google', [AuthController::class, 'googleAuth']);
 
     // Password reset
     Route::post('/password/reset-link', [PasswordResetController::class, 'sendResetLink']);

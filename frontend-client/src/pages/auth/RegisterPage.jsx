@@ -1,12 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { register, isLoading, isAuthenticated } = useAuthStore();
+  const { register, loginWithGoogle, isLoading, isAuthenticated } = useAuthStore();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const result = await loginWithGoogle(credentialResponse.credential);
+    if (result.success) {
+      toast.success('Cuenta creada con Google');
+      navigate('/onboarding');
+    } else {
+      toast.error(result.message || 'Error al registrarse con Google');
+    }
+  };
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -233,7 +244,25 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6">
+          <div className="relative flex items-center gap-3 my-4">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400 flex-shrink-0">o regístrate con</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => toast.error('Error al conectar con Google')}
+              text="signup_with"
+              shape="rectangular"
+              locale="es"
+              width="100%"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 text-center">
           <p className="text-text-secondary text-sm">
             ¿Ya tienes cuenta?{' '}
             <Link to="/login" className="text-accent hover:text-accent-hover font-medium">

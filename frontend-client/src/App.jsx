@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './stores/authStore';
 
@@ -42,6 +43,7 @@ import CreateProductPage from './pages/dashboard/CreateProductPage';
 
 import BlogPage from './pages/public/BlogPage';
 import BlogPostPage from './pages/public/BlogPostPage';
+import ProductDetailPage from './pages/public/ProductDetailPage';
 
 // Admin pages
 import HomepageEditorPage from './pages/admin/HomepageEditorPage';
@@ -79,6 +81,7 @@ function AdminRoute({ children }) {
 
 function App() {
   return (
+    <GoogleOAuthProvider clientId="472346209051-eebcrpga61ivpo9m2m5kv1ikhflemm7u.apps.googleusercontent.com">
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
@@ -87,6 +90,7 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="stores/:slug" element={<StoreProfilePage />} />
             <Route path="products" element={<ProductsPage />} />
+            <Route path="products/:slug" element={<ProductDetailPage />} />
             <Route path="services" element={<ServicesPage />} />
             <Route path="stores" element={<StoresPage />} />
             <Route path="blog" element={<BlogPage />} />
@@ -223,6 +227,7 @@ function App() {
         }}
       />
     </QueryClientProvider>
+    </GoogleOAuthProvider>
   );
 }
 

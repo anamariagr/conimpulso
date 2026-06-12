@@ -110,6 +110,32 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  loginWithGoogle: async (credential) => {
+    set({ isLoading: true, error: null, activeRole: null });
+    try {
+      const response = await authService.googleAuth(credential);
+      const { user, token } = response.data.data;
+
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      set({
+        user,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+        activeRole: null,
+      });
+
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error al autenticar con Google';
+      set({ isLoading: false, error: message, activeRole: null });
+      return { success: false, message };
+    }
+  },
+
   logout: async () => {
     try {
       await authService.logout();

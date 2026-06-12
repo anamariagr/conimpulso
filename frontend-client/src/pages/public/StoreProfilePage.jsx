@@ -85,7 +85,7 @@ export default function StoreProfilePage() {
 
       {/* Profile Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
-        <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
+        <div className="flex flex-col md:flex-row items-start md:items-end gap-6" style={{ background: '#00000099', padding: '21px', borderRadius: '7px' }}>
           <div className="w-32 h-32 bg-accent rounded-2xl flex items-center justify-center border-4 border-white shadow-card">
             <span className="text-5xl font-bold text-primary">{shop.name.charAt(0)}</span>
           </div>

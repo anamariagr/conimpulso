@@ -106,7 +106,7 @@ export default function ProductsPage() {
           {filteredProducts.map((product) => (
             <Link
               key={product.id}
-              to={`/products/${product.id}`}
+              to={`/products/${product.slug}`}
               className={`bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all ${viewMode === 'list' ? 'flex' : ''}`}
             >
               <div className={`bg-gray-100 ${viewMode === 'grid' ? 'aspect-square' : 'w-48 h-48'} flex items-center justify-center`}>
