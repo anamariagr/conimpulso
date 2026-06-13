@@ -25,6 +25,7 @@ Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/logout-all', [AuthController::class, 'logoutAll']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::post('/onboarding', [AuthController::class, 'completeOnboarding']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::post('/email/resend', [AuthController::class, 'resendVerification']);
 

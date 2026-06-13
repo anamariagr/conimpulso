@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -55,6 +56,7 @@ import CategoriesView from './pages/admin/CategoriesView';
 import SettingsView from './pages/admin/SettingsView';
 import WalletView from './pages/admin/WalletView';
 import BlogView from './pages/admin/BlogView';
+import LogisticsBannerView from './pages/admin/LogisticsBannerView';
 
 import './index.css';
 
@@ -80,6 +82,16 @@ function AdminRoute({ children }) {
 }
 
 function App() {
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+
+  // Refresh the authenticated user (roles, status, etc.) on app load so the
+  // cached localStorage user never goes stale after a role change.
+  useEffect(() => {
+    if (localStorage.getItem('auth_token')) {
+      checkAuth();
+    }
+  }, [checkAuth]);
+
   return (
     <GoogleOAuthProvider clientId="472346209051-eebcrpga61ivpo9m2m5kv1ikhflemm7u.apps.googleusercontent.com">
     <QueryClientProvider client={queryClient}>
@@ -213,6 +225,7 @@ function App() {
             <Route path="settings" element={<SettingsView />} />
             <Route path="wallet" element={<WalletView />} />
             <Route path="blog" element={<BlogView />} />
+            <Route path="logistics-banner" element={<LogisticsBannerView />} />
           </Route>
         </Routes>
       </BrowserRouter>

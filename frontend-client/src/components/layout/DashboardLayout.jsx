@@ -19,8 +19,6 @@ import {
   ChevronRight,
   Store,
   Award,
-  Eye,
-  EyeOff,
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -143,67 +141,53 @@ export default function DashboardLayout() {
           </ul>
         </nav>
 
-        {/* Become/Role Toggle Buttons */}
-        {sidebarOpen && (
-          <div className="px-3 py-2 border-t border-gray-800">
-            {isOnlyClient ? (
-              // User has no actual vendor/advisor role - show become options
-              <>
-                <p className="text-xs text-gray-500 px-2 mb-2">Opciones</p>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setActiveRole('vendor')}
-                    className="w-full flex items-center gap-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all text-sm font-medium"
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span>Ser Vendedor</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveRole('advisor')}
-                    className="w-full flex items-center gap-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all text-sm font-medium"
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span>Ser Asesor</span>
-                  </button>
-                </div>
-              </>
-            ) : (
-              // User has actual vendor or advisor role - show role switcher
-              <>
-                <p className="text-xs text-gray-500 px-2 mb-2">Cambiar rol</p>
-                <div className="space-y-2">
-                  {hasActualVendorRole && !showVendorMenu && (
+        {/* Role Switch - always show the other two roles */}
+        {sidebarOpen && (() => {
+          const currentRole = showVendorMenu ? 'vendor' : showAdvisorMenu ? 'advisor' : 'buyer';
+          const roleOptions = [
+            {
+              key: 'buyer',
+              label: 'Ser Comprador',
+              icon: ShoppingBag,
+              className: 'bg-gray-600 hover:bg-gray-700',
+              onClick: () => { clearActiveRole(); navigate('/dashboard'); },
+            },
+            {
+              key: 'vendor',
+              label: 'Ser Vendedor',
+              icon: Store,
+              className: 'bg-green-600 hover:bg-green-700',
+              onClick: () => { setActiveRole('vendor'); navigate('/dashboard/vendor'); },
+            },
+            {
+              key: 'advisor',
+              label: 'Ser Asesor',
+              icon: Award,
+              className: 'bg-blue-600 hover:bg-blue-700',
+              onClick: () => { setActiveRole('advisor'); navigate('/dashboard/advisors'); },
+            },
+          ];
+
+          return (
+            <div className="px-3 py-2 border-t border-gray-800">
+              <p className="text-xs text-gray-500 px-2 mb-2">Cambiar rol</p>
+              <div className="space-y-2">
+                {roleOptions
+                  .filter((option) => option.key !== currentRole)
+                  .map((option) => (
                     <button
-                      onClick={() => setActiveRole('vendor')}
-                      className="w-full flex items-center gap-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all text-sm font-medium"
+                      key={option.key}
+                      onClick={option.onClick}
+                      className={`w-full flex items-center gap-3 px-4 py-2 ${option.className} text-white rounded-lg transition-all text-sm font-medium`}
                     >
-                      <Eye className="w-4 h-4" />
-                      <span>Ver como Vendedor</span>
+                      <option.icon className="w-4 h-4" />
+                      <span>{option.label}</span>
                     </button>
-                  )}
-                  {hasActualAdvisorRole && !showAdvisorMenu && (
-                    <button
-                      onClick={() => setActiveRole('advisor')}
-                      className="w-full flex items-center gap-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all text-sm font-medium"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span>Ver como Asesor</span>
-                    </button>
-                  )}
-                  {(showVendorMenu || showAdvisorMenu) && (
-                    <button
-                      onClick={clearActiveRole}
-                      className="w-full flex items-center gap-3 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all text-sm font-medium"
-                    >
-                      <EyeOff className="w-4 h-4" />
-                      <span>Volver a Cliente</span>
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        )}
+                  ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* User Section */}
         <div className="p-4 border-t border-gray-800">

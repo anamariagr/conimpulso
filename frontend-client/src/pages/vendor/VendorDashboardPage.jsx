@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DollarSign, TrendingUp, Package, Eye, Users, Bell, Tag, Plus, ChevronRight, BarChart3 } from 'lucide-react';
 import { vendorService } from '../../services/api';
+import LogisticsPromoBanner from '../../components/LogisticsPromoBanner';
 
 export default function VendorDashboardPage() {
   const [stats, setStats] = useState(null);
@@ -58,6 +59,7 @@ export default function VendorDashboardPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white pt-20 px-4">
       <div className="max-w-7xl mx-auto">
+        <LogisticsPromoBanner />
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-[#FFD700]">Panel de Vendedor</h1>

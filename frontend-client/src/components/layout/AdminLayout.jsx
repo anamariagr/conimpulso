@@ -17,6 +17,7 @@ import {
   Layout,
   Wallet,
   BookOpen,
+  Truck,
 } from 'lucide-react';
 
 const adminMenuItems = [
@@ -28,6 +29,7 @@ const adminMenuItems = [
   { name: 'Categorías', icon: Grid3X3, path: '/admin/categories' },
   { name: 'Saldo / Wallet', icon: Wallet, path: '/admin/wallet' },
   { name: 'Blog', icon: BookOpen, path: '/admin/blog' },
+  { name: 'Banner Logística', icon: Truck, path: '/admin/logistics-banner' },
   { name: 'Configuración', icon: Settings, path: '/admin/settings' },
 ];
 

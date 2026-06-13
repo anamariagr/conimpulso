@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Check, ChevronRight, ChevronLeft } from 'lucide-react';
+import { authService } from '../../services/api';
+import { useAuthStore } from '../../stores/authStore';
 
 const steps = [
   {
@@ -42,15 +44,14 @@ const steps = [
   },
   {
     id: 4,
-    title: '¿Realizas envíos?',
-    subtitle: '¿Cómo entregás tus productos?',
-    type: 'multiple',
-    skipIf: (answers) => ['buy'].includes(answers[1]), // Skip if user selected "only buy"
+    title: '¿Cómo realizas tus envíos?',
+    subtitle: 'Selecciona tu método de envío principal',
+    type: 'single',
+    skipIf: (answers) => ['buy'].includes(answers[1]),
     options: [
-      { value: 'local_pickup', label: 'Recogida local', icon: '📍' },
-      { value: 'courier', label: 'Courier propio', icon: '🚚' },
-      { value: 'logistics', label: 'Integración logística', icon: '📬' },
-      { value: 'digital', label: 'Entrega digital', icon: '💾' },
+      { value: 'local_pickup', label: 'Recogida en local', icon: '📍' },
+      { value: 'inter_bochica', label: 'Envío por Inter Bochica', icon: '🚚', extra: 'Calle 1F 35B-35' },
+      { value: 'other_logistics', label: 'Otra empresa logística', icon: '📬' },
     ],
   },
   {
@@ -79,8 +80,10 @@ const steps = [
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
+  const checkAuth = useAuthStore((state) => state.checkAuth);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const isBuyerOnly = answers[1] === 'buy';
 
@@ -128,10 +131,30 @@ export default function OnboardingPage() {
     if (currentStepIndex > 0) setCurrentStepIndex((prev) => prev - 1);
   };
 
-  const handleFinish = () => {
-    console.log('Onboarding completed with:', answers);
-    toast.success('¡Perfil configurado exitosamente!');
-    navigate('/dashboard');
+  const handleFinish = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+
+    // answers[1] maps directly to the backend `goal` values
+    const goal = answers[1];
+
+    try {
+      if (answers[1] !== 'buy' && answers[4]) {
+        localStorage.setItem('vendor_shipping', answers[4]);
+      }
+
+      await authService.completeOnboarding({ goal });
+      // Refresh user so the new role(s) are reflected across the app
+      await checkAuth();
+
+      toast.success('¡Perfil configurado exitosamente!');
+      navigate(goal === 'buy' ? '/products' : '/dashboard');
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || 'No se pudo guardar tu perfil. Intenta de nuevo.'
+      );
+      setIsSaving(false);
+    }
   };
 
   const canProceed = () => {
@@ -153,8 +176,12 @@ export default function OnboardingPage() {
             Tu cuenta ha sido configurada correctamente. Ahora puedes empezar a explorar y usar la plataforma.
           </p>
           <div className="flex flex-col gap-3">
-            <button onClick={handleFinish} className="btn-primary">
-              Ir al dashboard
+            <button onClick={handleFinish} disabled={isSaving} className="btn-primary disabled:opacity-50">
+              {isSaving
+                ? 'Guardando...'
+                : answers[1] === 'buy'
+                ? 'Explorar productos'
+                : 'Ir al dashboard'}
             </button>
             <button onClick={() => navigate('/')} className="btn-outline">
               Explorar la plataforma
@@ -207,6 +234,9 @@ export default function OnboardingPage() {
                 >
                   <span className="text-3xl mb-2 block">{option.icon}</span>
                   <span className="font-medium">{option.label}</span>
+                  {option.extra && (
+                    <span className="block text-xs text-gray-500 mt-1">{option.extra}</span>
+                  )}
                   {isSelected && (
                     <Check className="w-5 h-5 text-accent absolute top-3 right-3" />
                   )}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://laravel-production-de1c.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/storage/:path*",
+      "destination": "https://laravel-production-de1c.up.railway.app/storage/:path*"
+    },
+    {
+      "source": "/((?!api/|storage/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

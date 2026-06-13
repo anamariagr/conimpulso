@@ -60,6 +60,64 @@ class AuthController extends Controller
         ], 201);
     }
 
+    /**
+     * Complete onboarding: assign role(s) based on the selected goal.
+     *
+     * goal options:
+     *   sell_products -> vendor
+     *   sell_services -> advisor
+     *   both          -> vendor + advisor
+     *   buy           -> client
+     */
+    public function completeOnboarding(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'goal' => ['required', 'string', 'in:sell_products,sell_services,both,buy'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $rolesByGoal = [
+            'sell_products' => ['vendor'],
+            'sell_services' => ['advisor'],
+            'both'          => ['vendor', 'advisor'],
+            'buy'           => ['client'],
+        ];
+
+        $roles = $rolesByGoal[$request->goal];
+
+        $user = $request->user();
+        $user->syncRoles($roles);
+
+        if ($user->status === 'pending') {
+            $user->update(['status' => 'active']);
+        }
+
+        $user->load('roles');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Onboarding completed successfully',
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'avatar' => $user->avatar,
+                    'status' => $user->status,
+                    'roles' => $user->getRoleNames(),
+                ],
+            ],
+        ]);
+    }
+
     public function login(Request $request): JsonResponse
     {
         $key = 'login_attempt:' . $request->ip();

@@ -9,7 +9,6 @@ const api = axios.create({
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   },
-  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
@@ -38,6 +37,7 @@ export const authService = {
   googleAuth: (credential) => api.post('/auth/google', { credential }),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
+  completeOnboarding: (data) => api.post('/auth/onboarding', data),
   refresh: () => api.post('/auth/refresh'),
   resetPassword: (data) => api.post('/auth/password/reset-link', data),
 };
