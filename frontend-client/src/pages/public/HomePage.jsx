@@ -98,7 +98,11 @@ const HERO_CONTENT = {
 
 const HeroSection = ({ heroBanner }) => {
   const { isAuthenticated, isVendor } = useAuthStore();
-  const youtubeEmbed = heroBanner?.media_type === 'video' ? getYouTubeEmbedUrl(heroBanner?.media_url) : null;
+  const videoId = heroBanner?.media_type === 'video' ? getYouTubeVideoId(heroBanner?.media_url) : null;
+  const youtubeEmbed = videoId ? getYouTubeEmbedUrl(heroBanner?.media_url) : null;
+  const youtubeThumbnail = videoId
+    ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+    : null;
   const iframeRef = useRef(null);
 
   const roleKey = !isAuthenticated ? 'guest' : isVendor() ? 'vendor' : 'buyer';
@@ -129,28 +133,39 @@ const HeroSection = ({ heroBanner }) => {
   }, [youtubeEmbed]);
 
   return (
-  <section className="relative bg-primary min-h-[600px] flex items-center">
+  <section className="relative bg-primary min-h-[500px] md:min-h-[600px] flex items-center">
     <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/50 to-transparent z-10"></div>
+      {/* Overlay gradient — más opaco en mobile para que el texto se lea mejor */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/70 to-primary/40 md:from-primary/80 md:via-primary/50 md:to-transparent z-10" />
+
       {heroBanner?.media_url ? (
         youtubeEmbed ? (
-          <iframe
-            ref={iframeRef}
-            src={youtubeEmbed}
-            title="banner"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              /* Técnica 16:9 full-cover: el iframe siempre cubre el contenedor */
-              width: 'max(100%, 177.78vh)',
-              height: 'max(56.25vw, 100%)',
-              transform: 'translate(-50%, -50%)',
-              border: 'none',
-              pointerEvents: 'none',
-            }}
-          />
+          <>
+            {/* Mobile: thumbnail del video (YouTube bloquea autoplay en iframe en iOS/Android) */}
+            <img
+              src={youtubeThumbnail}
+              alt=""
+              className="md:hidden absolute inset-0 w-full h-full object-cover object-center"
+            />
+            {/* Desktop: iframe con video en loop */}
+            <iframe
+              ref={iframeRef}
+              src={youtubeEmbed}
+              title="banner"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              className="hidden md:block"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: 'max(100%, 177.78vh)',
+                height: 'max(56.25vw, 100%)',
+                transform: 'translate(-50%, -50%)',
+                border: 'none',
+                pointerEvents: 'none',
+              }}
+            />
+          </>
         ) : heroBanner.media_type === 'video' ? (
           <video src={heroBanner.media_url} autoPlay muted loop playsInline className="w-full h-full object-cover" />
         ) : (
@@ -160,18 +175,19 @@ const HeroSection = ({ heroBanner }) => {
         <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1920&q=80" alt="" className="w-full h-full object-cover" />
       )}
     </div>
-    <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+
+    <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-16 md:py-20">
       <div className="max-w-2xl">
         {content.badge && (
-          <div className="inline-flex items-center gap-2 bg-accent/20 text-yellow-300 border border-accent/30 rounded-full px-4 py-1.5 text-sm font-medium mb-5">
+          <div className="inline-flex items-center gap-2 bg-accent/20 text-yellow-300 border border-accent/30 rounded-full px-3 py-1 text-xs md:px-4 md:py-1.5 md:text-sm font-medium mb-4 md:mb-5">
             {content.badge}
           </div>
         )}
-        <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
           {title} {accent && <span className="text-accent">{accent}</span>}
         </h1>
-        <p className="text-xl text-gray-300 mb-8">{description}</p>
-        <div className="flex flex-col sm:flex-row gap-4">
+        <p className="text-base md:text-xl text-gray-300 mb-6 md:mb-8 leading-relaxed">{description}</p>
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
           {heroBanner?.link_url ? (
             <a href={heroBanner.link_url} className="btn-primary flex items-center justify-center gap-2">
               {heroBanner.link_text || content.cta.label} <ArrowRight className="w-5 h-5" />
