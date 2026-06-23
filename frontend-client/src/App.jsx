@@ -45,6 +45,8 @@ import CreateProductPage from './pages/dashboard/CreateProductPage';
 import BlogPage from './pages/public/BlogPage';
 import BlogPostPage from './pages/public/BlogPostPage';
 import ProductDetailPage from './pages/public/ProductDetailPage';
+import PrivacyPage from './pages/public/PrivacyPage';
+import TermsPage from './pages/public/TermsPage';
 
 // Admin pages
 import HomepageEditorPage from './pages/admin/HomepageEditorPage';
@@ -93,7 +95,7 @@ function App() {
   }, [checkAuth]);
 
   return (
-    <GoogleOAuthProvider clientId="472346209051-eebcrpga61ivpo9m2m5kv1ikhflemm7u.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "472346209051-eebcrpga61ivpo9m2m5kv1ikhflemm7u.apps.googleusercontent.com"}>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
@@ -107,6 +109,8 @@ function App() {
             <Route path="stores" element={<StoresPage />} />
             <Route path="blog" element={<BlogPage />} />
             <Route path="blog/:slug" element={<BlogPostPage />} />
+            <Route path="privacidad" element={<PrivacyPage />} />
+            <Route path="terminos" element={<TermsPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
             <Route
