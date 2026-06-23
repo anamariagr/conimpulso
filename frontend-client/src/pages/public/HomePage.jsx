@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, Truck, Users, Star, Zap, Globe, Mail, ShoppingBag, MapPin, CheckCircle, X, Store } from 'lucide-react';
 import api from '../../services/api';
@@ -43,11 +43,30 @@ const getShopLogo = (shop) => {
 };
 
 // Section renderers
-const getYouTubeEmbedUrl = (url) => {
+const getYouTubeVideoId = (url) => {
   if (!url) return null;
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-  if (!match) return null;
-  return `https://www.youtube.com/embed/${match[1]}?autoplay=1&mute=1&loop=1&playlist=${match[1]}&controls=0&modestbranding=1&showinfo=0`;
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/);
+  return match ? match[1] : null;
+};
+
+const getYouTubeEmbedUrl = (url) => {
+  const videoId = getYouTubeVideoId(url);
+  if (!videoId) return null;
+  const params = new URLSearchParams({
+    autoplay: '1',
+    mute: '1',
+    loop: '1',
+    playlist: videoId,
+    controls: '0',
+    modestbranding: '1',
+    rel: '0',
+    vq: 'hd1080',
+    hd: '1',
+    enablejsapi: '1',
+    iv_load_policy: '3',
+    disablekb: '1',
+  });
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 };
 
 const HERO_CONTENT = {
@@ -80,11 +99,11 @@ const HERO_CONTENT = {
 const HeroSection = ({ heroBanner }) => {
   const { isAuthenticated, isVendor } = useAuthStore();
   const youtubeEmbed = heroBanner?.media_type === 'video' ? getYouTubeEmbedUrl(heroBanner?.media_url) : null;
+  const iframeRef = useRef(null);
 
   const roleKey = !isAuthenticated ? 'guest' : isVendor() ? 'vendor' : 'buyer';
   const content = HERO_CONTENT[roleKey];
 
-  // Role-specific text from DB takes priority, then generic banner title, then hardcoded default
   const title = (roleKey === 'vendor' ? heroBanner?.vendor_title : heroBanner?.buyer_title)
     || heroBanner?.title
     || content.title;
@@ -93,6 +112,22 @@ const HeroSection = ({ heroBanner }) => {
     || heroBanner?.description
     || content.description;
 
+  // Force 1080p via postMessage after player loads
+  useEffect(() => {
+    if (!iframeRef.current || !youtubeEmbed) return;
+    const sendQuality = () => {
+      try {
+        iframeRef.current?.contentWindow?.postMessage(
+          JSON.stringify({ event: 'command', func: 'setPlaybackQuality', args: ['hd1080'] }),
+          'https://www.youtube.com'
+        );
+      } catch (_) {}
+    };
+    const t1 = setTimeout(sendQuality, 1500);
+    const t2 = setTimeout(sendQuality, 4000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [youtubeEmbed]);
+
   return (
   <section className="relative bg-primary min-h-[600px] flex items-center">
     <div className="absolute inset-0 overflow-hidden">
@@ -100,14 +135,24 @@ const HeroSection = ({ heroBanner }) => {
       {heroBanner?.media_url ? (
         youtubeEmbed ? (
           <iframe
+            ref={iframeRef}
             src={youtubeEmbed}
-            className="absolute inset-0 w-full h-full"
-            style={{ border: 'none', pointerEvents: 'none', transform: 'scale(1.1)' }}
-            allow="autoplay; muted"
             title="banner"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              /* Técnica 16:9 full-cover: el iframe siempre cubre el contenedor */
+              width: 'max(100%, 177.78vh)',
+              height: 'max(56.25vw, 100%)',
+              transform: 'translate(-50%, -50%)',
+              border: 'none',
+              pointerEvents: 'none',
+            }}
           />
         ) : heroBanner.media_type === 'video' ? (
-          <video src={heroBanner.media_url} autoPlay muted loop className="w-full h-full object-cover" />
+          <video src={heroBanner.media_url} autoPlay muted loop playsInline className="w-full h-full object-cover" />
         ) : (
           <img src={heroBanner.media_url} alt={title} className="w-full h-full object-cover" />
         )
