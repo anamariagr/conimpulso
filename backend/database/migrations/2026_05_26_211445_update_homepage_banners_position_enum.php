@@ -8,8 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Update the position enum to include floating banner positions
-        DB::statement("ALTER TABLE homepage_banners MODIFY COLUMN position ENUM('hero', 'floating_left', 'floating_right', 'sidebar', 'between_sections', 'popup') DEFAULT 'hero'");
+        if (Schema::hasTable('homepage_banners')) {
+            DB::statement("ALTER TABLE homepage_banners MODIFY COLUMN position ENUM('hero', 'floating_left', 'floating_right', 'sidebar', 'between_sections', 'popup') DEFAULT 'hero'");
+        }
     }
 
     public function down(): void

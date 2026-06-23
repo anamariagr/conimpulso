@@ -226,12 +226,7 @@ export default function HomepageEditorPage() {
     formData.append('type', bannerForm.media_type);
 
     try {
-      const token = localStorage.getItem('token');
       const response = await api.post('/media/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
         onUploadProgress: (progressEvent) => {
           const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(pct);

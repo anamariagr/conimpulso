@@ -45,7 +45,7 @@ class HomepageController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'media_type' => 'required|in:image,video,gif',
-            'media_url' => 'required|url',
+            'media_url' => 'nullable|string|max:2048',
             'position' => 'required|in:hero,floating_left,floating_right,sidebar,between_sections,popup',
             'is_active' => 'boolean',
         ]);
