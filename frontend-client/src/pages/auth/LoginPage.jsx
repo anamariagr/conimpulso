@@ -3,11 +3,97 @@ import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+
+const RULES = {
+  email: (v) => {
+    if (!v) return 'El correo electrónico es requerido';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())) return 'Ingresa un correo electrónico válido';
+    return '';
+  },
+  password: (v) => {
+    if (!v) return 'La contraseña es requerida';
+    if (v.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
+    return '';
+  },
+};
+
+function FieldError({ msg }) {
+  if (!msg) return null;
+  return (
+    <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1.5">
+      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+      {msg}
+    </p>
+  );
+}
+
+function inputClass(error, touched, value) {
+  if (!touched || !value) return 'input-field pl-12 pr-10 py-3 rounded-lg border border-gray-300 transition-all';
+  if (error) return 'input-field pl-12 pr-10 py-3 rounded-lg border-2 border-red-400 bg-red-50 ring-1 ring-red-200 transition-all';
+  return 'input-field pl-12 pr-10 py-3 rounded-lg border-2 border-green-400 bg-green-50 ring-1 ring-green-200 transition-all';
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, loginWithGoogle, isLoading, isSuperAdmin } = useAuthStore();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({ email: '', password: '' });
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const [serverError, setServerError] = useState('');
+
+  const validate = (data = formData) => {
+    const e = {};
+    Object.keys(RULES).forEach((k) => { e[k] = RULES[k](data[k]); });
+    return e;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const next = { ...formData, [name]: value };
+    setFormData(next);
+    setServerError('');
+    if (touched[name]) {
+      setErrors((prev) => ({ ...prev, [name]: RULES[name](value) }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: RULES[name](value) }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setServerError('');
+    const allTouched = { email: true, password: true };
+    setTouched(allTouched);
+    const errs = validate();
+    setErrors(errs);
+    if (Object.values(errs).some(Boolean)) return;
+
+    const result = await login(formData.email, formData.password);
+    if (result.success) {
+      toast.success('Bienvenido de vuelta');
+      navigate(isSuperAdmin() ? '/admin' : '/dashboard');
+    } else {
+      const msg = result.message || '';
+      if (/invalid|credential|incorrect/i.test(msg)) {
+        setServerError('Correo o contraseña incorrectos.');
+      } else if (/not found|not exist/i.test(msg)) {
+        setServerError('No existe una cuenta con este correo.');
+      } else if (/blocked|disabled|inactive|suspend/i.test(msg)) {
+        setServerError('Tu cuenta está desactivada. Contacta al soporte.');
+      } else if (/Network Error/i.test(msg)) {
+        setServerError('Error de conexión. Verifica tu red e intenta nuevamente.');
+      } else {
+        setServerError(msg || 'Ocurrió un error. Intenta nuevamente.');
+      }
+    }
+  };
 
   const handleGoogleSuccess = async (credentialResponse) => {
     const result = await loginWithGoogle(credentialResponse.credential);
@@ -18,82 +104,8 @@ export default function LoginPage() {
       toast.error(result.message || 'Error al iniciar sesión con Google');
     }
   };
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [fieldErrors, setFieldErrors] = useState({
-    email: '',
-    password: '',
-  });
-  const [serverError, setServerError] = useState('');
 
-  const validateForm = () => {
-    const errors = { email: '', password: '' };
-    let isValid = true;
-
-    if (!formData.email) {
-      errors.email = 'El correo electrónico es requerido';
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Ingresa un correo electrónico válido';
-      isValid = false;
-    }
-
-    if (!formData.password) {
-      errors.password = 'La contraseña es requerida';
-      isValid = false;
-    } else if (formData.password.length < 4) {
-      errors.password = 'La contraseña debe tener al menos 4 caracteres';
-      isValid = false;
-    }
-
-    setFieldErrors(errors);
-    return isValid;
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Clear field error when user types
-    setFieldErrors({ ...fieldErrors, [e.target.name]: '' });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setServerError('');
-
-    if (!validateForm()) {
-      return;
-    }
-
-    const result = await login(formData.email, formData.password);
-
-    if (result.success) {
-      toast.success('Bienvenido de vuelta');
-      // Check if user is super admin, redirect to admin
-      if (isSuperAdmin()) {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
-    } else {
-      const message = result.message || '';
-      if (message.toLowerCase().includes('invalid') || message.toLowerCase().includes('credential')) {
-        setServerError('Correo o contraseña incorrectos. Verifica tus datos e intenta nuevamente.');
-      } else if (message.toLowerCase().includes('not found') || message.toLowerCase().includes('not exist')) {
-        setServerError('No existe una cuenta con este correo electrónico.');
-      } else if (message.toLowerCase().includes('blocked') || message.toLowerCase().includes('disabled') || message.toLowerCase().includes('inactive')) {
-        setServerError('Tu cuenta está desactivada. Contacta al soporte.');
-      } else if (message.toLowerCase().includes('verify')) {
-        setServerError('Por favor verifica tu correo electrónico antes de iniciar sesión.');
-      } else if (message.includes('Network Error')) {
-        setServerError('Error de conexión. Verifica tu red e intenta nuevamente.');
-      } else {
-        setServerError(message || 'Ocurrió un error inesperado. Intenta nuevamente.');
-      }
-    }
-  };
+  const isFieldOk = (name) => touched[name] && !errors[name] && formData[name];
 
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4">
@@ -103,77 +115,69 @@ export default function LoginPage() {
           <p className="text-text-secondary">Bienvenido de nuevo a ConImpulso</p>
         </div>
 
-        {/* Error Alert */}
         {serverError && (
-          <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-xl flex items-start gap-3 shadow-sm">
-            <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-red-700 font-bold text-lg">Error de autenticación</p>
-              <p className="text-red-600 text-sm mt-1">{serverError}</p>
-            </div>
+          <div className="mb-5 p-4 bg-red-50 border border-red-300 rounded-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-red-700 text-sm font-medium">{serverError}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+          {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-primary mb-2">Correo electrónico</label>
+            <label className="block text-sm font-medium text-primary mb-1.5">
+              Correo electrónico
+            </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-secondary" />
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`input-field pl-12 pr-4 py-3 rounded-lg transition-all ${
-                  fieldErrors.email
-                    ? 'border-2 border-red-500 bg-red-50 ring-2 ring-red-200'
-                    : 'border border-gray-300'
-                }`}
+                onBlur={handleBlur}
+                autoComplete="email"
                 placeholder="tu@correo.com"
+                className={inputClass(errors.email, touched.email, formData.email)}
               />
+              {isFieldOk('email') && (
+                <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+              )}
             </div>
-            {fieldErrors.email && (
-              <p className="mt-2 text-sm text-red-600 flex items-center gap-2 bg-red-50 px-3 py-2 rounded-lg border border-red-200">
-                <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                {fieldErrors.email}
-              </p>
-            )}
+            <FieldError msg={errors.email} />
           </div>
 
+          {/* Contraseña */}
           <div>
-            <label className="block text-sm font-medium text-primary mb-2">Contraseña</label>
+            <label className="block text-sm font-medium text-primary mb-1.5">
+              Contraseña
+            </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-secondary" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`input-field pl-12 pr-12 py-3 rounded-lg transition-all ${
-                  fieldErrors.password
-                    ? 'border-2 border-red-500 bg-red-50 ring-2 ring-red-200'
-                    : 'border border-gray-300'
-                }`}
+                onBlur={handleBlur}
+                autoComplete="current-password"
                 placeholder="••••••••"
+                className={inputClass(errors.password, touched.password, formData.password)}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
+                tabIndex={-1}
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {fieldErrors.password && (
-              <p className="mt-2 text-sm text-red-600 flex items-center gap-2 bg-red-50 px-3 py-2 rounded-lg border border-red-200">
-                <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                {fieldErrors.password}
-              </p>
-            )}
+            <FieldError msg={errors.password} />
           </div>
 
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" className="rounded border-gray-300 text-accent focus:ring-accent" />
               <span className="text-sm text-text-secondary">Recordarme</span>
             </label>
@@ -185,16 +189,17 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="btn-primary w-full py-3 text-base font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+            className="btn-primary w-full py-3 text-base font-semibold transition-all disabled:opacity-50"
           >
             {isLoading ? (
-              <span className="flex items-center justify-center gas justify-center gap-2">
-                <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
                 Verificando...
               </span>
-            ) : (
-              'Iniciar sesión'
-            )}
+            ) : 'Iniciar sesión'}
           </button>
         </form>
 
@@ -216,14 +221,12 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="mt-4 text-center">
-          <p className="text-text-secondary text-sm">
-            ¿No tienes cuenta?{' '}
-            <Link to="/register" className="text-accent hover:text-accent-hover font-medium">
-              Regístrate
-            </Link>
-          </p>
-        </div>
+        <p className="mt-4 text-center text-text-secondary text-sm">
+          ¿No tienes cuenta?{' '}
+          <Link to="/register" className="text-accent hover:text-accent-hover font-medium">
+            Regístrate
+          </Link>
+        </p>
       </div>
     </div>
   );

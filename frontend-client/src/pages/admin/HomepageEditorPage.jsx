@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { useSiteStore } from '../../stores/siteStore';
 
 const bannerSlots = [
   { id: 'hero', label: 'Hero Principal' },
@@ -38,10 +39,17 @@ const layoutOptions = [
 
 export default function HomepageEditorPage() {
   const navigate = useNavigate();
+  const { logoUrl, siteName, updateSettings } = useSiteStore();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('banners');
   const [previewMode, setPreviewMode] = useState(false);
+
+  // Logo states
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [pendingLogoUrl, setPendingLogoUrl] = useState(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoFileRef = useRef(null);
 
   // Data states
   const [banners, setBanners] = useState([]);
@@ -79,6 +87,57 @@ export default function HomepageEditorPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // ── Logo handlers ──────────────────────────────────────────────
+  const handleLogoFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Solo imágenes (PNG, JPG, SVG)'); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error('Máximo 2 MB'); return; }
+    setLogoPreview(URL.createObjectURL(file));
+    setUploadingLogo(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', 'image');
+      const res = await api.post('/media/upload', fd, {
+        headers: { 'Content-Type': undefined },
+      });
+      const url = res.data?.data?.url || res.data?.url;
+      if (!url) throw new Error();
+      setPendingLogoUrl(url);
+      toast.success('Logo cargado — guarda para aplicar');
+    } catch {
+      toast.error('Error al subir el logo');
+      setLogoPreview(null);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleSaveLogo = async () => {
+    if (pendingLogoUrl === null) return;
+    try {
+      await updateSettings({ logo_url: pendingLogoUrl });
+      toast.success('Logo guardado');
+      setPendingLogoUrl(null);
+      setLogoPreview(null);
+    } catch {
+      toast.error('Error al guardar el logo');
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    try {
+      await updateSettings({ logo_url: '' });
+      setLogoPreview(null);
+      setPendingLogoUrl(null);
+      toast.success('Logo eliminado');
+    } catch {
+      toast.error('Error al eliminar el logo');
+    }
+  };
+  // ──────────────────────────────────────────────────────────────
 
   const loadData = async () => {
     try {
@@ -227,10 +286,11 @@ export default function HomepageEditorPage() {
 
     try {
       const response = await api.post('/media/upload', formData, {
+        headers: { 'Content-Type': undefined },
         onUploadProgress: (progressEvent) => {
           const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(pct);
-        }
+        },
       });
 
       if (response.data.success) {
@@ -433,7 +493,7 @@ export default function HomepageEditorPage() {
         {/* Left Panel */}
         {!previewMode && (
           <div className="left-panel w-1/3 bg-white rounded-xl shadow-sm p-6">
-            <div className="flex gap-2 mb-6 border-b pb-2">
+            <div className="flex gap-2 mb-6 border-b pb-2 flex-wrap">
               <button
                 onClick={() => setActiveTab('banners')}
                 className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'banners' ? 'bg-accent text-primary' : 'text-gray-600 hover:bg-gray-100'}`}
@@ -445,6 +505,12 @@ export default function HomepageEditorPage() {
                 className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'sections' ? 'bg-accent text-primary' : 'text-gray-600 hover:bg-gray-100'}`}
               >
                 Secciones
+              </button>
+              <button
+                onClick={() => setActiveTab('logo')}
+                className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'logo' ? 'bg-accent text-primary' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                Logo
               </button>
             </div>
 
@@ -527,6 +593,93 @@ export default function HomepageEditorPage() {
                     {section.title && <p className="text-sm text-gray-600">{section.title}</p>}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Logo Tab */}
+            {activeTab === 'logo' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Logo de la plataforma</h3>
+                  <p className="text-sm text-gray-500 mb-4">Aparece en la barra de navegación y los sidebars del dashboard y admin.</p>
+
+                  {/* Vista previa */}
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-2">Vista previa</p>
+                    <div className="h-16 bg-primary rounded-xl flex items-center px-4 gap-3">
+                      {(logoPreview || logoUrl) ? (
+                        <img
+                          src={logoPreview || logoUrl}
+                          alt="Logo"
+                          className="h-9 max-w-[140px] object-contain"
+                        />
+                      ) : (
+                        <>
+                          <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span className="text-primary font-bold">C</span>
+                          </div>
+                          <span className="text-white font-bold">ConImpulso</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Upload */}
+                  <input
+                    ref={logoFileRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    className="hidden"
+                    id="logo-file-editor"
+                    onChange={handleLogoFile}
+                  />
+                  <label
+                    htmlFor="logo-file-editor"
+                    className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-dashed cursor-pointer text-sm font-medium transition-colors
+                      ${uploadingLogo
+                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'border-accent/50 text-accent hover:bg-accent/5 hover:border-accent'
+                      }`}
+                  >
+                    {uploadingLogo ? (
+                      <>
+                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Subiendo...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        {(logoPreview || logoUrl) ? 'Cambiar logo' : 'Subir logo'}
+                      </>
+                    )}
+                  </label>
+                  <p className="text-xs text-gray-400 mt-2 text-center">PNG, JPG o SVG · máx. 2 MB · fondo transparente recomendado</p>
+
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2 mt-4">
+                    {pendingLogoUrl !== null && (
+                      <button
+                        onClick={handleSaveLogo}
+                        className="w-full py-2.5 bg-accent text-primary font-semibold rounded-xl hover:bg-yellow-400 flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Guardar logo
+                      </button>
+                    )}
+                    {(logoUrl || logoPreview) && (
+                      <button
+                        onClick={handleRemoveLogo}
+                        className="w-full py-2 text-sm text-red-500 hover:text-red-700 flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                        Eliminar logo
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>

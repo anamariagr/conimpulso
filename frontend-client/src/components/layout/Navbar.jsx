@@ -1,14 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { useSiteStore } from '../../stores/siteStore';
 import { ShoppingBag, User, Menu, X, ChevronDown, LayoutDashboard, Settings, Wallet, LogOut, Shield } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 export default function Navbar() {
   const { isAuthenticated, user, logout, isSuperAdmin } = useAuthStore();
+  const { logoUrl, siteName, fetchSettings } = useSiteStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => { fetchSettings(); }, [fetchSettings]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -33,10 +37,16 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-              <span className="text-primary font-bold text-xl">C</span>
-            </div>
-            <span className="text-primary font-bold text-xl hidden sm:block">IMPULSO</span>
+            {logoUrl ? (
+              <img src={logoUrl} alt={siteName} className="h-10 w-auto max-w-[160px] object-contain" />
+            ) : (
+              <>
+                <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
+                  <span className="text-primary font-bold text-xl">C</span>
+                </div>
+                <span className="text-primary font-bold text-xl hidden sm:block">{siteName}</span>
+              </>
+            )}
           </Link>
 
           {/* Desktop Nav */}

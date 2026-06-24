@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
+import { useSiteStore } from '../../stores/siteStore';
 import {
   LayoutDashboard,
   Users,
@@ -35,6 +36,7 @@ const adminMenuItems = [
 
 export default function AdminLayout() {
   const { user, logout, isSuperAdmin } = useAuthStore();
+  const { logoUrl, siteName } = useSiteStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -74,13 +76,23 @@ export default function AdminLayout() {
         } bg-primary text-white flex flex-col transition-all duration-300`}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-gray-800 flex items-center justify-between">
-          <Link to="/admin" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-              <span className="text-primary font-bold text-xl">C</span>
-            </div>
-            {sidebarOpen && (
-              <span className="font-bold text-xl">ConImpulso Admin</span>
+        <div className="p-5 border-b border-gray-800 flex items-center justify-between">
+          <Link to="/admin" className="flex items-center gap-2 min-w-0">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={siteName}
+                className={`object-contain flex-shrink-0 ${sidebarOpen ? 'h-9 max-w-[130px]' : 'h-9 w-9'}`}
+              />
+            ) : (
+              <>
+                <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-primary font-bold text-xl">C</span>
+                </div>
+                {sidebarOpen && (
+                  <span className="font-bold text-lg">{siteName} Admin</span>
+                )}
+              </>
             )}
           </Link>
           <button

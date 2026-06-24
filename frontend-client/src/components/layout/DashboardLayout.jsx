@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { useSiteStore } from '../../stores/siteStore';
 import toast from 'react-hot-toast';
 import {
   LayoutDashboard,
@@ -23,6 +24,7 @@ import {
 
 export default function DashboardLayout() {
   const { user, logout, isVendor, isAdvisor, viewAsVendor, viewAsAdvisor, clearActiveRole, setActiveRole } = useAuthStore();
+  const { logoUrl, siteName } = useSiteStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -88,12 +90,22 @@ export default function DashboardLayout() {
       >
         {/* Logo */}
         <div className="p-4 border-b border-gray-800">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="text-primary font-bold text-xl">C</span>
-            </div>
-            {sidebarOpen && (
-              <span className="font-bold text-xl whitespace-nowrap">ConImpulso</span>
+          <Link to="/" className="flex items-center gap-2 min-w-0">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={siteName}
+                className={`object-contain flex-shrink-0 ${sidebarOpen ? 'h-9 max-w-[140px]' : 'h-9 w-9'}`}
+              />
+            ) : (
+              <>
+                <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-primary font-bold text-xl">C</span>
+                </div>
+                {sidebarOpen && (
+                  <span className="font-bold text-xl whitespace-nowrap">{siteName}</span>
+                )}
+              </>
             )}
           </Link>
         </div>

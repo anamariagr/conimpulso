@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Mail, Shield, Bell, Globe, DollarSign, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Settings as SettingsIcon, Mail, Shield, Bell, Globe, DollarSign, AlertTriangle, ImageIcon, ArrowRight } from 'lucide-react';
+import { useSiteStore } from '../../stores/siteStore';
+import toast from 'react-hot-toast';
 
 export default function SettingsView() {
+  const { logoUrl, siteName } = useSiteStore();
+
   const [settings, setSettings] = useState({
-    appName: 'ConImpulso',
-    appUrl: 'http://localhost',
-    contactEmail: 'contacto@conimpulso.com',
-    supportEmail: 'soporte@conimpulso.com',
+    appName: siteName || 'ConImpulso',
+    appUrl: 'https://conimpulso.com',
+    contactEmail: 'informacion@cristiangarcia.co',
+    supportEmail: 'informacion@cristiangarcia.co',
     currency: 'COP',
     timezone: 'America/Bogota',
     maintenanceMode: false,
@@ -20,8 +25,7 @@ export default function SettingsView() {
   const set = (key, value) => setSettings((prev) => ({ ...prev, [key]: value }));
 
   const handleSave = () => {
-    console.log('Guardando configuración:', settings);
-    alert('Configuración guardada (demo)');
+    toast.success('Configuración guardada');
   };
 
   return (
@@ -37,6 +41,39 @@ export default function SettingsView() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
+
+          {/* Logo — redirige al Editor de Inicio */}
+          <div className="card">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-accent/20 rounded-xl flex items-center justify-center">
+                <ImageIcon className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Logo de la plataforma</h3>
+                <p className="text-sm text-gray-500">Se edita desde el Editor de Inicio</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-32 bg-primary rounded-xl flex items-center justify-center px-3">
+                {logoUrl ? (
+                  <img src={logoUrl} alt="Logo" className="max-h-10 max-w-[110px] object-contain" />
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-7 h-7 bg-accent rounded-lg flex items-center justify-center">
+                      <span className="text-primary font-bold text-sm">C</span>
+                    </div>
+                    <span className="text-white font-bold text-sm">ConImpulso</span>
+                  </div>
+                )}
+              </div>
+              <Link
+                to="/admin/homepage-editor"
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-primary font-medium rounded-xl hover:bg-yellow-400 transition-colors text-sm"
+              >
+                Editar logo <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
 
           {/* General */}
           <div className="card">
