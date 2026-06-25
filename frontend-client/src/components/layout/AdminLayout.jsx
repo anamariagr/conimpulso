@@ -19,11 +19,13 @@ import {
   Wallet,
   BookOpen,
   Truck,
+  Images,
 } from 'lucide-react';
 
 const adminMenuItems = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
   { name: 'Editor de Inicio', icon: Layout, path: '/admin/homepage-editor' },
+  { name: 'Galería', icon: Images, path: '/admin/media' },
   { name: 'Usuarios', icon: Users, path: '/admin/users' },
   { name: 'Tiendas', icon: Store, path: '/admin/shops' },
   { name: 'Productos', icon: Package, path: '/admin/products' },
@@ -82,7 +84,7 @@ export default function AdminLayout() {
               <img
                 src={logoUrl}
                 alt={siteName}
-                className={`object-contain flex-shrink-0 ${sidebarOpen ? 'h-9 max-w-[130px]' : 'h-9 w-9'}`}
+                className={`object-contain flex-shrink-0 brightness-0 invert ${sidebarOpen ? 'h-9 max-w-[130px]' : 'h-9 w-9'}`}
               />
             ) : (
               <>

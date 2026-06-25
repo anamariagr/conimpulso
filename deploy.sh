@@ -24,6 +24,11 @@ docker-compose exec app php artisan migrate --force
 echo "Seeding database..."
 docker-compose exec app php artisan db:seed --force
 
+# Storage symlink and permissions
+echo "Setting up storage..."
+docker-compose exec app php artisan storage:link --force
+docker-compose exec app chmod -R 775 storage bootstrap/cache
+
 # Clear and cache
 echo "Optimizing..."
 docker-compose exec app php artisan config:cache

@@ -50,6 +50,10 @@ export default function HomepageEditorPage() {
   const [pendingLogoUrl, setPendingLogoUrl] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoFileRef = useRef(null);
+  const [logoHistory, setLogoHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ci_logo_history') || '[]'); }
+    catch { return []; }
+  });
 
   // Data states
   const [banners, setBanners] = useState([]);
@@ -106,6 +110,11 @@ export default function HomepageEditorPage() {
       const url = res.data?.data?.url || res.data?.url;
       if (!url) throw new Error();
       setPendingLogoUrl(url);
+      setLogoHistory(prev => {
+        const updated = [url, ...prev.filter(u => u !== url)].slice(0, 16);
+        localStorage.setItem('ci_logo_history', JSON.stringify(updated));
+        return updated;
+      });
       toast.success('Logo cargado — guarda para aplicar');
     } catch {
       toast.error('Error al subir el logo');

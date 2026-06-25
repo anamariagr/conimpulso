@@ -95,7 +95,7 @@ export default function DashboardLayout() {
               <img
                 src={logoUrl}
                 alt={siteName}
-                className={`object-contain flex-shrink-0 ${sidebarOpen ? 'h-9 max-w-[140px]' : 'h-9 w-9'}`}
+                className={`object-contain flex-shrink-0 brightness-0 invert ${sidebarOpen ? 'h-9 max-w-[140px]' : 'h-9 w-9'}`}
               />
             ) : (
               <>

@@ -59,6 +59,7 @@ import SettingsView from './pages/admin/SettingsView';
 import WalletView from './pages/admin/WalletView';
 import BlogView from './pages/admin/BlogView';
 import LogisticsBannerView from './pages/admin/LogisticsBannerView';
+import MediaLibraryPage from './pages/admin/MediaLibraryPage';
 
 import './index.css';
 
@@ -230,6 +231,7 @@ function App() {
             <Route path="wallet" element={<WalletView />} />
             <Route path="blog" element={<BlogView />} />
             <Route path="logistics-banner" element={<LogisticsBannerView />} />
+            <Route path="media" element={<MediaLibraryPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

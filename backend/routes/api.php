@@ -25,6 +25,10 @@ use App\Modules\Blog\Http\Controllers\Api\BlogController;
 |--------------------------------------------------------------------------
 */
 
+// Public file serving — sin auth, permite que el browser cargue imágenes directamente
+Route::get('/files/{folder}/{filename}', [MediaUploadController::class, 'serve'])
+    ->where('filename', '.*');
+
 Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
@@ -150,7 +154,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/services/{id}', [ServiceController::class, 'update']);
     Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
 
-    // Media Upload
+    // Media
+    Route::get('/media/list', [MediaUploadController::class, 'index']);
     Route::post('/media/upload', [MediaUploadController::class, 'upload']);
     Route::delete('/media/delete', [MediaUploadController::class, 'delete']);
 

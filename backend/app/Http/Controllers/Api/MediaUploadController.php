@@ -49,10 +49,10 @@ class MediaUploadController extends Controller
         $path = 'uploads/' . $type . 's/' . $filename;
 
         // Store the file
-        $url = Storage::putFileAs('public/' . 'uploads/' . $type . 's', $file, $filename);
+        Storage::putFileAs('public/uploads/' . $type . 's', $file, $filename);
 
-        // Get the public URL
-        $publicUrl = url('/storage/' . $path);
+        // Use the API file-serve route — works without storage:link and without nginx config
+        $publicUrl = url('/api/files/' . $type . 's/' . $filename);
 
         return response()->json([
             'success' => true,
@@ -67,6 +67,48 @@ class MediaUploadController extends Controller
         ], 201);
     }
 
+    public function index(): JsonResponse
+    {
+        $folders = ['images', 'videos', 'gifs', 'documents'];
+        $items = [];
+
+        foreach ($folders as $folder) {
+            $dir = 'public/uploads/' . $folder;
+            if (!Storage::exists($dir)) continue;
+
+            foreach (Storage::files($dir) as $file) {
+                $filename = basename($file);
+                $items[] = [
+                    'url'      => url('/api/files/' . $folder . '/' . $filename),
+                    'filename' => $filename,
+                    'folder'   => $folder,
+                    'size'     => Storage::size($file),
+                    'modified' => Storage::lastModified($file),
+                ];
+            }
+        }
+
+        usort($items, fn($a, $b) => $b['modified'] - $a['modified']);
+
+        return response()->json(['data' => $items]);
+    }
+
+    public function serve(string $folder, string $filename): \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
+    {
+        $path = 'public/uploads/' . $folder . '/' . $filename;
+
+        if (!Storage::exists($path)) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+
+        $file = Storage::get($path);
+        $mime = Storage::mimeType($path);
+
+        return response($file, 200)
+            ->header('Content-Type', $mime)
+            ->header('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+
     public function delete(Request $request): JsonResponse
     {
         $path = $request->input('path');
@@ -78,10 +120,14 @@ class MediaUploadController extends Controller
             ], 422);
         }
 
-        // Extract path from full URL if needed
-        if (str_contains($path, 'storage/')) {
-            $path = str_replace(url('/storage/'), '', $path);
-            $path = 'public/' . $path;
+        // Convertir URL completa a path de storage
+        if (str_contains($path, '/api/files/')) {
+            // Nuevo formato: http://host/api/files/{folder}/{filename}
+            preg_match('#/api/files/([^/]+)/(.+)$#', $path, $m);
+            $path = isset($m[1], $m[2]) ? 'public/uploads/' . $m[1] . '/' . $m[2] : '';
+        } elseif (str_contains($path, '/storage/')) {
+            // Formato viejo: http://host/storage/uploads/...
+            $path = 'public/' . preg_replace('#^.*/storage/#', '', $path);
         }
 
         if (Storage::exists($path)) {

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useSiteStore } from '../../stores/siteStore';
 
 export default function Footer() {
+  const { logoUrl, siteName } = useSiteStore();
   return (
     <footer className="bg-primary text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -8,10 +10,16 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-                <span className="text-primary font-bold text-xl">C</span>
-              </div>
-              <span className="font-bold text-xl">ConImpulso</span>
+              {logoUrl ? (
+                <img src={logoUrl} alt={siteName} className="h-10 max-w-[160px] object-contain brightness-0 invert" />
+              ) : (
+                <>
+                  <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-primary font-bold text-lg">C</span>
+                  </div>
+                  <span className="font-bold text-xl text-white">{siteName}</span>
+                </>
+              )}
             </div>
             <p className="text-gray-400 text-sm">
               El marketplace de productores directos, fabricantes y artesanos.
