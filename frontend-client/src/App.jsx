@@ -96,7 +96,7 @@ function App() {
   }, [checkAuth]);
 
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "472346209051-eebcrpga61ivpo9m2m5kv1ikhflemm7u.apps.googleusercontent.com"}>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "442205534139-asui66fntjnan2ali4khsf9n7bc2r4er.apps.googleusercontent.com"}>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
