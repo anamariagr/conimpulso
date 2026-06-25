@@ -208,8 +208,13 @@ export default function RegisterPage() {
   const handleGoogleSuccess = async (credentialResponse) => {
     const result = await loginWithGoogle(credentialResponse.credential);
     if (result.success) {
-      toast.success('Cuenta creada con Google');
-      navigate('/onboarding');
+      if (result.isNew) {
+        toast.success('Cuenta creada — cuéntanos quién eres');
+        navigate('/onboarding');
+      } else {
+        toast.success('Bienvenido de nuevo');
+        navigate('/dashboard');
+      }
     } else {
       toast.error(result.message || 'Error al registrarse con Google');
     }

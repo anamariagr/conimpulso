@@ -98,8 +98,13 @@ export default function LoginPage() {
   const handleGoogleSuccess = async (credentialResponse) => {
     const result = await loginWithGoogle(credentialResponse.credential);
     if (result.success) {
-      toast.success('Bienvenido');
-      navigate(isSuperAdmin() ? '/admin' : '/dashboard');
+      if (result.isNew) {
+        toast.success('Bienvenido — cuéntanos quién eres');
+        navigate('/onboarding');
+      } else {
+        toast.success('Bienvenido de nuevo');
+        navigate(isSuperAdmin() ? '/admin' : '/dashboard');
+      }
     } else {
       toast.error(result.message || 'Error al iniciar sesión con Google');
     }

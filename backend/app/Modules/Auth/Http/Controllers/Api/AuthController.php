@@ -351,10 +351,10 @@ class AuthController extends Controller
         }
 
         // Find or create user
+        $isNew = false;
         $user = User::where('google_id', $googleId)->orWhere('email', $email)->first();
 
         if ($user) {
-            // Link google_id if not set
             if (!$user->google_id) {
                 $user->update(['google_id' => $googleId]);
             }
@@ -362,6 +362,7 @@ class AuthController extends Controller
                 return response()->json(['success' => false, 'message' => 'Cuenta suspendida'], 403);
             }
         } else {
+            $isNew = true;
             $user = User::create([
                 'name'              => $googleUser['name'] ?? $email,
                 'email'             => $email,
@@ -390,6 +391,7 @@ class AuthController extends Controller
                 ],
                 'token'      => $token,
                 'token_type' => 'Bearer',
+                'is_new'     => $isNew,
             ],
         ]);
     }

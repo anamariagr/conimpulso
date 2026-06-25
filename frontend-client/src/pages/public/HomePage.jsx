@@ -116,10 +116,10 @@ const HeroSection = ({ heroBanner }) => {
     || heroBanner?.description
     || content.description;
 
-  // Force 1080p via postMessage after player loads
+  // Force 1080p: escucha los eventos reales del player y responde cuando está listo
   useEffect(() => {
-    if (!iframeRef.current || !youtubeEmbed) return;
-    const sendQuality = () => {
+    if (!youtubeEmbed) return;
+    const forceQuality = () => {
       try {
         iframeRef.current?.contentWindow?.postMessage(
           JSON.stringify({ event: 'command', func: 'setPlaybackQuality', args: ['hd1080'] }),
@@ -127,9 +127,18 @@ const HeroSection = ({ heroBanner }) => {
         );
       } catch (_) {}
     };
-    const t1 = setTimeout(sendQuality, 1500);
-    const t2 = setTimeout(sendQuality, 4000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const onMessage = (e) => {
+      if (e.origin !== 'https://www.youtube.com') return;
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        // El player avisa cuando está listo o cambia de estado
+        if (data.event === 'onReady' || data.event === 'onStateChange') forceQuality();
+      } catch (_) {}
+    };
+    window.addEventListener('message', onMessage);
+    // Fallback por si el player no manda eventos (algunos navegadores bloquean)
+    const t = setTimeout(forceQuality, 2000);
+    return () => { window.removeEventListener('message', onMessage); clearTimeout(t); };
   }, [youtubeEmbed]);
 
   return (
@@ -146,6 +155,12 @@ const HeroSection = ({ heroBanner }) => {
               src={youtubeThumbnail}
               alt=""
               className="md:hidden absolute inset-0 w-full h-full object-cover object-center"
+              onError={(e) => {
+                // maxresdefault no siempre existe — cae a hqdefault (480p)
+                if (e.target.src.includes('maxresdefault')) {
+                  e.target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                }
+              }}
             />
             {/* Desktop: iframe con video en loop */}
             <iframe
