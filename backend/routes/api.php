@@ -51,6 +51,7 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::post('/email/resend', [AuthController::class, 'resendVerification']);
+        Route::post('/onboarding', [AuthController::class, 'completeOnboarding']);
     });
 });
 
