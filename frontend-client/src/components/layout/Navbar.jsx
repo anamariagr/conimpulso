@@ -73,8 +73,8 @@ export default function Navbar() {
             </button>
 
             {isAuthenticated ? (
-              /* User Dropdown */
-              <div className="relative" ref={dropdownRef}>
+              /* User Dropdown — solo visible en desktop */
+              <div className="relative hidden md:block" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -228,6 +228,21 @@ export default function Navbar() {
 
               {isAuthenticated ? (
                 <>
+                  {/* Perfil del usuario — solo mobile */}
+                  <div className="flex items-center gap-3 px-4 py-3 mb-1 bg-gray-50 rounded-xl">
+                    <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <span className="text-primary font-bold">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-primary text-sm truncate">{user?.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    </div>
+                  </div>
+
                   <div className="border-t border-gray-100 my-2 pt-2">
                     {isSuperAdmin() ? (
                       <>
