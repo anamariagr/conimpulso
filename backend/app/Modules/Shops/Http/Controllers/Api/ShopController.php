@@ -7,6 +7,7 @@ use App\Modules\Shops\Models\Shop;
 use App\Modules\Shops\Models\Category;
 use App\Modules\Shops\Models\ShopReview;
 use App\Modules\Blog\Services\BlogPostGeneratorService;
+use App\Modules\Blog\Models\BlogPost;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -232,6 +233,13 @@ class ShopController extends Controller
             }
         }
 
+        // Keep blog post cover_image in sync with the shop logo
+        if ($request->has('logo') && $shop->logo) {
+            BlogPost::where('related_id', $shop->id)
+                ->where('related_type', 'shop')
+                ->update(['cover_image' => $shop->logo]);
+        }
+
         $shop->load(['categories', 'tags']);
 
         return $this->successResponse($shop, 'Tienda actualizada exitosamente');
@@ -266,7 +274,7 @@ class ShopController extends Controller
     {
         $this->authorize('viewAny', Shop::class);
 
-        $query = Shop::with(['user', 'categories'])
+        $query = Shop::with(['user', 'categories', 'benefits'])
             ->withCount(['products', 'services']);
 
         // Filters
@@ -405,6 +413,17 @@ class ShopController extends Controller
         return $this->successResponse($shop, 'Tienda creada exitosamente', 201);
     }
 
+    public function adminShow(int $id): JsonResponse
+    {
+        $this->authorize('viewAny', Shop::class);
+
+        $shop = Shop::with(['user', 'categories'])
+            ->withCount(['products', 'services'])
+            ->findOrFail($id);
+
+        return $this->successResponse($shop);
+    }
+
     public function adminUpdate(Request $request, int $id): JsonResponse
     {
         $shop = Shop::findOrFail($id);
@@ -416,16 +435,55 @@ class ShopController extends Controller
             'city'        => ['sometimes', 'nullable', 'string', 'max:100'],
             'is_featured' => ['sometimes', 'boolean'],
             'is_verified' => ['sometimes', 'boolean'],
+            'logo'        => ['sometimes', 'nullable', 'string', 'max:500'],
+            'gallery'     => ['sometimes', 'nullable', 'array'],
         ]);
 
         if ($validator->fails()) {
             return $this->errorResponse('Validation failed', 422, $validator->errors());
         }
 
-        $shop->fill($request->only(['name', 'description', 'status', 'city', 'is_featured', 'is_verified']));
+        $shop->fill($validator->validated());
         $shop->save();
 
+        // Keep blog post cover_image in sync with the shop logo
+        if ($request->has('logo') && $shop->logo) {
+            BlogPost::where('related_id', $shop->id)
+                ->where('related_type', 'shop')
+                ->update(['cover_image' => $shop->logo]);
+        }
+
         return $this->successResponse($shop->fresh(), 'Tienda actualizada');
+    }
+
+    public function benefits(int $id): JsonResponse
+    {
+        $this->authorize('manageBenefits', Shop::class);
+
+        $shop = Shop::findOrFail($id);
+
+        return $this->successResponse(
+            $shop->benefits()->get(['feature_key', 'is_active', 'source', 'expires_at'])
+        );
+    }
+
+    public function toggleBenefit(Request $request, int $id, string $featureKey): JsonResponse
+    {
+        $this->authorize('manageBenefits', Shop::class);
+
+        $shop = Shop::findOrFail($id);
+
+        $benefit = \App\Modules\Shops\Models\ShopBenefit::firstOrNew([
+            'shop_id' => $shop->id,
+            'feature_key' => $featureKey,
+        ]);
+
+        $benefit->is_active = !$benefit->is_active;
+        $benefit->source = 'manual';
+        $benefit->granted_by = $request->user()->id;
+        $benefit->save();
+
+        return $this->successResponse($benefit, $benefit->is_active ? 'Beneficio activado' : 'Beneficio desactivado');
     }
 
     // Categories

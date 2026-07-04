@@ -33,6 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/shops/{id}/suspend', [ShopController::class, 'suspend']);
         Route::put('/shops/{id}/featured', [ShopController::class, 'toggleFeatured']);
         Route::put('/shops/{id}/verified', [ShopController::class, 'toggleVerified']);
+        Route::get('/shops/{id}/benefits', [ShopController::class, 'benefits']);
+        Route::put('/shops/{id}/benefits/{featureKey}/toggle', [ShopController::class, 'toggleBenefit']);
 
         // Categories management
         Route::get('/categories', [CategoryController::class, 'adminIndex']);

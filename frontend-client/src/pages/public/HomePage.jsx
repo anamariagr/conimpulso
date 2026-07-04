@@ -98,6 +98,7 @@ const HERO_CONTENT = {
 
 const HeroSection = ({ heroBanner }) => {
   const { isAuthenticated, isVendor } = useAuthStore();
+  const [hasShop, setHasShop] = useState(null); // null = loading, true/false = resolved
   const videoId = heroBanner?.media_type === 'video' ? getYouTubeVideoId(heroBanner?.media_url) : null;
   const youtubeEmbed = videoId ? getYouTubeEmbedUrl(heroBanner?.media_url) : null;
   const youtubeThumbnail = videoId
@@ -106,7 +107,23 @@ const HeroSection = ({ heroBanner }) => {
   const iframeRef = useRef(null);
 
   const roleKey = !isAuthenticated ? 'guest' : isVendor() ? 'vendor' : 'buyer';
-  const content = HERO_CONTENT[roleKey];
+
+  // Check if vendor already has a shop to show the right CTA
+  useEffect(() => {
+    if (roleKey !== 'vendor') return;
+    api.get('/my/shops')
+      .then((res) => setHasShop((res.data.data?.length ?? 0) > 0))
+      .catch(() => setHasShop(false));
+  }, [roleKey]);
+
+  const vendorCta = hasShop
+    ? { label: 'Crear nuevo producto', to: '/dashboard/products/new', icon: <ShoppingBag className="w-5 h-5" /> }
+    : { label: 'Crear mi tienda', to: '/dashboard/store/new', icon: <Store className="w-5 h-5" /> };
+
+  const content = {
+    ...HERO_CONTENT[roleKey],
+    ...(roleKey === 'vendor' && hasShop !== null ? { cta: vendorCta } : {}),
+  };
 
   const title = (roleKey === 'vendor' ? heroBanner?.vendor_title : heroBanner?.buyer_title)
     || heroBanner?.title

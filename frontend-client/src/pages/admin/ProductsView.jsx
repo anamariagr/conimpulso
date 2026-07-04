@@ -29,7 +29,7 @@ export default function ProductsView() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/products');
+      const response = await api.get('/admin/products');
       setProducts(response.data.data || []);
     } catch (error) {
       console.error('Error loading products:', error);
@@ -70,7 +70,7 @@ export default function ProductsView() {
       stock: product.stock || 0,
       category_id: product.category_id || '',
       shop_id: product.shop_id || '',
-      is_active: product.is_active !== false,
+      is_active: product.status === 'active',
       images: product.images || []
     });
     setShowModal(true);
@@ -91,9 +91,10 @@ export default function ProductsView() {
       if (formData.stock !== undefined) payload.stock = Number(formData.stock);
       if (formData.category_id) payload.category_id = formData.category_id;
       if (formData.shop_id) payload.shop_id = formData.shop_id;
+      payload.status = formData.is_active ? 'active' : 'inactive';
 
       if (editingProduct) {
-        await api.put(`/products/${editingProduct}`, payload);
+        await api.put(`/admin/products/${editingProduct}`, payload);
         toast.success('Producto actualizado');
       } else {
         await api.post('/products', payload);
@@ -110,7 +111,7 @@ export default function ProductsView() {
   const deleteProduct = async (id) => {
     if (!confirm('¿Eliminar este producto?')) return;
     try {
-      await api.delete(`/products/${id}`);
+      await api.delete(`/admin/products/${id}`);
       toast.success('Producto eliminado');
       loadProducts();
     } catch (error) {
@@ -249,7 +250,7 @@ export default function ProductsView() {
                               p.id === product.id ? { ...p, status: 'inactive' } : p
                             ));
                             try {
-                              await api.put(`/products/${product.id}`, { status: 'inactive' });
+                              await api.put(`/admin/products/${product.id}`, { status: 'inactive' });
                               toast.success('Producto desactivado');
                             } catch {
                               // Revert if failed
@@ -273,7 +274,7 @@ export default function ProductsView() {
                               p.id === product.id ? { ...p, status: 'active' } : p
                             ));
                             try {
-                              await api.put(`/products/${product.id}`, { status: 'active' });
+                              await api.put(`/admin/products/${product.id}`, { status: 'active' });
                               toast.success('Producto activado');
                             } catch {
                               // Revert if failed

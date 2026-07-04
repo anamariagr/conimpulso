@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
-import { Package, ShoppingBag, Target, TrendingUp, Users, Briefcase, Star, Eye, EyeOff } from 'lucide-react';
+import { useSiteStore } from '../../stores/siteStore';
+import { Package, ShoppingBag, Target, TrendingUp, Users, Briefcase, Star, Eye, EyeOff, Sparkles } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user, viewAsVendor, viewAsAdvisor, clearActiveRole, activeRole } = useAuthStore();
+  const { aiInsightsEnabled } = useSiteStore();
 
   const showVendorContent = viewAsVendor();
   const showAdvisorContent = viewAsAdvisor();
@@ -202,13 +204,15 @@ export default function DashboardPage() {
                   <Star className="w-5 h-5" />
                   Asesores
                 </Link>
-                <Link
-                  to="/ai"
-                  className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 text-primary rounded-lg hover:border-accent hover:text-accent transition"
-                >
-                  <Users className="w-5 h-5" />
-                  AI Insights
-                </Link>
+                {aiInsightsEnabled && (
+                  <Link
+                    to="/ai"
+                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 text-primary rounded-lg hover:border-accent hover:text-accent transition"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    AI Insights
+                  </Link>
+                )}
                 <Link
                   to="/dashboard/wallet"
                   className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 text-primary rounded-lg hover:border-accent hover:text-accent transition"
@@ -309,13 +313,15 @@ export default function DashboardPage() {
                   <Briefcase className="w-5 h-5" />
                   Billetera
                 </Link>
-                <Link
-                  to="/ai"
-                  className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 text-primary rounded-lg hover:border-accent hover:text-accent transition"
-                >
-                  <Users className="w-5 h-5" />
-                  AI Insights
-                </Link>
+                {aiInsightsEnabled && (
+                  <Link
+                    to="/ai"
+                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 text-primary rounded-lg hover:border-accent hover:text-accent transition"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    AI Insights
+                  </Link>
+                )}
                 <Link
                   to="/dashboard/b2b"
                   className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 text-primary rounded-lg hover:border-accent hover:text-accent transition"
@@ -353,18 +359,20 @@ export default function DashboardPage() {
                   </div>
                   <span className="text-primary font-semibold">3</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                      <Users className="w-5 h-5 text-accent" />
+                {aiInsightsEnabled && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-accent" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-primary">AI Insights</p>
+                        <p className="text-sm text-gray-500">Recomendaciones</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-primary">AI Insights</p>
-                      <p className="text-sm text-gray-500">Recomendaciones</p>
-                    </div>
+                    <Link to="/ai" className="text-accent font-semibold hover:underline text-sm">Ver</Link>
                   </div>
-                  <span className="text-accent font-semibold">Nuevos</span>
-                </div>
+                )}
               </div>
             </div>
           </div>

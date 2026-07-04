@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Store, Loader2, CheckCircle, Sparkles } from 'lucide-react';
 import api from '../../services/api';
 import ShopStoryForm from '../../components/forms/ShopStoryForm';
+import { SingleImageUploader, GalleryUploader } from '../../components/forms/ImageUploader';
+
+const GALLERY_MIN = 3;
 
 function storyComplete(s) {
   return !!(s.what_we_do && s.founded_year && s.why_started && s.location && s.differentiator);
@@ -16,38 +19,50 @@ export default function CreateShopPage() {
   const nextParam = searchParams.get('next');
 
   const [form, setForm] = useState({ name: '', description: '', city: '', phone: '', email: '' });
+  const [logo, setLogo] = useState('');
+  const [gallery, setGallery] = useState([]);
   const [story, setStory] = useState({});
   const [storyErrors, setStoryErrors] = useState({});
   const [shopId, setShopId] = useState(null);
-  const [loading, setLoading] = useState(isEditMode);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!isEditMode) return;
     api.get('/my/shops')
       .then((res) => {
         const shop = (res.data.data || [])[0];
-        if (shop) {
-          setShopId(shop.id);
-          setForm({ name: shop.name || '', description: shop.description || '', city: shop.city || '', phone: shop.phone || '', email: shop.email || '' });
-          if (shop.story) setStory(shop.story);
+        if (isEditMode) {
+          if (shop) {
+            setShopId(shop.id);
+            setForm({ name: shop.name || '', description: shop.description || '', city: shop.city || '', phone: shop.phone || '', email: shop.email || '' });
+            if (shop.logo) setLogo(shop.logo);
+            if (shop.gallery?.length) setGallery(shop.gallery);
+            if (shop.story) setStory(shop.story);
+          } else {
+            navigate('/dashboard/store/new', { replace: true });
+          }
+        } else if (shop) {
+          // Already has a shop (pending/active/rejected/suspended) — show its status instead of the create form
+          navigate('/dashboard/store', { replace: true });
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        if (isEditMode) navigate('/dashboard/store/new', { replace: true });
+      })
       .finally(() => setLoading(false));
-  }, [isEditMode]);
+  }, [isEditMode, navigate]);
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
   const validateStory = () => {
     const errs = {};
-    if (!story.what_we_do?.trim())    errs.what_we_do    = 'Requerido';
-    if (!story.founded_year?.trim())  errs.founded_year  = 'Requerido';
-    if (!story.why_started?.trim())   errs.why_started   = 'Requerido';
-    if (!story.location?.trim())      errs.location      = 'Requerido';
-    if (!story.differentiator?.trim())errs.differentiator= 'Requerido';
+    if (!story.what_we_do?.trim())     errs.what_we_do     = 'Requerido';
+    if (!story.founded_year?.trim())   errs.founded_year   = 'Requerido';
+    if (!story.why_started?.trim())    errs.why_started    = 'Requerido';
+    if (!story.location?.trim())       errs.location       = 'Requerido';
+    if (!story.differentiator?.trim()) errs.differentiator = 'Requerido';
     setStoryErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -55,16 +70,35 @@ export default function CreateShopPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) { setError('El nombre de la tienda es requerido'); return; }
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
+      setError('El correo electrónico de contacto no es válido');
+      return;
+    }
+    if (!logo) {
+      setError('El logo de la tienda es obligatorio');
+      document.getElementById('section-images')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    if (!isEditMode && gallery.length < GALLERY_MIN) {
+      setError(`Debes subir al menos ${GALLERY_MIN} imágenes de tus productos o tienda`);
+      document.getElementById('section-images')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
     if (!isEditMode && !validateStory()) {
       setError('Completa la historia de tu emprendimiento para continuar');
       document.getElementById('shop-story-section')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
+    if (isEditMode && !shopId) {
+      navigate('/dashboard/store/new', { replace: true });
+      return;
+    }
     setSaving(true);
     setError('');
     try {
-      const payload = isEditMode ? form : { ...form, story };
-      if (isEditMode && shopId) {
+      const base = { ...form, logo, gallery };
+      const payload = isEditMode ? base : { ...base, story };
+      if (isEditMode) {
         await api.put(`/shops/${shopId}`, payload);
       } else {
         await api.post('/shops', payload);
@@ -135,6 +169,27 @@ export default function CreateShopPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Ciudad</label>
             <input type="text" value={form.city} onChange={(e) => set('city', e.target.value)} className="input-field w-full" placeholder="Ej: Bogotá, Medellín, Cali..." />
           </div>
+        </div>
+
+        {/* Images */}
+        <div id="section-images" className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400">Imágenes</h2>
+
+          <SingleImageUploader
+            value={logo}
+            onChange={setLogo}
+            label="Logo de la tienda"
+            hint="Imagen cuadrada recomendada. Formatos: JPG, PNG, WebP. Máx. 5 MB."
+            required
+          />
+
+          <GalleryUploader
+            value={gallery}
+            onChange={setGallery}
+            min={GALLERY_MIN}
+            label="Fotos de productos o tienda"
+            required
+          />
         </div>
 
         {/* Contact */}

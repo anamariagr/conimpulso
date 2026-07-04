@@ -11,6 +11,32 @@ use Illuminate\Support\Facades\Storage;
 
 class MessagesController extends Controller
 {
+    public function adminIndex(Request $request): JsonResponse
+    {
+        $query = Message::with(['sender', 'receiver'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('subject', 'like', "%{$q}%")
+                    ->orWhere('body', 'like', "%{$q}%");
+            });
+        }
+
+        $messages = $query->paginate(30);
+
+        return response()->json([
+            'success' => true,
+            'data' => $messages->items(),
+            'meta' => [
+                'total' => $messages->total(),
+                'current_page' => $messages->currentPage(),
+                'last_page' => $messages->lastPage(),
+            ],
+        ]);
+    }
+
     public function inbox(Request $request): JsonResponse
     {
         $messages = Message::with('sender')

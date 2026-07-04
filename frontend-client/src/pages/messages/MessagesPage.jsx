@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MessageSquare, Send, Mail, AlertCircle, X, Search, CheckCircle, Inbox } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 export default function MessagesPage() {
-  const [activeTab, setActiveTab] = useState('inbox');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'sent' ? 'sent' : 'inbox');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCompose, setShowCompose] = useState(false);
@@ -12,15 +14,33 @@ export default function MessagesPage() {
   const [composeData, setComposeData] = useState({ receiver_id: '', subject: '', body: '' });
   const [availableUsers, setAvailableUsers] = useState([]);
   const [userSearch, setUserSearch] = useState('');
+  const [selectedRecipient, setSelectedRecipient] = useState(null);
+  const [showUserList, setShowUserList] = useState(false);
   const [myMessagingEnabled, setMyMessagingEnabled] = useState(true);
   const [myDisabledReason, setMyDisabledReason] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     fetchMessages();
     fetchMyInfo();
     // eslint-disable-next-line react-hooks/exhaust-deps
   }, [activeTab]);
+
+  // Auto-open a specific message when arriving via ?tab=sent&open=<id> (e.g. after a purchase request).
+  useEffect(() => {
+    const openId = searchParams.get('open');
+    if (!openId || messages.length === 0) return;
+    const found = messages.find((m) => String(m.id) === openId);
+    if (found) {
+      setSelectedMessage(found);
+      if (!found.is_read && activeTab === 'inbox') markAsRead(found.id);
+      searchParams.delete('open');
+      searchParams.delete('tab');
+      setSearchParams(searchParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
 
   const fetchMyInfo = async () => {
     try {
@@ -51,7 +71,7 @@ export default function MessagesPage() {
       }
 
       if (unreadRes.status === 'fulfilled') {
-        setUnreadCount(unreadRes.value.data.data?.unread_count || 0);
+        setUnreadCount(unreadRes.value.data?.data?.unread_count || 0);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -80,21 +100,40 @@ export default function MessagesPage() {
       return;
     }
     setShowCompose(true);
-    fetchAvailableUsers(userSearch);
+    setSelectedRecipient(null);
+    setUserSearch('');
+    setShowUserList(false);
+    fetchAvailableUsers('');
   };
 
   const handleSearchUsers = (e) => {
     const v = e.target.value;
     setUserSearch(v);
+    setShowUserList(true);
+    setSelectedRecipient(null);
+    setComposeData((d) => ({ ...d, receiver_id: '' }));
     fetchAvailableUsers(v);
+  };
+
+  const handleSelectRecipient = (user) => {
+    setSelectedRecipient(user);
+    setComposeData((d) => ({ ...d, receiver_id: user.id }));
+    setShowUserList(false);
+    setUserSearch('');
+  };
+
+  const handleClearRecipient = () => {
+    setSelectedRecipient(null);
+    setComposeData((d) => ({ ...d, receiver_id: '' }));
+    setUserSearch('');
+    setShowUserList(false);
   };
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!composeData.receiver_id) {
-      toast.error('Selecciona un destinatario');
-      return;
-    }
+    if (!composeData.receiver_id) { toast.error('Selecciona un destinatario'); return; }
+    if (sending) return;
+    setSending(true);
     try {
       const res = await api.post('/messages', composeData, {
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -103,12 +142,14 @@ export default function MessagesPage() {
         toast.success('Mensaje enviado');
         setShowCompose(false);
         setComposeData({ receiver_id: '', subject: '', body: '' });
+        setSelectedRecipient(null);
+        setUserSearch('');
         setActiveTab('sent');
-        fetchMessages();
       }
     } catch (error) {
-      const msg = error.response?.data?.message || 'Error al enviar mensaje';
-      toast.error(msg);
+      toast.error(error.response?.data?.message || 'Error al enviar mensaje');
+    } finally {
+      setSending(false);
     }
   };
 
@@ -299,41 +340,63 @@ export default function MessagesPage() {
             <form onSubmit={handleSend} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Para</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Buscar usuario por nombre o email..."
-                    value={userSearch}
-                    onChange={handleSearchUsers}
-                    className="input-field pl-10 w-full"
-                  />
-                </div>
-                {availableUsers.length > 0 ? (
-                  <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
-                    {availableUsers.map((user) => (
-                      <button
-                        key={user.id}
-                        type="button"
-                        onClick={() => setComposeData({ ...composeData, receiver_id: user.id })}
-                        className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-gray-50 ${
-                          composeData.receiver_id === user.id ? 'bg-accent/10' : ''
-                        }`}
-                      >
-                        <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                          {user.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                        </div>
-                      </button>
-                    ))}
+
+                {/* Selected recipient chip */}
+                {selectedRecipient ? (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-accent/10 border border-accent/30 rounded-lg">
+                    <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                      {selectedRecipient.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">{selectedRecipient.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{selectedRecipient.email}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleClearRecipient}
+                      className="p-1 hover:bg-accent/20 rounded-full flex-shrink-0"
+                      title="Cambiar destinatario"
+                    >
+                      <X className="w-4 h-4 text-gray-500" />
+                    </button>
                   </div>
                 ) : (
-                  <p className="mt-2 text-xs text-gray-500">
-                    {userSearch ? 'Sin resultados' : 'Cargando usuarios disponibles...'}
-                  </p>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Buscar usuario por nombre o email..."
+                      value={userSearch}
+                      onChange={handleSearchUsers}
+                      onFocus={() => { setShowUserList(true); if (!userSearch) fetchAvailableUsers(''); }}
+                      className="input-field pl-10 w-full"
+                      autoComplete="off"
+                    />
+                    {showUserList && (
+                      <div className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+                        {availableUsers.length > 0 ? availableUsers.map((user) => (
+                          <button
+                            key={user.id}
+                            type="button"
+                            onMouseDown={(e) => { e.preventDefault(); handleSelectRecipient(user); }}
+                            className="w-full px-3 py-2.5 text-left flex items-center gap-2 hover:bg-gray-50 border-b border-gray-50 last:border-0"
+                          >
+                            <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                            </div>
+                          </button>
+                        )) : (
+                          <p className="px-3 py-3 text-xs text-gray-500 text-center">
+                            {userSearch ? 'Sin resultados para esa búsqueda' : 'Cargando usuarios...'}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
               <div>
@@ -365,8 +428,8 @@ export default function MessagesPage() {
                 >
                   Cancelar
                 </button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400">
-                  Enviar
+                <button type="submit" disabled={sending} className="flex-1 px-4 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 disabled:opacity-60 disabled:cursor-not-allowed">
+                  {sending ? 'Enviando...' : 'Enviar'}
                 </button>
               </div>
             </form>

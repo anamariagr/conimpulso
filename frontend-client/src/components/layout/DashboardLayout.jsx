@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useSiteStore } from '../../stores/siteStore';
+import { authService } from '../../services/api';
 import toast from 'react-hot-toast';
 import {
   LayoutDashboard,
   Package,
   ShoppingBag,
   MessageSquare,
+  FileText,
   Wallet,
   Settings,
   TrendingUp,
@@ -23,12 +25,13 @@ import {
 } from 'lucide-react';
 
 export default function DashboardLayout() {
-  const { user, logout, isVendor, isAdvisor, viewAsVendor, viewAsAdvisor, clearActiveRole, setActiveRole } = useAuthStore();
-  const { logoUrl, siteName } = useSiteStore();
+  const { user, logout, isVendor, isAdvisor, viewAsVendor, viewAsAdvisor, clearActiveRole, setActiveRole, checkAuth } = useAuthStore();
+  const { logoUrl, siteName, aiInsightsEnabled } = useSiteStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [grantingRole, setGrantingRole] = useState(false);
 
   // Get computed role values - use view-as if activeRole is set for clients
   const showVendorMenu = viewAsVendor();
@@ -42,8 +45,9 @@ export default function DashboardLayout() {
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
     { icon: ShoppingBag, label: 'Pedidos', href: '/dashboard/orders' },
     { icon: MessageSquare, label: 'Mensajes', href: '/dashboard/messages', badge: 3 },
+    { icon: FileText, label: 'Cotizaciones', href: '/dashboard/quotes' },
     { icon: Wallet, label: 'Billetera', href: '/dashboard/wallet' },
-    { icon: Sparkles, label: 'AI Insights', href: '/ai' },
+    ...(aiInsightsEnabled ? [{ icon: Sparkles, label: 'AI Insights', href: '/ai' }] : []),
     { icon: Briefcase, label: 'B2B', href: '/dashboard/b2b' },
     { icon: Settings, label: 'Configuración', href: '/dashboard/settings' },
   ];
@@ -78,6 +82,27 @@ export default function DashboardLayout() {
     clearActiveRole();
     logout();
     navigate('/login');
+  };
+
+  // Grants the real backend role (if missing) before switching to that dashboard view.
+  const becomeRole = async (role, hasRole, goal, href) => {
+    if (grantingRole) return;
+    if (hasRole) {
+      setActiveRole(role);
+      navigate(href);
+      return;
+    }
+    setGrantingRole(true);
+    try {
+      await authService.completeOnboarding({ goal });
+      await checkAuth();
+      setActiveRole(role);
+      navigate(href);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'No se pudo activar el modo vendedor/asesor');
+    } finally {
+      setGrantingRole(false);
+    }
   };
 
   return (
@@ -169,14 +194,14 @@ export default function DashboardLayout() {
               label: 'Ser Vendedor',
               icon: Store,
               className: 'bg-green-600 hover:bg-green-700',
-              onClick: () => { setActiveRole('vendor'); navigate('/dashboard/vendor'); },
+              onClick: () => becomeRole('vendor', hasActualVendorRole, 'sell_products', '/dashboard/vendor'),
             },
             {
               key: 'advisor',
               label: 'Ser Asesor',
               icon: Award,
               className: 'bg-blue-600 hover:bg-blue-700',
-              onClick: () => { setActiveRole('advisor'); navigate('/dashboard/advisors'); },
+              onClick: () => becomeRole('advisor', hasActualAdvisorRole, 'sell_services', '/dashboard/advisors'),
             },
           ];
 
@@ -190,7 +215,8 @@ export default function DashboardLayout() {
                     <button
                       key={option.key}
                       onClick={option.onClick}
-                      className={`w-full flex items-center gap-3 px-4 py-2 ${option.className} text-white rounded-lg transition-all text-sm font-medium`}
+                      disabled={grantingRole}
+                      className={`w-full flex items-center gap-3 px-4 py-2 ${option.className} text-white rounded-lg transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <option.icon className="w-4 h-4" />
                       <span>{option.label}</span>

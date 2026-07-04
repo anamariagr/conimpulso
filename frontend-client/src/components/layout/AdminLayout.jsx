@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 import { useSiteStore } from '../../stores/siteStore';
 import {
@@ -20,6 +21,8 @@ import {
   BookOpen,
   Truck,
   Images,
+  MessageSquare,
+  ShoppingBag,
 } from 'lucide-react';
 
 const adminMenuItems = [
@@ -31,6 +34,8 @@ const adminMenuItems = [
   { name: 'Productos', icon: Package, path: '/admin/products' },
   { name: 'Categorías', icon: Grid3X3, path: '/admin/categories' },
   { name: 'Saldo / Wallet', icon: Wallet, path: '/admin/wallet' },
+  { name: 'Solicitudes de compra', icon: ShoppingBag, path: '/admin/purchase-requests' },
+  { name: 'Mensajes', icon: MessageSquare, path: '/admin/messages' },
   { name: 'Blog', icon: BookOpen, path: '/admin/blog' },
   { name: 'Banner Logística', icon: Truck, path: '/admin/logistics-banner' },
   { name: 'Configuración', icon: Settings, path: '/admin/settings' },
@@ -42,6 +47,18 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPending = () => {
+      api.get('/admin/purchase-requests/pending-count')
+        .then((r) => setPendingCount(r.data.data?.count || 0))
+        .catch(() => {});
+    };
+    fetchPending();
+    const interval = setInterval(fetchPending, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const isActive = (path) => {
     if (path === '/admin') {
@@ -108,21 +125,31 @@ export default function AdminLayout() {
         {/* Navigation */}
         <nav className="flex-1 p-4">
           <ul className="space-y-1">
-            {adminMenuItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    isActive(item.path)
-                      ? 'bg-accent text-primary font-semibold'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {sidebarOpen && <span>{item.name}</span>}
-                </Link>
-              </li>
-            ))}
+            {adminMenuItems.map((item) => {
+              const isPurchase = item.path === '/admin/purchase-requests';
+              return (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                      isActive(item.path)
+                        ? 'bg-accent text-primary font-semibold'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    {sidebarOpen && (
+                      <span className="flex-1">{item.name}</span>
+                    )}
+                    {isPurchase && pendingCount > 0 && (
+                      <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                        {pendingCount}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 

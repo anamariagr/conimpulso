@@ -1,16 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useSiteStore } from '../../stores/siteStore';
-import { ShoppingBag, User, Menu, X, ChevronDown, LayoutDashboard, Settings, Wallet, LogOut, Shield } from 'lucide-react';
+import { useCartStore } from '../../stores/cartStore';
+import { ShoppingBag, ShoppingCart, User, Menu, X, ChevronDown, LayoutDashboard, Settings, Wallet, LogOut, Shield } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import CartDrawer from '../cart/CartDrawer';
 
 export default function Navbar() {
   const { isAuthenticated, user, logout, isSuperAdmin } = useAuthStore();
   const { logoUrl, siteName, fetchSettings } = useSiteStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const totalItems = useCartStore((s) => s.totalItems);
 
   useEffect(() => { fetchSettings(); }, [fetchSettings]);
 
@@ -32,6 +36,7 @@ export default function Navbar() {
   };
 
   return (
+    <>
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -67,9 +72,18 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            {/* Cart Icon */}
-            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors relative">
-              <ShoppingBag className="w-5 h-5 text-primary" />
+            {/* Cart */}
+            <button
+              onClick={() => setCartOpen(true)}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
+              type="button"
+            >
+              <ShoppingCart className="w-5 h-5 text-primary" />
+              {totalItems() > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-accent text-primary text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {totalItems() > 9 ? '9+' : totalItems()}
+                </span>
+              )}
             </button>
 
             {isAuthenticated ? (
@@ -321,5 +335,8 @@ export default function Navbar() {
         )}
       </div>
     </header>
+
+    <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
   );
 }

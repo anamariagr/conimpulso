@@ -21,7 +21,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
@@ -93,7 +93,7 @@ class AuthController extends Controller
         $roles = $rolesByGoal[$request->goal];
 
         $user = $request->user();
-        $user->syncRoles($roles);
+        $user->assignRole($roles);
 
         if ($user->status === 'pending') {
             $user->update(['status' => 'active']);

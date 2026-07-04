@@ -13,6 +13,8 @@ import StoreProfilePage from './pages/public/StoreProfilePage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import OnboardingPage from './pages/auth/OnboardingPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import ProductsPage from './pages/public/ProductsPage';
 import ServicesPage from './pages/public/ServicesPage';
 import StoresPage from './pages/public/StoresPage';
@@ -41,6 +43,8 @@ import VendorDashboardPage from './pages/vendor/VendorDashboardPage';
 import NewProductGatePage from './pages/dashboard/NewProductGatePage';
 import CreateShopPage from './pages/dashboard/CreateShopPage';
 import CreateProductPage from './pages/dashboard/CreateProductPage';
+import EditProductPage from './pages/dashboard/EditProductPage';
+import QuoteRequestsPage from './pages/dashboard/QuoteRequestsPage';
 
 import BlogPage from './pages/public/BlogPage';
 import BlogPostPage from './pages/public/BlogPostPage';
@@ -49,6 +53,8 @@ import PrivacyPage from './pages/public/PrivacyPage';
 import TermsPage from './pages/public/TermsPage';
 
 // Admin pages
+import MessagesView from './pages/admin/MessagesView';
+import PurchaseRequestsView from './pages/admin/PurchaseRequestsView';
 import HomepageEditorPage from './pages/admin/HomepageEditorPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import UsersView from './pages/admin/UsersView';
@@ -114,6 +120,8 @@ function App() {
             <Route path="terminos" element={<TermsPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password/:token" element={<ResetPasswordPage />} />
             <Route
               path="onboarding"
               element={
@@ -137,6 +145,8 @@ function App() {
             <Route path="products" element={<ProductsListPage />} />
             <Route path="products/new" element={<NewProductGatePage />} />
             <Route path="products/create" element={<CreateProductPage />} />
+            <Route path="products/:id/edit" element={<EditProductPage />} />
+
             <Route path="orders" element={<OrdersListPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="store" element={<StorePage />} />
@@ -145,6 +155,7 @@ function App() {
             <Route path="b2b" element={<B2BProfilesPage />} />
             <Route path="leads" element={<LeadsPage />} />
             <Route path="messages" element={<MessagesPage />} />
+            <Route path="quotes" element={<QuoteRequestsPage />} />
             <Route path="advisors" element={<AdvisorDashboardPage />} />
             <Route path="advisors/leads" element={<AdvisorLeadsPage />} />
             <Route path="advisors/commissions" element={<AdvisorCommissionsPage />} />
@@ -232,6 +243,8 @@ function App() {
             <Route path="blog" element={<BlogView />} />
             <Route path="logistics-banner" element={<LogisticsBannerView />} />
             <Route path="media" element={<MediaLibraryPage />} />
+            <Route path="messages" element={<MessagesView />} />
+            <Route path="purchase-requests" element={<PurchaseRequestsView />} />
           </Route>
         </Routes>
       </BrowserRouter>

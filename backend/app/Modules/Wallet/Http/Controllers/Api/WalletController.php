@@ -7,12 +7,16 @@ use App\Modules\Auth\Models\User;
 use App\Modules\Wallet\Models\Wallet;
 use App\Modules\Wallet\Models\WalletTransaction;
 use App\Modules\Wallet\Models\WalletTopUp;
+use App\Services\SiteSettings;
+use App\Services\WhatsAppNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class WalletController extends Controller
 {
+    protected const MANUAL_PROOF_METHODS = ['bre_b_llave', 'bre_b_qr'];
+
     public function index(Request $request): JsonResponse
     {
         $wallet = Wallet::firstOrCreate(
@@ -61,10 +65,13 @@ class WalletController extends Controller
 
     public function topUpRequest(Request $request): JsonResponse
     {
+        $requiresProof = in_array($request->payment_method, self::MANUAL_PROOF_METHODS, true);
+
         $validator = Validator::make($request->all(), [
             'amount' => ['required', 'numeric', 'min:1', 'max:1000000'],
             'payment_method' => ['required', 'string', 'max:50'],
             'payment_reference' => ['nullable', 'string', 'max:255'],
+            'payment_proof_url' => [$requiresProof ? 'required' : 'nullable', 'string', 'max:500'],
         ]);
 
         if ($validator->fails()) {
@@ -82,10 +89,32 @@ class WalletController extends Controller
             'amount' => $request->amount,
             'payment_method' => $request->payment_method,
             'payment_reference' => $request->payment_reference,
+            'payment_proof_url' => $request->payment_proof_url,
             'status' => 'pending',
         ]);
 
+        $this->notifyAdminOfTopUp($topUp->load('user'));
+
         return $this->successResponse($topUp, 'Solicitud de recarga creada. Pendiente de verificación.', 201);
+    }
+
+    protected function coinRate(): float
+    {
+        return (float) SiteSettings::get('wallet_coin_value_cop', 3000);
+    }
+
+    protected function notifyAdminOfTopUp(WalletTopUp $topUp): void
+    {
+        $coins = round((float) $topUp->amount / $this->coinRate(), 2);
+
+        $text = "💰 *Nueva solicitud de recarga* en ConImpulso\n\n"
+            . "👤 Cliente: {$topUp->user->name} ({$topUp->user->email})\n"
+            . '💵 Monto pagado: $' . number_format((float) $topUp->amount, 0, ',', '.') . " COP\n"
+            . "🪙 Monedas a acreditar: {$coins}\n"
+            . "💳 Método: {$topUp->payment_method}\n"
+            . '📎 Comprobante: ' . ($topUp->payment_proof_url ? 'Sí, adjunto (revisar en el panel)' : 'No requerido');
+
+        WhatsAppNotifier::send(SiteSettings::get('whatsapp_phone'), $text);
     }
 
     public function myTopUps(Request $request): JsonResponse
@@ -207,16 +236,19 @@ class WalletController extends Controller
                 ['balance' => 0, 'currency' => 'USD']
             );
 
-            $wallet->credit($topUp->amount, 'Top-up approved: ' . $topUp->payment_reference, 'deposit');
+            $coins = round((float) $topUp->amount / $this->coinRate(), 2);
+
+            $wallet->credit($coins, 'Recarga aprobada: ' . $topUp->payment_reference, 'deposit');
 
             $topUp->update([
                 'status' => 'approved',
                 'wallet_id' => $wallet->id,
+                'coins_credited' => $coins,
                 'verified_at' => now(),
                 'verified_by' => $request->user()->id,
             ]);
 
-            return $this->successResponse($topUp, 'Top-up approved and credited');
+            return $this->successResponse($topUp, 'Recarga aprobada y monedas acreditadas');
         } else {
             $topUp->update([
                 'status' => 'rejected',

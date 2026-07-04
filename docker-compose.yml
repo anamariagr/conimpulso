@@ -125,6 +125,21 @@ services:
     profiles:
       - reverb
 
+  # WhatsApp Gateway (self-hosted, whatsmeow-based via WAHA's GOWS engine)
+  whatsapp:
+    image: devlikeapro/waha
+    container_name: nexuslab-whatsapp
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./docker/whatsapp/sessions:/app/.sessions
+    environment:
+      - WHATSAPP_DEFAULT_ENGINE=GOWS
+      - WAHA_API_KEY=${WHATSAPP_GATEWAY_API_KEY:-changeme}
+    networks:
+      - nexuslab-network
+
   # MailHog (Development Mail Server)
   mailhog:
     image: mailhog/mailhog:latest

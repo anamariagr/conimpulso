@@ -31,9 +31,24 @@ class BlogController extends Controller
         $perPage = min($request->get('per_page', 12), 50);
         $posts   = $query->paginate($perPage);
 
+        // Fill missing cover_images from the related entity on-the-fly
+        $items = collect($posts->items())->map(function ($post) {
+            if (!$post->cover_image && $post->related_id) {
+                if ($post->related_type === 'shop') {
+                    $shop = \App\Modules\Shops\Models\Shop::select('logo')->find($post->related_id);
+                    $post->cover_image = $shop?->logo;
+                } elseif ($post->related_type === 'product') {
+                    $product = \App\Modules\Products\Models\Product::select('images')->find($post->related_id);
+                    $images = $product?->images;
+                    $post->cover_image = is_array($images) ? ($images[0] ?? null) : null;
+                }
+            }
+            return $post;
+        })->values()->all();
+
         return response()->json([
             'success' => true,
-            'data'    => $posts->items(),
+            'data'    => $items,
             'meta'    => [
                 'current_page' => $posts->currentPage(),
                 'last_page'    => $posts->lastPage(),
@@ -49,12 +64,14 @@ class BlogController extends Controller
         // Load related product/shop data for stock and extra info
         $related = null;
         if ($post->related_id && $post->related_type === 'product') {
-            $related = \App\Modules\Products\Models\Product::with('shop')
+            $related = \App\Modules\Products\Models\Product::with(['shop' => function ($q) {
+                $q->select('id', 'name', 'slug', 'city', 'logo', 'gallery', 'status');
+            }])
                 ->select('id', 'name', 'price', 'stock', 'status', 'images', 'slug', 'shop_id')
                 ->find($post->related_id);
         } elseif ($post->related_id && $post->related_type === 'shop') {
             $related = \App\Modules\Shops\Models\Shop::with('user')
-                ->select('id', 'name', 'slug', 'city', 'logo', 'status')
+                ->select('id', 'name', 'slug', 'city', 'logo', 'gallery', 'description', 'status')
                 ->find($post->related_id);
         }
 

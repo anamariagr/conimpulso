@@ -1,30 +1,47 @@
-import { useState, useEffect } from 'react';
-import { Wallet as WalletIcon, Plus, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Wallet as WalletIcon, Plus, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle, QrCode } from 'lucide-react';
 import api from '../../services/api';
+import { useSiteStore } from '../../stores/siteStore';
+import { SingleImageUploader } from '../../components/forms/ImageUploader';
+import toast from 'react-hot-toast';
+
+const MANUAL_PROOF_METHODS = ['bre_b_llave', 'bre_b_qr'];
 
 export default function WalletPage() {
+  const { walletCoinValueCop, breBKey, breBQrImageUrl, wompiEnabled, fetchSettings } = useSiteStore();
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [pendingTopUps, setPendingTopUps] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [showTopUp, setShowTopUp] = useState(false);
-  const [topUpData, setTopUpData] = useState({ amount: '', payment_method: 'transfer', payment_reference: '' });
+  const [topUpData, setTopUpData] = useState({ amount: '', payment_method: 'transfer', payment_reference: '', payment_proof_url: '' });
+  const topUpRef = useRef(null);
 
   useEffect(() => {
     fetchData();
+    fetchSettings();
   }, []);
+
+  useEffect(() => {
+    if (showTopUp) {
+      topUpRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showTopUp]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [walletRes, transactionsRes, statsRes] = await Promise.all([
+      const [walletRes, transactionsRes, statsRes, topUpsRes] = await Promise.all([
         api.get('/wallet'),
         api.get('/wallet/transactions'),
         api.get('/wallet/stats'),
+        api.get('/wallet/top-ups'),
       ]);
       setWallet(walletRes.data.data);
       setTransactions(transactionsRes.data.data);
       setStats(statsRes.data.data);
+      setPendingTopUps((topUpsRes.data.data || []).filter((t) => t.status === 'pending'));
     } catch (error) {
       console.error('Error fetching wallet:', error);
     } finally {
@@ -32,15 +49,32 @@ export default function WalletPage() {
     }
   };
 
+  const [topUpError, setTopUpError] = useState('');
+  const [submittingTopUp, setSubmittingTopUp] = useState(false);
+
+  const requiresProof = MANUAL_PROOF_METHODS.includes(topUpData.payment_method);
+  const coinsPreview = topUpData.amount ? (Number(topUpData.amount) / walletCoinValueCop).toFixed(2) : '0.00';
+
   const handleTopUp = async (e) => {
     e.preventDefault();
+    if (submittingTopUp) return;
+    setTopUpError('');
+    if (requiresProof && !topUpData.payment_proof_url) {
+      setTopUpError('Sube la imagen del comprobante de pago para continuar.');
+      return;
+    }
+    setSubmittingTopUp(true);
     try {
       await api.post('/wallet/top-up', topUpData);
+      toast.success('Solicitud de recarga enviada. Te avisaremos cuando sea aprobada.');
       setShowTopUp(false);
-      setTopUpData({ amount: '', payment_method: 'transfer', payment_reference: '' });
+      setTopUpData({ amount: '', payment_method: 'transfer', payment_reference: '', payment_proof_url: '' });
       fetchData();
     } catch (error) {
+      setTopUpError(error.response?.data?.message || 'Error al crear la solicitud de recarga');
       console.error('Error creating top-up:', error);
+    } finally {
+      setSubmittingTopUp(false);
     }
   };
 
@@ -83,13 +117,14 @@ export default function WalletPage() {
             <h1 className="text-3xl font-bold text-[#FFD700]">Mi Billetera</h1>
             <p className="text-gray-400 mt-1">Gestiona tu saldo y transacciones</p>
           </div>
-          <button
-            onClick={() => setShowTopUp(!showTopUp)}
+          <a
+            href="#recargar-form"
+            onClick={(e) => { e.preventDefault(); setShowTopUp(true); }}
             className="flex items-center gap-2 px-6 py-2 bg-[#FFD700] text-black font-semibold rounded-lg hover:bg-yellow-400 transition"
           >
             <Plus className="w-5 h-5" />
             Recargar
-          </button>
+          </a>
         </div>
 
         {/* Balance Card */}
@@ -122,52 +157,106 @@ export default function WalletPage() {
 
         {/* Top Up Form */}
         {showTopUp && (
-          <form onSubmit={handleTopUp} className="bg-[#1A1A1A] rounded-xl p-6 mb-8 border border-gray-700">
+          <form id="recargar-form" ref={topUpRef} onSubmit={handleTopUp} className="bg-[#1A1A1A] rounded-xl p-6 mb-8 border border-gray-700 scroll-mt-24">
             <h3 className="text-lg font-semibold text-[#FFD700] mb-4">Solicitar Recarga</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-1">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Monto (USD)</label>
+                <label className="block text-gray-400 text-sm mb-2">Monto a pagar (COP)</label>
                 <input
                   type="number"
-                  step="0.01"
+                  step="1"
                   min="1"
                   required
                   value={topUpData.amount}
                   onChange={(e) => setTopUpData({ ...topUpData, amount: e.target.value })}
                   className="w-full px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white focus:border-[#FFD700] focus:outline-none"
-                  placeholder="0.00"
+                  placeholder="0"
                 />
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Método de Pago</label>
                 <select
                   value={topUpData.payment_method}
-                  onChange={(e) => setTopUpData({ ...topUpData, payment_method: e.target.value })}
+                  onChange={(e) => setTopUpData({ ...topUpData, payment_method: e.target.value, payment_proof_url: '' })}
                   className="w-full px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white focus:border-[#FFD700] focus:outline-none"
                 >
                   <option value="transfer">Transferencia Bancaria</option>
                   <option value="card">Tarjeta de Crédito/Débito</option>
                   <option value="pix">PIX</option>
                   <option value="cash">Efectivo</option>
+                  <option value="bre_b_llave">Bre-B (llave)</option>
+                  <option value="bre_b_qr">Bre-B (QR)</option>
+                  <option value="wompi" disabled={!wompiEnabled}>Wompi {wompiEnabled ? '' : '(Próximamente)'}</option>
                   <option value="other">Otro</option>
                 </select>
               </div>
             </div>
+            <p className="text-sm text-[#FFD700] mb-4">= {coinsPreview} monedas</p>
+
+            {requiresProof && (
+              <div className="bg-[#0A0A0A] border border-gray-700 rounded-lg p-4 mb-4">
+                <div className="flex items-center gap-2 text-sm text-gray-300 mb-4">
+                  <QrCode className="w-4 h-4 text-[#FFD700]" />
+                  {topUpData.payment_method === 'bre_b_llave'
+                    ? (breBKey ? <>Llave Bre-B: <span className="font-semibold text-white">{breBKey}</span></> : 'La llave Bre-B aún no ha sido configurada.')
+                    : 'Escanea el código QR para pagar con Bre-B.'}
+                </div>
+                <div className="flex flex-wrap justify-around gap-4">
+                  <div>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Comprobante de pago <span className="text-red-400">*</span>
+                    </p>
+                    <SingleImageUploader
+                      value={topUpData.payment_proof_url}
+                      onChange={(url) => setTopUpData({ ...topUpData, payment_proof_url: url })}
+                      required
+                    />
+                  </div>
+                  {topUpData.payment_method === 'bre_b_qr' && (
+                    <div>
+                      <p className="text-xs text-gray-400 mb-2">Escanea este QR</p>
+                      <div className="relative aspect-square w-full max-w-[180px] rounded-xl border-2 border-dashed border-gray-700 bg-white overflow-hidden">
+                        {breBQrImageUrl ? (
+                          <img src={breBQrImageUrl} alt="QR Bre-B" className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400 text-center px-2">
+                            QR aún no configurado
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="mb-4">
-              <label className="block text-gray-400 text-sm mb-2">Referencia de Pago</label>
+              <label className="block text-gray-400 text-sm mb-2">
+                Referencia de Pago <span className="text-gray-500">(opcional)</span>
+              </label>
               <input
                 type="text"
                 value={topUpData.payment_reference}
                 onChange={(e) => setTopUpData({ ...topUpData, payment_reference: e.target.value })}
                 className="w-full px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white focus:border-[#FFD700] focus:outline-none"
-                placeholder="Número de transacción o referencia"
+                placeholder="Ej: número de aprobación o los últimos dígitos del comprobante"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                {requiresProof
+                  ? 'No es necesario si ya subiste el comprobante arriba.'
+                  : 'El código o número de confirmación que te dio tu banco/app al hacer el pago, si lo tienes a mano.'}
+              </p>
             </div>
+            {topUpError && <p className="text-sm text-red-400 mb-4">{topUpError}</p>}
             <div className="flex gap-3">
-              <button type="submit" className="px-6 py-2 bg-[#FFD700] text-black font-semibold rounded-lg hover:bg-yellow-400 transition">
-                Solicitar Recarga
+              <button
+                type="submit"
+                disabled={submittingTopUp}
+                className="px-6 py-2 bg-[#FFD700] text-black font-semibold rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingTopUp ? 'Enviando...' : 'Solicitar Recarga'}
               </button>
-              <button type="button" onClick={() => setShowTopUp(false)} className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">
+              <button type="button" disabled={submittingTopUp} onClick={() => setShowTopUp(false)} className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition disabled:opacity-50">
                 Cancelar
               </button>
             </div>
@@ -180,13 +269,34 @@ export default function WalletPage() {
             <h2 className="text-lg font-semibold text-white">Transacciones Recientes</h2>
           </div>
 
-          {transactions.length === 0 ? (
+          {transactions.length === 0 && pendingTopUps.length === 0 ? (
             <div className="p-12 text-center">
               <WalletIcon className="w-12 h-12 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-500">No hay transacciones aún</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-800">
+              {pendingTopUps.map((topUp) => (
+                <div key={`pending-${topUp.id}`} className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-yellow-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">Recarga pendiente</p>
+                      <p className="text-sm text-gray-500">En revisión por el equipo</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-yellow-400">
+                      Carga pendiente de ${parseFloat(topUp.amount).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(topUp.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
               {transactions.map((transaction) => (
                 <div key={transaction.id} className="p-4 flex items-center justify-between hover:bg-[#2A2A2A] transition">
                   <div className="flex items-center gap-4">

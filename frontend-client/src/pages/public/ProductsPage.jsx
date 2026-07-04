@@ -109,8 +109,18 @@ export default function ProductsPage() {
               to={`/products/${product.slug}`}
               className={`bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all ${viewMode === 'list' ? 'flex' : ''}`}
             >
-              <div className={`bg-gray-100 ${viewMode === 'grid' ? 'aspect-square' : 'w-48 h-48'} flex items-center justify-center`}>
-                <span className="text-6xl text-gray-300">📦</span>
+              <div className={`bg-gray-100 ${viewMode === 'grid' ? 'aspect-square' : 'w-48 h-48 flex-shrink-0'} overflow-hidden relative`}>
+                {Array.isArray(product.images) && product.images[0] ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-6xl text-gray-300">📦</span>
+                  </div>
+                )}
               </div>
               <div className={`p-4 ${viewMode === 'list' ? 'flex-1' : ''}`}>
                 <h3 className="font-semibold text-gray-900 mb-1">{product.name || 'Producto'}</h3>

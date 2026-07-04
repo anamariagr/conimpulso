@@ -62,6 +62,22 @@ export default function BlogPostPage() {
     : '';
   const stockBadge = isProduct && related ? STOCK_BADGE(related.stock) : null;
 
+  // For product posts, the related shop is loaded in related.shop
+  const relatedShop = isProduct ? related?.shop : related;
+
+  // Cover priority differs by post type:
+  // - product post: product image first, then shop logo
+  // - shop post: shop logo
+  const coverImage = post.cover_image
+    || (isProduct ? (Array.isArray(related?.images) ? related.images[0] : null) : relatedShop?.logo)
+    || null;
+
+  // Gallery from the shop (shown for both shop posts and product posts)
+  const shopGallery = Array.isArray(relatedShop?.gallery) ? relatedShop.gallery : [];
+
+  // Extra product images (all except the first, which is the cover)
+  const productImages = isProduct && Array.isArray(related?.images) ? related.images.slice(1) : [];
+
   const paragraphs = (post.content || '').split('\n\n').filter(Boolean);
 
   return (
@@ -73,9 +89,9 @@ export default function BlogPostPage() {
         </Link>
 
         {/* Cover */}
-        {post.cover_image && (
+        {coverImage && (
           <div className="aspect-[16/7] rounded-2xl overflow-hidden mb-8 bg-gray-900">
-            <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+            <img src={coverImage} alt={post.title} className="w-full h-full object-cover" />
           </div>
         )}
 
@@ -114,6 +130,36 @@ export default function BlogPostPage() {
           ))}
         </div>
 
+        {/* Product extra images */}
+        {productImages.length > 0 && (
+          <div className="mb-10">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Más fotos del producto</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {productImages.map((img, i) => (
+                <div key={i} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+                  <img src={img} alt={`foto ${i + 2}`} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Shop gallery — shown on both shop posts and product posts */}
+        {shopGallery.length > 0 && (
+          <div className="mb-10">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+              {isProduct ? `Galería de ${relatedShop?.name || 'la tienda'}` : 'Galería'}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {shopGallery.map((img, i) => (
+                <div key={i} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+                  <img src={img} alt={`${relatedShop?.name} ${i + 1}`} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ConImpulso badge */}
         <div className="bg-[#0A0A0A] rounded-2xl p-5 mb-8 flex items-center gap-3">
           <span className="text-2xl">✦</span>
@@ -128,8 +174,8 @@ export default function BlogPostPage() {
           <div className="bg-white rounded-2xl border-2 border-accent/20 p-6 flex items-center gap-5 shadow-sm">
             {/* Thumb */}
             <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-900 flex-shrink-0">
-              {post.cover_image ? (
-                <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+              {coverImage ? (
+                <img src={coverImage} alt={post.title} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <span className="text-2xl font-bold text-accent">{related.name?.charAt(0)}</span>

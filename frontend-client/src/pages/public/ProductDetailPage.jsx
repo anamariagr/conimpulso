@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, Store, Tag, Clock, Package, ShoppingCart, MessageSquare, Wrench, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
+import { ArrowLeft, Star, Store, Tag, Clock, Package, ShoppingCart, MessageSquare, Wrench, ChevronLeft, ChevronRight, Share2, Pencil, X, Send } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { useCartStore } from '../../stores/cartStore';
 
 function ImageGallery({ images }) {
   const [current, setCurrent] = useState(0);
@@ -70,6 +71,13 @@ export default function ProductDetailPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactType, setContactType] = useState('contact'); // 'contact' | 'quote'
+  const [contactForm, setContactForm] = useState({ message: '', contact_phone: '', quantity: 1 });
+  const [sending, setSending] = useState(false);
+  const [paymentStep, setPaymentStep] = useState('method'); // 'method' | 'form'
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const addItem = useCartStore((s) => s.addItem);
 
   useEffect(() => {
     const fetch = async () => {
@@ -123,12 +131,58 @@ export default function ProductDetailPage() {
     ? Math.round(((product.price - product.price_wholesale) / product.price) * 100)
     : null;
 
-  const handleContact = () => {
-    toast('Función de mensajería disponible próximamente', { icon: '💬' });
+  const openContact = (type = 'contact') => {
+    setContactType(type);
+    setContactForm({ message: '', contact_phone: '', quantity });
+    setPaymentStep('method');
+    setPaymentMethod(null);
+    setShowContactModal(true);
   };
 
-  const handleQuote = () => {
-    toast('Solicitud de cotización disponible próximamente', { icon: '📋' });
+  const handleContact = () => openContact('contact');
+  const handleQuote = () => openContact('quote');
+
+  const handleSendRequest = async (e) => {
+    e.preventDefault();
+    if (!contactForm.message.trim()) { toast.error('Escribe un mensaje'); return; }
+    if (sending) return;
+    setSending(true);
+    try {
+      const res = await api.post('/purchase-requests', {
+        product_id: product.id,
+        message: contactForm.message,
+        contact_phone: contactForm.contact_phone,
+        quantity: contactForm.quantity || 1,
+      });
+      toast.success('¡Solicitud enviada! Te llevamos a tu conversación con el vendedor.');
+      setShowContactModal(false);
+      const messageId = res.data?.data?.message_id;
+      navigate(`/dashboard/messages?tab=sent${messageId ? `&open=${messageId}` : ''}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al enviar solicitud');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSendQuote = async (e) => {
+    e.preventDefault();
+    const qty = parseInt(contactForm.quantity);
+    if (!qty || qty < 1) { toast.error('Ingresa una cantidad válida'); return; }
+    if (sending) return;
+    setSending(true);
+    try {
+      await api.post('/quote-requests', {
+        product_id: product.id,
+        quantity: qty,
+      });
+      toast.success('¡Cotización enviada al vendedor!');
+      setShowContactModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al enviar cotización');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleShare = () => {
@@ -179,11 +233,11 @@ export default function ProductDetailPage() {
           <div className="bg-gray-50 rounded-xl p-4 space-y-2">
             <div className="flex items-baseline gap-3">
               <span className="text-3xl font-bold text-primary">
-                ${parseFloat(displayPrice).toLocaleString('es', { minimumFractionDigits: 2 })}
+                ${parseFloat(displayPrice).toLocaleString('es-CO', { maximumFractionDigits: 0 })}
               </span>
               {isWholesale && (
                 <span className="text-sm text-gray-400 line-through">
-                  ${parseFloat(product.price).toLocaleString('es', { minimumFractionDigits: 2 })}
+                  ${parseFloat(product.price).toLocaleString('es-CO', { maximumFractionDigits: 0 })}
                 </span>
               )}
             </div>
@@ -193,7 +247,7 @@ export default function ProductDetailPage() {
                   -{wholesaleDiscount}% mayoreo
                 </span>
                 <span className="text-gray-500">
-                  Precio mayoreo: ${parseFloat(product.price_wholesale).toLocaleString('es', { minimumFractionDigits: 2 })}
+                  Precio mayoreo: ${parseFloat(product.price_wholesale).toLocaleString('es-CO', { maximumFractionDigits: 0 })}
                   (mín. {product.minimum_wholesale_quantity || 10} unidades)
                 </span>
               </div>
@@ -228,58 +282,86 @@ export default function ProductDetailPage() {
 
           {/* Quantity & Actions */}
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-gray-700">Cantidad</label>
-              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setQuantity(q => Math.max(product.minimum_quantity || 1, q - 1))}
-                  className="px-3 py-2 hover:bg-gray-100 transition-colors text-gray-600 font-bold"
-                >−</button>
-                <input
-                  type="number"
-                  value={quantity}
-                  min={product.minimum_quantity || 1}
-                  onChange={e => setQuantity(Math.max(product.minimum_quantity || 1, parseInt(e.target.value) || 1))}
-                  className="w-16 text-center py-2 border-x border-gray-300 focus:outline-none"
-                />
-                <button
-                  onClick={() => setQuantity(q => q + 1)}
-                  className="px-3 py-2 hover:bg-gray-100 transition-colors text-gray-600 font-bold"
-                >+</button>
+            {is_owner ? (
+              /* Owner view: only edit button */
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center justify-between gap-3">
+                <p className="text-sm text-yellow-700 font-medium">Estás viendo tu producto como lo ven los compradores</p>
+                <Link
+                  to={`/dashboard/products/${product.slug || product.id}/edit`}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors text-sm flex-shrink-0"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Editar producto
+                </Link>
               </div>
-              {product.minimum_quantity > 1 && (
-                <span className="text-xs text-gray-400">Mín. {product.minimum_quantity}</span>
-              )}
-            </div>
+            ) : (
+              /* Buyer view: contact + quotation */
+              <>
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-gray-700">Cantidad</label>
+                  <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setQuantity(q => Math.max(product.minimum_quantity || 1, q - 1))}
+                      className="px-3 py-2 hover:bg-gray-100 transition-colors text-gray-600 font-bold"
+                    >−</button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      min={product.minimum_quantity || 1}
+                      onChange={e => setQuantity(Math.max(product.minimum_quantity || 1, parseInt(e.target.value) || 1))}
+                      className="w-16 text-center py-2 border-x border-gray-300 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => setQuantity(q => q + 1)}
+                      className="px-3 py-2 hover:bg-gray-100 transition-colors text-gray-600 font-bold"
+                    >+</button>
+                  </div>
+                  {product.minimum_quantity > 1 && (
+                    <span className="text-xs text-gray-400">Mín. {product.minimum_quantity}</span>
+                  )}
+                </div>
 
-            <button
-              onClick={handleContact}
-              className="w-full flex items-center justify-center gap-2 bg-primary text-white font-semibold py-3 rounded-xl hover:bg-primary/90 transition-colors"
-            >
-              <MessageSquare className="w-5 h-5" />
-              Contactar al vendedor
-            </button>
+                <button
+                  onClick={handleContact}
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-white font-semibold py-3 rounded-xl hover:bg-primary/90 transition-colors"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  Comprar
+                </button>
 
-            <div className="grid grid-cols-2 gap-3">
-              {product.allow_quotation && (
                 <button
-                  onClick={handleQuote}
-                  className="flex items-center justify-center gap-2 border border-primary text-primary font-semibold py-2.5 rounded-xl hover:bg-primary/5 transition-colors text-sm"
+                  onClick={() => {
+                    addItem(product, quantity);
+                    toast.success(`"${product.name}" agregado al carrito`, { icon: '🛒' });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 border-2 border-primary text-primary font-semibold py-3 rounded-xl hover:bg-primary/5 transition-colors"
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  Solicitar cotización
+                  <ShoppingCart className="w-5 h-5" />
+                  Agregar al carrito
                 </button>
-              )}
-              {product.allow_custom_order && (
-                <button
-                  onClick={handleQuote}
-                  className="flex items-center justify-center gap-2 border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm"
-                >
-                  <Wrench className="w-4 h-4" />
-                  Orden personalizada
-                </button>
-              )}
-            </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {product.allow_quotation && (
+                    <button
+                      onClick={handleQuote}
+                      className="flex items-center justify-center gap-2 border border-primary text-primary font-semibold py-2.5 rounded-xl hover:bg-primary/5 transition-colors text-sm"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      Solicitar cotización
+                    </button>
+                  )}
+                  {product.allow_custom_order && (
+                    <button
+                      onClick={handleQuote}
+                      className="flex items-center justify-center gap-2 border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm"
+                    >
+                      <Wrench className="w-4 h-4" />
+                      Orden personalizada
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Store */}
@@ -392,7 +474,7 @@ export default function ProductDetailPage() {
                 {product.variants.map((v, i) => (
                   <div key={i} className="flex justify-between items-center text-sm">
                     <span className="text-gray-700">{v.name || v.sku}</span>
-                    {v.price && <span className="font-medium">${parseFloat(v.price).toLocaleString('es', { minimumFractionDigits: 2 })}</span>}
+                    {v.price && <span className="font-medium">${parseFloat(v.price).toLocaleString('es-CO', { maximumFractionDigits: 0 })}</span>}
                   </div>
                 ))}
               </div>
@@ -400,6 +482,183 @@ export default function ProductDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Comprar / Cotizar modal */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6">
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                {contactType === 'contact' && paymentStep === 'form' && (
+                  <button onClick={() => setPaymentStep('method')} className="p-1 hover:bg-gray-100 rounded-lg mr-1">
+                    <ChevronLeft className="w-5 h-5 text-gray-500" />
+                  </button>
+                )}
+                <h3 className="text-lg font-bold text-gray-900">
+                  {contactType === 'quote' ? 'Solicitar cotización' : 'Comprar'}
+                </h3>
+              </div>
+              <button onClick={() => setShowContactModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* ── COTIZACIÓN: solo cantidad ── */}
+            {contactType === 'quote' && (
+              <form onSubmit={handleSendQuote} className="space-y-5">
+                {/* Badge por mayor */}
+                <div className="flex items-center justify-center">
+                  <span className="inline-flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full tracking-wide uppercase">
+                    <Package className="w-3.5 h-3.5" />
+                    Compra por mayor
+                  </span>
+                </div>
+
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
+                  El vendedor recibirá tu solicitud y te responderá con el precio unitario y el total.
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ¿Cuántas unidades necesitas?
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={contactForm.quantity}
+                    onChange={(e) => setContactForm((f) => ({ ...f, quantity: parseInt(e.target.value) || 1 }))}
+                    className="input-field w-full text-lg font-semibold text-center"
+                    autoFocus
+                  />
+                  <p className="text-xs text-gray-400 mt-1 text-center">Solo números — sin mensajes ni datos de contacto</p>
+                </div>
+
+                {product?.price && (
+                  <div className="bg-gray-50 rounded-xl p-3 text-sm text-center text-gray-500">
+                    Precio referencia: <strong className="text-gray-900">${parseFloat(product.price).toLocaleString('es-CO')}</strong> c/u
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setShowContactModal(false)}
+                    className="flex-1 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium text-sm">
+                    Cancelar
+                  </button>
+                  <button type="submit" disabled={sending}
+                    className="flex-1 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 text-sm">
+                    <Send className="w-4 h-4" />
+                    {sending ? 'Enviando...' : 'Solicitar cotización'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* ── COMPRAR paso 1: método de pago ── */}
+            {contactType === 'contact' && paymentStep === 'method' && (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-500 mb-4">Selecciona cómo quieres pagar</p>
+
+                <button
+                  onClick={() => { setPaymentMethod('wompi'); }}
+                  className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-primary/40 hover:bg-gray-50 transition-all"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#7B2FBE]/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[#7B2FBE] font-bold text-sm">W</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-900">Wompi</p>
+                    <p className="text-xs text-gray-400">Tarjeta crédito / débito, Nequi, Bancolombia</p>
+                  </div>
+                  <span className="ml-auto text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">Próximamente</span>
+                </button>
+
+                <button
+                  onClick={() => { setPaymentMethod('pse'); }}
+                  className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-primary/40 hover:bg-gray-50 transition-all"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-700 font-bold text-sm">PSE</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-900">PSE</p>
+                    <p className="text-xs text-gray-400">Débito directo desde tu cuenta bancaria</p>
+                  </div>
+                  <span className="ml-auto text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">Próximamente</span>
+                </button>
+
+                <button
+                  onClick={() => { setPaymentMethod('vendor'); setPaymentStep('form'); }}
+                  className="w-full flex items-center gap-4 p-4 border-2 border-accent rounded-xl bg-accent/5 hover:bg-accent/10 transition-all"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-900">Cuadrar pago con el vendedor</p>
+                    <p className="text-xs text-gray-500">El equipo te contacta para coordinar el pago</p>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {/* ── COMPRAR paso 2: formulario solicitud ── */}
+            {contactType === 'contact' && paymentStep === 'form' && paymentMethod === 'vendor' && (
+              <form onSubmit={handleSendRequest} className="space-y-4">
+                <div className="p-3 bg-blue-50 rounded-xl text-sm text-blue-700">
+                  Tu solicitud será revisada y el equipo se pondrá en contacto contigo a la brevedad.
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={contactForm.quantity}
+                    onChange={(e) => setContactForm((f) => ({ ...f, quantity: parseInt(e.target.value) || 1 }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tu teléfono (opcional)</label>
+                  <input
+                    type="tel"
+                    placeholder="Ej: 3001234567"
+                    value={contactForm.contact_phone}
+                    onChange={(e) => setContactForm((f) => ({ ...f, contact_phone: e.target.value }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mensaje *</label>
+                  <textarea
+                    rows={3}
+                    placeholder={contactType === 'quote'
+                      ? 'Describe lo que necesitas: especificaciones, plazos, condiciones...'
+                      : '¿Qué te gustaría saber o coordinar con el vendedor?'}
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
+                    className="input-field w-full"
+                    required
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setShowContactModal(false)}
+                    className="flex-1 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium text-sm">
+                    Cancelar
+                  </button>
+                  <button type="submit" disabled={sending}
+                    className="flex-1 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 text-sm">
+                    <Send className="w-4 h-4" />
+                    {sending ? 'Enviando...' : 'Enviar solicitud'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

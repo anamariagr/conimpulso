@@ -9,6 +9,7 @@ use App\Modules\Products\Models\ProductReview;
 use App\Modules\Blog\Services\BlogPostGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -221,7 +222,9 @@ class ProductController extends Controller
             'data' => [
                 'product' => $product,
                 'rating' => $product->average_rating,
-                'is_owner' => $request->user() ? $product->shop->isOwnedBy($request->user()) : false,
+                'is_owner' => ($user = Auth::guard('sanctum')->user()) && $product->shop
+                    ? (int)$product->shop->user_id === (int)$user->id
+                    : false,
             ],
         ]);
     }
@@ -286,6 +289,32 @@ class ProductController extends Controller
         $product->delete();
 
         return $this->successResponse(null, 'Producto eliminado exitosamente');
+    }
+
+    public function myProducts(Request $request): JsonResponse
+    {
+        $shop = \App\Modules\Shops\Models\Shop::where('user_id', $request->user()->id)->first();
+
+        if (!$shop) {
+            return response()->json(['success' => true, 'data' => [], 'meta' => ['total' => 0]]);
+        }
+
+        $query = Product::where('shop_id', $shop->id)
+            ->orderBy('created_at', 'desc');
+
+        $perPage = min($request->get('per_page', 50), 100);
+        $products = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $products->items(),
+            'meta' => [
+                'current_page' => $products->currentPage(),
+                'last_page'    => $products->lastPage(),
+                'per_page'     => $products->perPage(),
+                'total'        => $products->total(),
+            ],
+        ]);
     }
 
     // Admin methods

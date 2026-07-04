@@ -71,6 +71,11 @@ class User extends Authenticatable
         return $this->hasMany(\App\Modules\Shops\Models\Shop::class);
     }
 
+    public function wallet()
+    {
+        return $this->hasOne(\App\Modules\Wallet\Models\Wallet::class);
+    }
+
     public function messagingDisabledBy()
     {
         return $this->belongsTo(\App\Modules\Auth\Models\User::class, 'messaging_disabled_by');

@@ -43,7 +43,8 @@ export const authService = {
   me: () => api.get('/auth/me'),
   completeOnboarding: (data) => api.post('/auth/onboarding', data),
   refresh: () => api.post('/auth/refresh'),
-  resetPassword: (data) => api.post('/auth/password/reset-link', data),
+  sendResetLink: (data) => api.post('/auth/password/reset-link', data),
+  resetPassword: (data) => api.post('/auth/password/reset', data),
 };
 
 export const advertisingService = {

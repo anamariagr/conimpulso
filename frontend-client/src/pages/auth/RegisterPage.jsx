@@ -35,8 +35,7 @@ const RULES = {
     if (v.length < 8) return 'Debe tener al menos 8 caracteres';
     if (!/[A-Z]/.test(v)) return 'Debe tener al menos una letra mayúscula';
     if (!/[a-z]/.test(v)) return 'Debe tener al menos una letra minúscula';
-    if (!/[\d!@#$%^&*(),.?":{}|<>_\-+=/\\]/.test(v))
-      return 'Debe tener al menos un número o símbolo (!@#$...)';
+    if (!/\d/.test(v)) return 'Debe tener al menos un número';
     return '';
   },
   password_confirmation: (v, formData) => {
@@ -59,8 +58,8 @@ function getPasswordStrength(password) {
   if (/[!@#$%^&*(),.?":{}|<>_\-+=/\\]/.test(password)) score++;
 
   if (score <= 2) return { score, label: 'Débil', color: 'bg-red-500' };
-  if (score <= 3) return { score, label: 'Regular', color: 'bg-orange-400' };
-  if (score <= 4) return { score, label: 'Buena', color: 'bg-yellow-400' };
+  if (score <= 4) return { score, label: 'Regular', color: 'bg-orange-400' };
+  if (score <= 5) return { score, label: 'Buena', color: 'bg-yellow-400' };
   return { score, label: 'Fuerte', color: 'bg-green-500' };
 }
 

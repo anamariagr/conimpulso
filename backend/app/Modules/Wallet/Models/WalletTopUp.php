@@ -13,8 +13,10 @@ class WalletTopUp extends Model
         'user_id',
         'wallet_id',
         'amount',
+        'coins_credited',
         'payment_method',
         'payment_reference',
+        'payment_proof_url',
         'status',
         'verified_at',
         'verified_by',
@@ -24,6 +26,7 @@ class WalletTopUp extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'coins_credited' => 'decimal:2',
             'verified_at' => 'datetime',
         ];
     }

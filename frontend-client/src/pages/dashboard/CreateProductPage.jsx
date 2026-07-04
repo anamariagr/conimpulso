@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Package, Loader2, CheckCircle, Store, Sparkles } from 'lucide-react';
 import api from '../../services/api';
 import ProductStoryForm from '../../components/forms/ProductStoryForm';
+import { GalleryUploader } from '../../components/forms/ImageUploader';
 
 const STATUSES = [
   { value: 'draft', label: 'Borrador (no visible al público)' },
@@ -31,6 +32,7 @@ export default function CreateProductPage() {
     status: 'draft',
     allow_quotation: false,
   });
+  const [images, setImages] = useState([]);
   const [story, setStory] = useState({});
   const [storyErrors, setStoryErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -85,6 +87,7 @@ export default function CreateProductPage() {
         minimum_quantity: form.minimum_quantity ? Number(form.minimum_quantity) : undefined,
         status:           form.status,
         allow_quotation:  form.allow_quotation,
+        images:           images.length > 0 ? images : undefined,
         story,
       };
       await api.post('/products', payload);
@@ -162,6 +165,17 @@ export default function CreateProductPage() {
               {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
+        </div>
+
+        {/* Images */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <GalleryUploader
+            value={images}
+            onChange={setImages}
+            min={0}
+            label="Fotos del producto"
+            hint="Agrega hasta 10 fotos. La primera imagen será la portada."
+          />
         </div>
 
         {/* Pricing */}

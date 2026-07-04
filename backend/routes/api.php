@@ -123,6 +123,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
+    // Purchase requests (buyer → admin)
+    Route::post('/purchase-requests', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'store']);
+
+    // Quote requests (buyer ↔ shop owner)
+    Route::post('/quote-requests', [\App\Modules\Products\Http\Controllers\Api\QuoteRequestController::class, 'store']);
+    Route::get('/quote-requests/buyer', [\App\Modules\Products\Http\Controllers\Api\QuoteRequestController::class, 'buyerIndex']);
+    Route::get('/quote-requests/shop', [\App\Modules\Products\Http\Controllers\Api\QuoteRequestController::class, 'shopIndex']);
+    Route::put('/quote-requests/{id}/respond', [\App\Modules\Products\Http\Controllers\Api\QuoteRequestController::class, 'shopRespond']);
+
     // Quotations
     Route::get('/quotations', [App\Modules\Products\Http\Controllers\Api\QuotationController::class, 'index']);
     Route::post('/quotations', [App\Modules\Products\Http\Controllers\Api\QuotationController::class, 'store']);
@@ -327,6 +336,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
     // Admin shops management
     Route::get('/shops', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'adminIndex']);
+    Route::get('/shops/{id}', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'adminShow']);
     Route::post('/shops', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'adminStore']);
     Route::put('/shops/{id}/approve', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'approve']);
     Route::put('/shops/{id}/reject', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'reject']);
@@ -334,6 +344,30 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::put('/shops/{id}/featured', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'toggleFeatured']);
     Route::put('/shops/{id}/verified', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'toggleVerified']);
     Route::put('/shops/{id}', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'adminUpdate']);
+
+    // Admin messages
+    Route::get('/messages', [\App\Modules\Messages\Http\Controllers\Api\MessagesController::class, 'adminIndex']);
+
+    // Admin purchase requests
+    Route::get('/purchase-requests', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'adminIndex']);
+    Route::get('/purchase-requests/pending-count', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'adminPendingCount']);
+    Route::put('/purchase-requests/{id}', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'adminUpdate']);
+
+    // Admin products management
+    Route::get('/products', [\App\Modules\Products\Http\Controllers\Api\ProductController::class, 'adminIndex']);
+    Route::put('/products/{id}', [\App\Modules\Products\Http\Controllers\Api\ProductController::class, 'update']);
+    Route::delete('/products/{id}', [\App\Modules\Products\Http\Controllers\Api\ProductController::class, 'destroy']);
+
+    // Admin wallet management
+    Route::get('/wallet/pending-topups', [WalletController::class, 'pendingTopUps']);
+    Route::post('/wallet/topups/{id}/approve', [WalletController::class, 'approveTopUp']);
+    Route::get('/wallet/users', [WalletController::class, 'adminListUsers']);
+    Route::post('/wallet/users/{userId}/credit', [WalletController::class, 'adminCredit']);
+    Route::post('/wallet/users/{userId}/debit', [WalletController::class, 'adminDebit']);
+
+    // Admin shop benefits
+    Route::get('/shops/{id}/benefits', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'benefits']);
+    Route::put('/shops/{id}/benefits/{featureKey}/toggle', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'toggleBenefit']);
 });
 
 Route::get('/homepage/active', [App\Modules\Homepage\Http\Controllers\Api\HomepageController::class, 'activeLayout']);

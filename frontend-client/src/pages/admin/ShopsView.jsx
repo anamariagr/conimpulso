@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Filter, MoreVertical, Check, X, Star, Shield, Edit2 } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, Check, X, Star, Shield, Edit2, ImageIcon, Pencil, ZoomIn, MessageCircle } from 'lucide-react';
+import { SingleImageUploader, GalleryUploader } from '../../components/forms/ImageUploader';
 import api from '../../services/api';
 
 const STATUS_COLORS = {
@@ -271,18 +272,57 @@ function CreateModal({ onClose, onCreated }) {
   );
 }
 
+// ---- Image lightbox ----
+function Lightbox({ src, onClose }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
+      <button className="absolute top-4 right-4 text-white/70 hover:text-white" onClick={onClose}>
+        <X className="w-6 h-6" />
+      </button>
+      <img src={src} alt="Vista ampliada" className="max-w-full max-h-full rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />
+    </div>
+  );
+}
+
 // ---- Edit modal ----
-function EditModal({ shop, onClose, onSave }) {
+function EditModal({ shop: initialShop, onClose, onSave }) {
+  const [shop, setShop] = useState(initialShop);
+  const [loadingShop, setLoadingShop] = useState(true);
   const [form, setForm] = useState({
-    name: shop.name || '',
-    description: shop.description || '',
-    city: shop.city || '',
-    status: shop.status || 'pending',
-    is_featured: shop.is_featured || false,
-    is_verified: shop.is_verified || false,
+    name: initialShop.name || '',
+    description: initialShop.description || '',
+    city: initialShop.city || '',
+    status: initialShop.status || 'pending',
+    is_featured: initialShop.is_featured || false,
+    is_verified: initialShop.is_verified || false,
   });
+  const [logo, setLogo] = useState(initialShop.logo || '');
+  const [gallery, setGallery] = useState(Array.isArray(initialShop.gallery) ? initialShop.gallery : []);
+  const [editingImages, setEditingImages] = useState(false);
+  const [lightbox, setLightbox] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // Fetch fresh data to ensure we see the latest images from the client
+  useEffect(() => {
+    api.get(`/admin/shops/${initialShop.id}`)
+      .then((res) => {
+        const s = res.data.data;
+        setShop(s);
+        setForm({
+          name: s.name || '',
+          description: s.description || '',
+          city: s.city || '',
+          status: s.status || 'pending',
+          is_featured: s.is_featured || false,
+          is_verified: s.is_verified || false,
+        });
+        setLogo(s.logo || '');
+        setGallery(Array.isArray(s.gallery) ? s.gallery : []);
+      })
+      .catch(() => { /* keep initial data on error */ })
+      .finally(() => setLoadingShop(false));
+  }, [initialShop.id]);
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -292,8 +332,8 @@ function EditModal({ shop, onClose, onSave }) {
     setSaving(true);
     setError('');
     try {
-      const res = await api.put(`/admin/shops/${shop.id}`, form);
-      onSave(res.data.data);
+      const res = await api.put(`/admin/shops/${shop.id}`, { ...form, logo, gallery });
+      onSave({ ...res.data.data, logo, gallery });
       onClose();
     } catch (err) {
       setError(err.response?.data?.message || 'Error al guardar los cambios');
@@ -303,88 +343,156 @@ function EditModal({ shop, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900">Editar tienda</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => set('name', e.target.value)}
-              className="input-field w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => set('description', e.target.value)}
-              className="input-field w-full"
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+    <>
+      {lightbox && <Lightbox src={lightbox} onClose={() => setLightbox(null)} />}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
+          <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+              <h2 className="text-lg font-bold text-gray-900">Editar tienda</h2>
+              {loadingShop && <p className="text-xs text-gray-400 mt-0.5">Cargando datos actualizados...</p>}
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Images section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Imágenes del cliente</p>
+                <button
+                  type="button"
+                  onClick={() => setEditingImages((v) => !v)}
+                  className="flex items-center gap-1 text-xs text-accent font-medium hover:underline"
+                >
+                  <Pencil className="w-3 h-3" />
+                  {editingImages ? 'Cancelar edición' : 'Editar imágenes'}
+                </button>
+              </div>
+
+              {/* Logo */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1.5">Logo</p>
+                {editingImages ? (
+                  <SingleImageUploader value={logo} onChange={setLogo} hint="Imagen cuadrada. Máx. 5 MB." />
+                ) : logo ? (
+                  <button type="button" onClick={() => setLightbox(logo)} className="relative group w-20 h-20 rounded-xl overflow-hidden border border-gray-200 block">
+                    <img src={logo} alt="Logo" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
+                      <ZoomIn className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition" />
+                    </div>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-gray-400 bg-gray-50 rounded-xl p-3 border border-dashed border-gray-200">
+                    <ImageIcon className="w-4 h-4 flex-shrink-0" />
+                    Sin logo
+                  </div>
+                )}
+              </div>
+
+              {/* Gallery */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1.5">Fotos de productos / galería</p>
+                {editingImages ? (
+                  <GalleryUploader value={gallery} onChange={setGallery} min={0} label="" />
+                ) : gallery.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2">
+                    {gallery.map((url, i) => (
+                      <button key={i} type="button" onClick={() => setLightbox(url)} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-200">
+                        <img src={url} alt={`foto ${i + 1}`} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
+                          <ZoomIn className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-gray-400 bg-gray-50 rounded-xl p-3 border border-dashed border-gray-200">
+                    <ImageIcon className="w-4 h-4 flex-shrink-0" />
+                    El cliente no subió fotos de galería.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 pt-4 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Información</p>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
               <input
                 type="text"
-                value={form.city}
-                onChange={(e) => set('city', e.target.value)}
+                value={form.name}
+                onChange={(e) => set('name', e.target.value)}
                 className="input-field w-full"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-              <select
-                value={form.status}
-                onChange={(e) => set('status', e.target.value)}
-                className="input-field w-full"
-              >
-                <option value="active">Activa</option>
-                <option value="pending">Pendiente</option>
-                <option value="suspended">Suspendida</option>
-                <option value="rejected">Rechazada</option>
-                <option value="inactive">Inactiva</option>
-                <option value="draft">Borrador</option>
-              </select>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-6 pt-2">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <div
-                onClick={() => set('is_featured', !form.is_featured)}
-                className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.is_featured ? 'bg-yellow-400' : 'bg-gray-200'}`}
-              >
-                <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_featured ? 'translate-x-4' : 'translate-x-0'}`} />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+              <textarea
+                value={form.description}
+                onChange={(e) => set('description', e.target.value)}
+                className="input-field w-full"
+                rows={2}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+                <input
+                  type="text"
+                  value={form.city}
+                  onChange={(e) => set('city', e.target.value)}
+                  className="input-field w-full"
+                />
               </div>
-              <span className="text-sm font-medium text-gray-700">Destacada</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <div
-                onClick={() => set('is_verified', !form.is_verified)}
-                className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.is_verified ? 'bg-blue-500' : 'bg-gray-200'}`}
-              >
-                <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_verified ? 'translate-x-4' : 'translate-x-0'}`} />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <select
+                  value={form.status}
+                  onChange={(e) => set('status', e.target.value)}
+                  className="input-field w-full"
+                >
+                  <option value="active">Activa</option>
+                  <option value="pending">Pendiente</option>
+                  <option value="suspended">Suspendida</option>
+                  <option value="rejected">Rechazada</option>
+                  <option value="inactive">Inactiva</option>
+                  <option value="draft">Borrador</option>
+                </select>
               </div>
-              <span className="text-sm font-medium text-gray-700">Verificada</span>
-            </label>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <div
+                  onClick={() => set('is_featured', !form.is_featured)}
+                  className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.is_featured ? 'bg-yellow-400' : 'bg-gray-200'}`}
+                >
+                  <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_featured ? 'translate-x-4' : 'translate-x-0'}`} />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Destacada</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <div
+                  onClick={() => set('is_verified', !form.is_verified)}
+                  className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.is_verified ? 'bg-blue-500' : 'bg-gray-200'}`}
+                >
+                  <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_verified ? 'translate-x-4' : 'translate-x-0'}`} />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Verificada</span>
+              </label>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
@@ -395,9 +503,10 @@ function EditModal({ shop, onClose, onSave }) {
               {saving ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -456,6 +565,21 @@ export default function ShopsView() {
     try {
       await api.put(`/admin/shops/${id}/verified`);
       setShops((prev) => prev.map((s) => s.id === id ? { ...s, is_verified: !s.is_verified } : s));
+    } catch (e) { console.error(e); }
+  };
+
+  const shopHasBenefit = (shop, featureKey) =>
+    (shop.benefits || []).some((b) => b.feature_key === featureKey && b.is_active);
+
+  const toggleWhatsAppBenefit = async (id) => {
+    try {
+      const res = await api.put(`/admin/shops/${id}/benefits/buyer_whatsapp_notifications/toggle`);
+      const updated = res.data.data;
+      setShops((prev) => prev.map((s) => {
+        if (s.id !== id) return s;
+        const rest = (s.benefits || []).filter((b) => b.feature_key !== 'buyer_whatsapp_notifications');
+        return { ...s, benefits: [...rest, updated] };
+      }));
     } catch (e) { console.error(e); }
   };
 
@@ -591,6 +715,13 @@ export default function ShopsView() {
                       title={shop.is_verified ? 'Quitar verificación' : 'Verificar'}
                     >
                       <Shield className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => toggleWhatsAppBenefit(shop.id)}
+                      className={`p-2 rounded transition-colors ${shopHasBenefit(shop, 'buyer_whatsapp_notifications') ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-50'}`}
+                      title={shopHasBenefit(shop, 'buyer_whatsapp_notifications') ? 'Desactivar notificación WhatsApp al vendedor' : 'Activar notificación WhatsApp al vendedor'}
+                    >
+                      <MessageCircle className={`w-4 h-4 ${shopHasBenefit(shop, 'buyer_whatsapp_notifications') ? 'fill-green-100' : ''}`} />
                     </button>
                     <button
                       onClick={() => setEditingShop(shop)}

@@ -43,4 +43,15 @@ return [
         ],
     ],
 
+    'callmebot' => [
+        'phone'   => env('WHATSAPP_PHONE', '3115728852'),
+        'api_key' => env('CALLMEBOT_API_KEY', ''),
+    ],
+
+    'whatsapp_gateway' => [
+        'url'     => env('WHATSAPP_GATEWAY_URL', 'http://whatsapp:3000'),
+        'api_key' => env('WHATSAPP_GATEWAY_API_KEY', ''),
+        'session' => env('WHATSAPP_GATEWAY_SESSION', 'default'),
+    ],
+
 ];

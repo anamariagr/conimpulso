@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Minus, Check, X, Wallet, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Search, Plus, Minus, Check, X, Wallet, Clock, AlertTriangle, RefreshCw, QrCode, Eye, EyeOff } from 'lucide-react';
 import api from '../../services/api';
+import { useSiteStore } from '../../stores/siteStore';
+import { SingleImageUploader } from '../../components/forms/ImageUploader';
 import toast from 'react-hot-toast';
 
 export default function WalletView() {
-  const [tab, setTab] = useState('topups'); // 'topups' | 'adjust'
+  const [tab, setTab] = useState('topups'); // 'topups' | 'adjust' | 'payment-config'
 
   return (
     <div className="space-y-6">
@@ -20,11 +22,158 @@ export default function WalletView() {
         <TabBtn active={tab === 'adjust'} onClick={() => setTab('adjust')}>
           <Wallet className="w-4 h-4" /> Ajuste manual de saldo
         </TabBtn>
+        <TabBtn active={tab === 'payment-config'} onClick={() => setTab('payment-config')}>
+          <QrCode className="w-4 h-4" /> Bre-B / Wompi
+        </TabBtn>
       </div>
 
       {tab === 'topups' && <PendingTopUps />}
       {tab === 'adjust' && <ManualAdjust />}
+      {tab === 'payment-config' && <PaymentConfig />}
     </div>
+  );
+}
+
+/* ─── Configuración de pago: llave/QR Bre-B, Wompi ─── */
+function PaymentConfig() {
+  const {
+    walletCoinValueCop, breBKey, breBQrImageUrl, wompiEnabled, wompiPublicKey,
+    loaded, fetchSettings, updateSettings,
+  } = useSiteStore();
+
+  const [form, setForm] = useState({
+    walletCoinValueCop: walletCoinValueCop || 3000,
+    breBKey: breBKey || '',
+    breBQrImageUrl: breBQrImageUrl || '',
+    wompiEnabled: wompiEnabled || false,
+    wompiPublicKey: wompiPublicKey || '',
+  });
+  const [showWompiKey, setShowWompiKey] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { fetchSettings(); }, []);
+
+  // Only sync from the store once the real values have loaded — otherwise
+  // this would briefly overwrite the form with defaults on every render.
+  useEffect(() => {
+    if (!loaded) return;
+    setForm({
+      walletCoinValueCop: walletCoinValueCop || 3000,
+      breBKey: breBKey || '',
+      breBQrImageUrl: breBQrImageUrl || '',
+      wompiEnabled: wompiEnabled || false,
+      wompiPublicKey: wompiPublicKey || '',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
+
+  const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateSettings({
+        wallet_coin_value_cop: form.walletCoinValueCop,
+        bre_b_key: form.breBKey,
+        bre_b_qr_image_url: form.breBQrImageUrl,
+        wompi_enabled: form.wompiEnabled,
+        wompi_public_key: form.wompiPublicKey,
+      });
+      toast.success('Configuración de pagos guardada');
+    } catch {
+      toast.error('Error al guardar la configuración');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="card max-w-lg space-y-5">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Valor de 1 moneda (COP)</label>
+        <input
+          type="number"
+          min="1"
+          value={form.walletCoinValueCop}
+          onChange={(e) => set('walletCoinValueCop', e.target.value)}
+          className="input-field w-full"
+          placeholder="3000"
+        />
+        <p className="text-xs text-gray-400 mt-1">Al aprobar una recarga se acreditan (monto pagado ÷ este valor) monedas.</p>
+      </div>
+
+      <div className="border-t border-gray-100 pt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Llave Bre-B</label>
+        <input
+          type="text"
+          value={form.breBKey}
+          onChange={(e) => set('breBKey', e.target.value)}
+          className="input-field w-full"
+          placeholder="Ej: @tullave o número"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
+          <QrCode className="w-4 h-4" /> QR de Bre-B
+        </label>
+        <SingleImageUploader
+          value={form.breBQrImageUrl}
+          onChange={(url) => set('breBQrImageUrl', url)}
+          hint="Imagen del código QR que verán los clientes al elegir Bre-B."
+        />
+      </div>
+
+      <div className="border-t border-gray-100 pt-4">
+        <Toggle
+          label="Wompi habilitado"
+          checked={form.wompiEnabled}
+          onChange={(v) => set('wompiEnabled', v)}
+        />
+        <p className="text-xs text-gray-400 mt-1 mb-3">Actívalo cuando tengas la cuenta de Wompi aprobada.</p>
+        {form.wompiEnabled && (
+          <div className="relative">
+            <input
+              type={showWompiKey ? 'text' : 'password'}
+              value={form.wompiPublicKey}
+              onChange={(e) => set('wompiPublicKey', e.target.value)}
+              className="input-field w-full pr-10"
+              placeholder="Llave pública de Wompi"
+            />
+            <button
+              type="button"
+              onClick={() => setShowWompiKey(!showWompiKey)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showWompiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={!loaded || saving}
+        className="w-full py-3 rounded-xl bg-accent hover:bg-yellow-400 text-primary font-semibold transition-colors disabled:opacity-50"
+      >
+        {!loaded ? 'Cargando...' : saving ? 'Guardando...' : 'Guardar cambios'}
+      </button>
+    </div>
+  );
+}
+
+function Toggle({ label, checked, onChange }) {
+  return (
+    <label className="flex items-center justify-between cursor-pointer">
+      <span className="text-sm text-gray-700">{label}</span>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-gray-200'}`}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
+      </button>
+    </label>
   );
 }
 
@@ -43,9 +192,13 @@ function TabBtn({ active, onClick, children }) {
 
 /* ─── Recargas pendientes ─── */
 function PendingTopUps() {
+  const { walletCoinValueCop, fetchSettings } = useSiteStore();
   const [topUps, setTopUps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  useEffect(() => { fetchSettings(); }, []);
 
   const load = async () => {
     setLoading(true);
@@ -119,9 +272,22 @@ function PendingTopUps() {
             <div className="text-center">
               <p className="text-xs text-gray-500">Monto</p>
               <p className="text-xl font-bold text-gray-900">
-                {Number(t.amount).toLocaleString('es-CL')}
+                ${Number(t.amount).toLocaleString('es-CL')}
+              </p>
+              <p className="text-xs text-accent-dark font-medium">
+                = {(Number(t.amount) / (walletCoinValueCop || 3000)).toFixed(2)} monedas
               </p>
             </div>
+            {t.payment_proof_url && (
+              <button
+                type="button"
+                onClick={() => setPreview(t.payment_proof_url)}
+                className="hidden md:flex flex-col items-center gap-1 text-gray-500 hover:text-gray-700"
+              >
+                <img src={t.payment_proof_url} alt="Comprobante" className="w-12 h-12 object-cover rounded-lg border border-gray-200" />
+                <span className="text-xs">Comprobante</span>
+              </button>
+            )}
             <div className="text-center hidden md:block">
               <p className="text-xs text-gray-500">Fecha</p>
               <p className="text-sm text-gray-600">
@@ -147,6 +313,15 @@ function PendingTopUps() {
           </div>
         ))}
       </div>
+
+      {preview && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          onClick={() => setPreview(null)}
+        >
+          <img src={preview} alt="Comprobante" className="max-w-full max-h-full rounded-xl" />
+        </div>
+      )}
     </div>
   );
 }

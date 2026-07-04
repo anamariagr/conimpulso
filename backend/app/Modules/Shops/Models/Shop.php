@@ -2,6 +2,7 @@
 
 namespace App\Modules\Shops\Models;
 
+use App\Modules\Auth\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -131,6 +132,16 @@ class Shop extends Model
     public function reviews()
     {
         return $this->hasMany(\App\Modules\Shops\Models\ShopReview::class);
+    }
+
+    public function benefits()
+    {
+        return $this->hasMany(ShopBenefit::class);
+    }
+
+    public function hasBenefit(string $featureKey): bool
+    {
+        return $this->benefits()->active()->where('feature_key', $featureKey)->exists();
     }
 
     public function getAverageRatingAttribute(): float
