@@ -20,7 +20,7 @@ export default function AnalyticsPage() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             to="/dashboard/products/new"
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
           >
             <ArrowRight className="w-5 h-5" />
             Crear producto

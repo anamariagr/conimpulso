@@ -211,7 +211,7 @@ export default function MessagesPage() {
           <button
             onClick={openCompose}
             disabled={!myMessagingEnabled}
-            className="flex items-center gap-2 px-4 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
             title={!myMessagingEnabled ? 'Tu mensajería está deshabilitada' : ''}
           >
             <Send className="w-5 h-5" />
@@ -248,7 +248,7 @@ export default function MessagesPage() {
           <Inbox className="w-4 h-4" />
           Recibidos
           {unreadCount > 0 && (
-            <span className="bg-accent text-primary text-xs font-bold rounded-full px-2 py-0.5">
+            <span className="bg-accent text-white text-xs font-bold rounded-full px-2 py-0.5">
               {unreadCount}
             </span>
           )}
@@ -290,7 +290,7 @@ export default function MessagesPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                  <div className="w-10 h-10 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                     {(message.sender?.name || message.receiver?.name || '?').charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -344,7 +344,7 @@ export default function MessagesPage() {
                 {/* Selected recipient chip */}
                 {selectedRecipient ? (
                   <div className="flex items-center gap-2 px-3 py-2 bg-accent/10 border border-accent/30 rounded-lg">
-                    <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                    <div className="w-7 h-7 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                       {selectedRecipient.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -381,7 +381,7 @@ export default function MessagesPage() {
                             onMouseDown={(e) => { e.preventDefault(); handleSelectRecipient(user); }}
                             className="w-full px-3 py-2.5 text-left flex items-center gap-2 hover:bg-gray-50 border-b border-gray-50 last:border-0"
                           >
-                            <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                            <div className="w-7 h-7 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                               {user.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0 flex-1">
@@ -428,7 +428,7 @@ export default function MessagesPage() {
                 >
                   Cancelar
                 </button>
-                <button type="submit" disabled={sending} className="flex-1 px-4 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 disabled:opacity-60 disabled:cursor-not-allowed">
+                <button type="submit" disabled={sending} className="flex-1 px-4 py-2 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 disabled:opacity-60 disabled:cursor-not-allowed">
                   {sending ? 'Enviando...' : 'Enviar'}
                 </button>
               </div>

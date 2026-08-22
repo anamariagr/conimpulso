@@ -26,7 +26,7 @@ export default function StoresPage() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-500" /></div>;
   }
 
   return (
@@ -38,7 +38,7 @@ export default function StoresPage() {
 
       <div className="relative mb-8">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input type="search" placeholder="Buscar tiendas..." value={searchQuery} onChange={handleSearchChange} className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent" />
+        <input type="search" placeholder="Buscar tiendas..." value={searchQuery} onChange={handleSearchChange} className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
       </div>
 
       {isError ? (
@@ -69,7 +69,7 @@ export default function StoresPage() {
                   </div>
                   <p className="text-sm text-gray-600 line-clamp-2 mb-3">{shop.description || 'Sin descripción'}</p>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <div className="flex items-center gap-1"><Star className="w-4 h-4 text-yellow-500" /><span>{shop.followers || 0} seguidores</span></div>
+                    <div className="flex items-center gap-1"><Star className="w-4 h-4 text-accent-500" /><span>{shop.followers || 0} seguidores</span></div>
                     <span>{shop.views || 0} vistas</span>
                   </div>
                 </div>

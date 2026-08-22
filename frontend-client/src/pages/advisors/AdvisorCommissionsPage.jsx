@@ -30,7 +30,7 @@ export default function AdvisorCommissionsPage() {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'pending':
-        return <Clock className="w-4 h-4 text-yellow-500" />;
+        return <Clock className="w-4 h-4 text-accent-500" />;
       case 'approved':
         return <CheckCircle className="w-4 h-4 text-blue-500" />;
       case 'paid':
@@ -42,7 +42,7 @@ export default function AdvisorCommissionsPage() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'text-yellow-400',
+      pending: 'text-accent-400',
       approved: 'text-blue-400',
       paid: 'text-green-400',
     };
@@ -54,7 +54,7 @@ export default function AdvisorCommissionsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#FFD700]">Mis Comisiones</h1>
+          <h1 className="text-3xl font-bold text-[#4d3cbb]">Mis Comisiones</h1>
           <p className="text-gray-400 mt-1">Historial de ganancias y pagos</p>
         </div>
 
@@ -73,12 +73,12 @@ export default function AdvisorCommissionsPage() {
           </div>
           <div className="bg-[#1A1A1A] rounded-xl p-4 border border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-yellow-900/30 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-yellow-500" />
+              <div className="w-10 h-10 bg-accent-900/30 rounded-lg flex items-center justify-center">
+                <Clock className="w-5 h-5 text-accent-500" />
               </div>
               <div>
                 <p className="text-gray-400 text-xs">Pendiente</p>
-                <p className="text-xl font-bold text-[#FFD700]">${stats.pending?.toLocaleString() || 0}</p>
+                <p className="text-xl font-bold text-[#4d3cbb]">${stats.pending?.toLocaleString() || 0}</p>
               </div>
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function AdvisorCommissionsPage() {
         {/* Commissions List */}
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin w-8 h-8 border-4 border-[#FFD700] border-t-transparent rounded-full"></div>
+            <div className="animate-spin w-8 h-8 border-4 border-[#4d3cbb] border-t-transparent rounded-full"></div>
           </div>
         ) : commissions.length === 0 ? (
           <div className="bg-[#1A1A1A] rounded-xl p-12 text-center border border-gray-800">
@@ -141,7 +141,7 @@ export default function AdvisorCommissionsPage() {
                         {commission.type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-[#FFD700] font-semibold">
+                    <td className="px-6 py-4 text-[#4d3cbb] font-semibold">
                       ${parseFloat(commission.amount).toLocaleString()}
                     </td>
                     <td className="px-6 py-4">

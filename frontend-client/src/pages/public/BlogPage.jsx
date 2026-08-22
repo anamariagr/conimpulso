@@ -4,7 +4,7 @@ import { Calendar, Store, Package, Search } from 'lucide-react';
 import api from '../../services/api';
 
 const TYPE_BADGE = {
-  product: { label: 'Nuevo producto', icon: Package, color: 'bg-accent/10 text-yellow-700' },
+  product: { label: 'Nuevo producto', icon: Package, color: 'bg-accent/10 text-accent-700' },
   shop:    { label: 'Nueva tienda',   icon: Store,   color: 'bg-blue-50 text-blue-700' },
   article: { label: 'Artículo',       icon: null,    color: 'bg-gray-100 text-gray-600' },
 };
@@ -34,7 +34,7 @@ function PostCard({ post }) {
           <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-5xl font-bold text-yellow-400 opacity-30">{post.title.charAt(0)}</span>
+            <span className="text-5xl font-bold text-accent-400 opacity-30">{post.title.charAt(0)}</span>
           </div>
         )}
         {/* Badge */}
@@ -96,7 +96,7 @@ export default function BlogPage() {
       {/* Hero */}
       <div className="bg-[#0A0A0A] text-white pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-accent/10 text-yellow-400 border border-accent/20 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 bg-accent/10 text-accent-400 border border-accent/20 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             ✦ Emprendimiento local · Hecho a mano · Directo del creador
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -118,7 +118,7 @@ export default function BlogPage() {
                 className="w-full bg-white/10 border border-white/20 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-accent"
               />
             </div>
-            <button type="submit" className="px-4 py-2.5 bg-accent text-primary font-semibold rounded-xl hover:bg-yellow-400 transition">
+            <button type="submit" className="px-4 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-400 transition">
               Buscar
             </button>
           </form>
@@ -134,7 +134,7 @@ export default function BlogPage() {
               onClick={() => setTypeFilter(f.value)}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 typeFilter === f.value
-                  ? 'bg-accent text-primary'
+                  ? 'bg-accent text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >

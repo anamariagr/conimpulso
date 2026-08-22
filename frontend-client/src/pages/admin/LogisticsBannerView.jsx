@@ -10,7 +10,7 @@ const DEFAULT_BANNER = {
   phone: '',
   cta: 'Conocer más',
   ctaUrl: '',
-  bgColor: '#FFD700',
+  bgColor: '#4d3cbb',
   textColor: '#0A0A0A',
 };
 
@@ -193,7 +193,7 @@ export default function LogisticsBannerView() {
                   value={form.bgColor}
                   onChange={handleChange}
                   className="input-field flex-1"
-                  placeholder="#FFD700"
+                  placeholder="#4d3cbb"
                 />
               </div>
             </div>

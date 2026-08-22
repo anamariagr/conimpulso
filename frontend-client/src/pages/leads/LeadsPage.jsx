@@ -44,7 +44,7 @@ export default function LeadsPage() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-yellow-100 text-yellow-700',
+      pending: 'bg-accent-100 text-accent-700',
       contacted: 'bg-blue-100 text-blue-700',
       qualified: 'bg-green-100 text-green-700',
       converted: 'bg-purple-100 text-purple-700',
@@ -59,7 +59,7 @@ export default function LeadsPage() {
         <h1 className="text-2xl font-bold text-primary">Leads</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+          className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
         >
           <Plus className="w-5 h-5" />
           {showForm ? 'Cancelar' : 'Nuevo Lead'}
@@ -110,7 +110,7 @@ export default function LeadsPage() {
           />
           <button
             type="submit"
-            className="px-6 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+            className="px-6 py-2 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
           >
             Crear Lead
           </button>
@@ -134,7 +134,7 @@ export default function LeadsPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
             >
               <Plus className="w-5 h-5" />
               Crear mi primer lead

@@ -9,7 +9,7 @@ const DEFAULT_BANNER = {
   phone: '',
   cta: 'Conocer más',
   ctaUrl: '',
-  bgColor: '#FFD700',
+  bgColor: '#4d3cbb',
   textColor: '#0A0A0A',
 };
 

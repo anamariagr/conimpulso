@@ -30,8 +30,8 @@ export default function B2BProfilesPage() {
     <div className="min-h-screen bg-[#0A0A0A] text-white pt-20 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-[#FFD700]">Directorio Empresarial</h1>
-          <button className="px-6 py-2 bg-[#FFD700] text-black font-semibold rounded-lg hover:bg-yellow-400 transition">
+          <h1 className="text-3xl font-bold text-[#4d3cbb]">Directorio Empresarial</h1>
+          <button className="px-6 py-2 bg-[#4d3cbb] text-black font-semibold rounded-lg hover:bg-accent-400 transition">
             Mi Perfil B2B
           </button>
         </div>
@@ -42,12 +42,12 @@ export default function B2BProfilesPage() {
             placeholder="Buscar empresas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-3 bg-[#1A1A1A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#FFD700] focus:outline-none"
+            className="px-4 py-3 bg-[#1A1A1A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#4d3cbb] focus:outline-none"
           />
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="px-4 py-3 bg-[#1A1A1A] border border-gray-700 rounded-lg text-white focus:border-[#FFD700] focus:outline-none"
+            className="px-4 py-3 bg-[#1A1A1A] border border-gray-700 rounded-lg text-white focus:border-[#4d3cbb] focus:outline-none"
           >
             <option value="">Todos los tipos</option>
             <option value="manufacturer">Fabricante</option>
@@ -60,19 +60,19 @@ export default function B2BProfilesPage() {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin w-8 h-8 border-4 border-[#FFD700] border-t-transparent rounded-full"></div>
+            <div className="animate-spin w-8 h-8 border-4 border-[#4d3cbb] border-t-transparent rounded-full"></div>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {profiles.map((profile) => (
-                <div key={profile.id} className="bg-[#1A1A1A] rounded-xl p-6 border border-gray-800 hover:border-[#FFD700] transition">
+                <div key={profile.id} className="bg-[#1A1A1A] rounded-xl p-6 border border-gray-800 hover:border-[#4d3cbb] transition">
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="text-xl font-semibold text-white">{profile.company_name}</h3>
-                      <span className="text-sm text-[#FFD700]">{profile.business_type}</span>
+                      <span className="text-sm text-[#4d3cbb]">{profile.business_type}</span>
                     </div>
-                    <span className={`px-2 py-1 text-xs rounded ${profile.verification_status === 'verified' ? 'bg-green-900 text-green-400' : 'bg-yellow-900 text-yellow-400'}`}>
+                    <span className={`px-2 py-1 text-xs rounded ${profile.verification_status === 'verified' ? 'bg-green-900 text-green-400' : 'bg-accent-900 text-accent-400'}`}>
                       {profile.verification_status === 'verified' ? 'Verificado' : 'Pendiente'}
                     </span>
                   </div>
@@ -84,7 +84,7 @@ export default function B2BProfilesPage() {
                       ))}
                     </div>
                   )}
-                  <button className="w-full mt-4 px-4 py-2 border border-[#FFD700] text-[#FFD700] rounded-lg hover:bg-[#FFD700] hover:text-black transition">
+                  <button className="w-full mt-4 px-4 py-2 border border-[#4d3cbb] text-[#4d3cbb] rounded-lg hover:bg-[#4d3cbb] hover:text-black transition">
                     Conectar
                   </button>
                 </div>
@@ -97,7 +97,7 @@ export default function B2BProfilesPage() {
                   <button
                     key={i}
                     onClick={() => fetchProfiles(i + 1)}
-                    className={`px-4 py-2 rounded-lg ${pagination.current_page === i + 1 ? 'bg-[#FFD700] text-black' : 'bg-[#1A1A1A] text-white'}`}
+                    className={`px-4 py-2 rounded-lg ${pagination.current_page === i + 1 ? 'bg-[#4d3cbb] text-black' : 'bg-[#1A1A1A] text-white'}`}
                   >
                     {i + 1}
                   </button>

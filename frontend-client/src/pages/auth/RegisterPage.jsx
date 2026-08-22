@@ -59,7 +59,7 @@ function getPasswordStrength(password) {
 
   if (score <= 2) return { score, label: 'Débil', color: 'bg-red-500' };
   if (score <= 4) return { score, label: 'Regular', color: 'bg-orange-400' };
-  if (score <= 5) return { score, label: 'Buena', color: 'bg-yellow-400' };
+  if (score <= 5) return { score, label: 'Buena', color: 'bg-accent-400' };
   return { score, label: 'Fuerte', color: 'bg-green-500' };
 }
 
@@ -76,7 +76,7 @@ function PasswordStrengthBar({ password }) {
         />
       </div>
       <p className={`text-xs mt-1 font-medium ${
-        score <= 2 ? 'text-red-500' : score <= 3 ? 'text-orange-500' : score <= 4 ? 'text-yellow-600' : 'text-green-600'
+        score <= 2 ? 'text-red-500' : score <= 3 ? 'text-orange-500' : score <= 4 ? 'text-accent-600' : 'text-green-600'
       }`}>
         Contraseña {label}
       </p>

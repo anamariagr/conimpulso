@@ -4,7 +4,7 @@ import { Package, Clock, CheckCircle, Truck, XCircle, Ban, Factory, CreditCard }
 import api from '../../services/api';
 
 const STATUS = {
-  pending:          { label: 'Pendiente',           cls: 'bg-yellow-100 text-yellow-700', icon: Clock },
+  pending:          { label: 'Pendiente',           cls: 'bg-accent-100 text-accent-700', icon: Clock },
   confirmed:        { label: 'Confirmado',          cls: 'bg-blue-100 text-blue-700',     icon: CheckCircle },
   ordered_producer: { label: 'Preparando tu pedido',cls: 'bg-purple-100 text-purple-700', icon: Factory },
   shipped:          { label: 'Enviado',             cls: 'bg-indigo-100 text-indigo-700', icon: Truck },
@@ -53,7 +53,7 @@ export default function OrdersPage() {
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             Mis Pedidos
             {inProcess > 0 && (
-              <span className="bg-accent text-primary text-xs font-bold rounded-full px-2 py-0.5">
+              <span className="bg-accent text-white text-xs font-bold rounded-full px-2 py-0.5">
                 {inProcess} en proceso
               </span>
             )}

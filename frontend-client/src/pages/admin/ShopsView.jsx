@@ -5,7 +5,7 @@ import api from '../../services/api';
 
 const STATUS_COLORS = {
   active: 'bg-green-100 text-green-700',
-  pending: 'bg-yellow-100 text-yellow-700',
+  pending: 'bg-accent-100 text-accent-700',
   suspended: 'bg-red-100 text-red-700',
   rejected: 'bg-red-100 text-red-700',
   draft: 'bg-gray-100 text-gray-700',
@@ -241,7 +241,7 @@ function CreateModal({ onClose, onCreated }) {
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <div
                 onClick={() => set('is_featured', !form.is_featured)}
-                className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.is_featured ? 'bg-yellow-400' : 'bg-gray-200'}`}
+                className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.is_featured ? 'bg-accent-400' : 'bg-gray-200'}`}
               >
                 <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_featured ? 'translate-x-4' : 'translate-x-0'}`} />
               </div>
@@ -477,7 +477,7 @@ function EditModal({ shop: initialShop, onClose, onSave }) {
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <div
                   onClick={() => set('is_featured', !form.is_featured)}
-                  className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.is_featured ? 'bg-yellow-400' : 'bg-gray-200'}`}
+                  className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.is_featured ? 'bg-accent-400' : 'bg-gray-200'}`}
                 >
                   <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_featured ? 'translate-x-4' : 'translate-x-0'}`} />
                 </div>
@@ -655,7 +655,7 @@ export default function ShopsView() {
                       {shop.logo ? (
                         <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-yellow-400 font-bold text-xl">
+                        <span className="text-accent-400 font-bold text-xl">
                           {shop.name?.charAt(0) || 'S'}
                         </span>
                       )}
@@ -664,7 +664,7 @@ export default function ShopsView() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-gray-900">{shop.name}</h3>
                         {shop.is_verified && <Shield className="w-4 h-4 text-blue-500" title="Verificada" />}
-                        {shop.is_featured && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" title="Destacada" />}
+                        {shop.is_featured && <Star className="w-4 h-4 text-accent-500 fill-accent-500" title="Destacada" />}
                       </div>
                       <p className="text-sm text-gray-500">
                         {shop.user?.name || 'Sin dueño'} · {shop.city || 'Sin ciudad'}
@@ -704,10 +704,10 @@ export default function ShopsView() {
                     )}
                     <button
                       onClick={() => toggleFeatured(shop.id)}
-                      className={`p-2 rounded transition-colors ${shop.is_featured ? 'text-yellow-500 hover:bg-yellow-50' : 'text-gray-400 hover:bg-gray-50'}`}
+                      className={`p-2 rounded transition-colors ${shop.is_featured ? 'text-accent-500 hover:bg-accent-50' : 'text-gray-400 hover:bg-gray-50'}`}
                       title={shop.is_featured ? 'Quitar destacado' : 'Destacar'}
                     >
-                      <Star className={`w-4 h-4 ${shop.is_featured ? 'fill-yellow-500' : ''}`} />
+                      <Star className={`w-4 h-4 ${shop.is_featured ? 'fill-accent-500' : ''}`} />
                     </button>
                     <button
                       onClick={() => toggleVerified(shop.id)}

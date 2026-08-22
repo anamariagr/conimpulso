@@ -37,14 +37,14 @@ export default function ShipmentTrackingPage() {
       case 'in_transit':
         return <Truck className="w-5 h-5 text-blue-500" />;
       default:
-        return <Clock className="w-5 h-5 text-yellow-500" />;
+        return <Clock className="w-5 h-5 text-accent-500" />;
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-[#FFD700] border-t-transparent rounded-full"></div>
+        <div className="animate-spin w-8 h-8 border-4 border-[#4d3cbb] border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -64,7 +64,7 @@ export default function ShipmentTrackingPage() {
     <div className="min-h-screen bg-[#0A0A0A] text-white pt-20 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#FFD700]">Rastreo de Envío</h1>
+          <h1 className="text-3xl font-bold text-[#4d3cbb]">Rastreo de Envío</h1>
           <p className="text-gray-400 mt-1">Tracking: {trackingNumber}</p>
         </div>
 

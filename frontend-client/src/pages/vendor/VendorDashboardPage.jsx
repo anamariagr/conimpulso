@@ -51,7 +51,7 @@ export default function VendorDashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-[#FFD700] border-t-transparent rounded-full"></div>
+        <div className="animate-spin w-8 h-8 border-4 border-[#4d3cbb] border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -62,19 +62,19 @@ export default function VendorDashboardPage() {
         <LogisticsPromoBanner />
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[#FFD700]">Panel de Vendedor</h1>
+            <h1 className="text-3xl font-bold text-[#4d3cbb]">Panel de Vendedor</h1>
             <p className="text-gray-400 mt-1">Gestiona tu tienda y monitoreo tu rendimiento</p>
           </div>
           <div className="flex gap-3">
             <Link
               to="/dashboard/store/edit"
-              className="px-4 py-2 bg-[#1A1A1A] border border-gray-700 rounded-lg hover:border-[#FFD700] transition"
+              className="px-4 py-2 bg-[#1A1A1A] border border-gray-700 rounded-lg hover:border-[#4d3cbb] transition"
             >
               Editar Tienda
             </Link>
             <Link
               to="/dashboard/settings"
-              className="px-4 py-2 bg-[#1A1A1A] border border-gray-700 rounded-lg hover:border-[#FFD700] transition"
+              className="px-4 py-2 bg-[#1A1A1A] border border-gray-700 rounded-lg hover:border-[#4d3cbb] transition"
             >
               Configuración
             </Link>
@@ -109,10 +109,10 @@ export default function VendorDashboardPage() {
 
           <div className="bg-[#1A1A1A] rounded-xl p-6 border border-gray-800">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-yellow-900/30 rounded-xl flex items-center justify-center">
-                <Eye className="w-6 h-6 text-yellow-500" />
+              <div className="w-12 h-12 bg-accent-900/30 rounded-xl flex items-center justify-center">
+                <Eye className="w-6 h-6 text-accent-500" />
               </div>
-              <span className="text-xs text-yellow-500 bg-yellow-900/30 px-2 py-1 rounded">Vistas</span>
+              <span className="text-xs text-accent-500 bg-accent-900/30 px-2 py-1 rounded">Vistas</span>
             </div>
             <p className="text-gray-400 text-sm mb-1">Visitas a Tu Tienda</p>
             <p className="text-2xl font-bold text-white">{stats?.total_views?.toLocaleString() || 0}</p>
@@ -144,7 +144,7 @@ export default function VendorDashboardPage() {
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1">
                     <div
-                      className="w-full bg-[#FFD700] rounded-t transition-all hover:bg-yellow-400"
+                      className="w-full bg-[#4d3cbb] rounded-t transition-all hover:bg-accent-400"
                       style={{ height: `${Math.max(height, 2)}%` }}
                       title={`${day.date}: $${day.revenue}`}
                     ></div>
@@ -160,14 +160,14 @@ export default function VendorDashboardPage() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white">Notificaciones</h2>
               {unreadCount > 0 && (
-                <button onClick={handleMarkAllRead} className="text-xs text-[#FFD700] hover:underline">
+                <button onClick={handleMarkAllRead} className="text-xs text-[#4d3cbb] hover:underline">
                   Marcar todas leídas
                 </button>
               )}
             </div>
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {notifications.slice(0, 5).map((notif) => (
-                <div key={notif.id} className={`p-3 rounded-lg ${notif.is_read ? 'bg-[#0A0A0A]' : 'bg-[#FFD700]/10 border border-[#FFD700]/30'}`}>
+                <div key={notif.id} className={`p-3 rounded-lg ${notif.is_read ? 'bg-[#0A0A0A]' : 'bg-[#4d3cbb]/10 border border-[#4d3cbb]/30'}`}>
                   <p className="text-white text-sm font-medium">{notif.title}</p>
                   <p className="text-gray-400 text-xs mt-1">{notif.message}</p>
                 </div>
@@ -186,14 +186,14 @@ export default function VendorDashboardPage() {
               <h2 className="text-xl font-semibold text-white">Promociones</h2>
               <Link
                 to="/dashboard/store/promotions"
-                className="flex items-center gap-1 text-[#FFD700] text-sm hover:underline"
+                className="flex items-center gap-1 text-[#4d3cbb] text-sm hover:underline"
               >
                 Ver todas <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
             <Link
               to="/dashboard/store/promotions/new"
-              className="flex items-center justify-center gap-2 w-full p-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-[#FFD700] transition text-gray-400 hover:text-[#FFD700]"
+              className="flex items-center justify-center gap-2 w-full p-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-[#4d3cbb] transition text-gray-400 hover:text-[#4d3cbb]"
             >
               <Plus className="w-5 h-5" />
               Crear Nueva Promoción
@@ -206,7 +206,7 @@ export default function VendorDashboardPage() {
               <h2 className="text-xl font-semibold text-white">Productos Más Vendidos</h2>
               <Link
                 to="/dashboard/products"
-                className="flex items-center gap-1 text-[#FFD700] text-sm hover:underline"
+                className="flex items-center gap-1 text-[#4d3cbb] text-sm hover:underline"
               >
                 Ver todos <ChevronRight className="w-4 h-4" />
               </Link>
@@ -250,28 +250,28 @@ export default function VendorDashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
           <Link
             to="/dashboard/products/new"
-            className="bg-[#1A1A1A] rounded-xl p-4 border border-gray-800 hover:border-[#FFD700] transition text-center"
+            className="bg-[#1A1A1A] rounded-xl p-4 border border-gray-800 hover:border-[#4d3cbb] transition text-center"
           >
-            <Plus className="w-8 h-8 text-[#FFD700] mx-auto mb-2" />
+            <Plus className="w-8 h-8 text-[#4d3cbb] mx-auto mb-2" />
             <p className="text-white font-medium">Nuevo Producto</p>
           </Link>
           <Link
             to="/advertising/campaigns/new"
-            className="bg-[#1A1A1A] rounded-xl p-4 border border-gray-800 hover:border-[#FFD700] transition text-center"
+            className="bg-[#1A1A1A] rounded-xl p-4 border border-gray-800 hover:border-[#4d3cbb] transition text-center"
           >
-            <Tag className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+            <Tag className="w-8 h-8 text-accent-500 mx-auto mb-2" />
             <p className="text-white font-medium">Crear Campaña</p>
           </Link>
           <Link
             to="/dashboard/leads"
-            className="bg-[#1A1A1A] rounded-xl p-4 border border-gray-800 hover:border-[#FFD700] transition text-center"
+            className="bg-[#1A1A1A] rounded-xl p-4 border border-gray-800 hover:border-[#4d3cbb] transition text-center"
           >
             <TrendingUp className="w-8 h-8 text-green-500 mx-auto mb-2" />
             <p className="text-white font-medium">Ver Leads</p>
           </Link>
           <Link
             to="/ai"
-            className="bg-[#1A1A1A] rounded-xl p-4 border border-gray-800 hover:border-[#FFD700] transition text-center"
+            className="bg-[#1A1A1A] rounded-xl p-4 border border-gray-800 hover:border-[#4d3cbb] transition text-center"
           >
             <BarChart3 className="w-8 h-8 text-purple-500 mx-auto mb-2" />
             <p className="text-white font-medium">AI Insights</p>

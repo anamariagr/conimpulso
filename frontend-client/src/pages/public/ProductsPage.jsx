@@ -38,7 +38,7 @@ export default function ProductsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-500"></div>
       </div>
     );
   }
@@ -59,19 +59,19 @@ export default function ProductsPage() {
             placeholder="Buscar productos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent"
           />
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-3 rounded-lg ${viewMode === 'grid' ? 'bg-yellow-500 text-black' : 'bg-gray-100 text-gray-600'}`}
+            className={`p-3 rounded-lg ${viewMode === 'grid' ? 'bg-accent-500 text-black' : 'bg-gray-100 text-gray-600'}`}
           >
             <Grid className="w-5 h-5" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-3 rounded-lg ${viewMode === 'list' ? 'bg-yellow-500 text-black' : 'bg-gray-100 text-gray-600'}`}
+            className={`p-3 rounded-lg ${viewMode === 'list' ? 'bg-accent-500 text-black' : 'bg-gray-100 text-gray-600'}`}
           >
             <List className="w-5 h-5" />
           </button>
@@ -80,7 +80,7 @@ export default function ProductsPage() {
 
       {/* Categories */}
       <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-        <button className="px-4 py-2 bg-yellow-500 text-black rounded-full font-medium whitespace-nowrap">
+        <button className="px-4 py-2 bg-accent-500 text-black rounded-full font-medium whitespace-nowrap">
           Todos
         </button>
         {categories.filter(c => !c.parent_id).map((category) => (
@@ -126,7 +126,7 @@ export default function ProductsPage() {
                 <h3 className="font-semibold text-gray-900 mb-1">{product.name || 'Producto'}</h3>
                 <p className="text-sm text-gray-500 mb-2 line-clamp-2">{product.description || 'Sin descripción'}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-yellow-600">
+                  <span className="text-lg font-bold text-accent-600">
                     ${product.price || '0.00'}
                   </span>
                   {product.shop && (

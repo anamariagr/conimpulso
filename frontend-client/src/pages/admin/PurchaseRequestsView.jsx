@@ -4,7 +4,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const STATUS = {
-  pending:   { label: 'Pendiente',   cls: 'bg-yellow-100 text-yellow-700', icon: Clock },
+  pending:   { label: 'Pendiente',   cls: 'bg-accent-100 text-accent-700', icon: Clock },
   contacted: { label: 'Contactado',  cls: 'bg-blue-100 text-blue-700',    icon: MessageSquare },
   closed:    { label: 'Cerrado',     cls: 'bg-green-100 text-green-700',  icon: CheckCircle },
 };
@@ -218,7 +218,7 @@ export default function PurchaseRequestsView() {
                 </button>
               )}
               <button onClick={() => handleUpdate(selected.status)} disabled={updating}
-                className="px-4 py-2 bg-accent text-primary font-medium rounded-xl hover:bg-yellow-400 text-sm disabled:opacity-60">
+                className="px-4 py-2 bg-accent text-white font-medium rounded-xl hover:bg-accent-400 text-sm disabled:opacity-60">
                 Guardar notas
               </button>
             </div>

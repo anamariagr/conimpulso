@@ -154,7 +154,7 @@ function PaymentConfig() {
       <button
         onClick={handleSave}
         disabled={!loaded || saving}
-        className="w-full py-3 rounded-xl bg-accent hover:bg-yellow-400 text-primary font-semibold transition-colors disabled:opacity-50"
+        className="w-full py-3 rounded-xl bg-accent hover:bg-accent-400 text-primary font-semibold transition-colors disabled:opacity-50"
       >
         {!loaded ? 'Cargando...' : saving ? 'Guardando...' : 'Guardar cambios'}
       </button>
@@ -254,8 +254,8 @@ function PendingTopUps() {
         {topUps.map((t) => (
           <div key={t.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="font-bold text-yellow-700">{t.user?.name?.charAt(0) || '?'}</span>
+              <div className="w-10 h-10 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="font-bold text-accent-700">{t.user?.name?.charAt(0) || '?'}</span>
               </div>
               <div>
                 <p className="font-medium text-gray-900">{t.user?.name || `Usuario #${t.user_id}`}</p>
@@ -442,7 +442,7 @@ function ManualAdjust() {
                 key={u.id}
                 onClick={() => setSelected(u)}
                 className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors text-left ${
-                  selected?.id === u.id ? 'border-accent bg-yellow-50' : 'border-gray-100 hover:border-gray-300'
+                  selected?.id === u.id ? 'border-accent bg-accent-50' : 'border-gray-100 hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center gap-3">

@@ -16,7 +16,7 @@ function EmptyState() {
         </p>
         <Link
           to="/dashboard/store/new"
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
         >
           <Plus className="w-5 h-5" />
           Crear mi tienda
@@ -52,9 +52,9 @@ function EmptyState() {
 
 function PendingState({ shop }) {
   return (
-    <div className="bg-white rounded-xl border-2 border-yellow-300 shadow-sm p-10 text-center">
-      <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Clock className="w-8 h-8 text-yellow-600" />
+    <div className="bg-white rounded-xl border-2 border-accent-300 shadow-sm p-10 text-center">
+      <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Clock className="w-8 h-8 text-accent-600" />
       </div>
       <h2 className="text-xl font-semibold text-primary mb-2">Tu tienda está en revisión</h2>
       <p className="text-gray-500 mb-1 max-w-md mx-auto">
@@ -71,7 +71,7 @@ function PendingState({ shop }) {
         </Link>
         <Link
           to="/dashboard/products/new"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
         >
           <Plus className="w-4 h-4" />
           Agregar productos mientras tanto
@@ -126,7 +126,7 @@ function ActiveState({ shop }) {
           )}
           <Link
             to="/dashboard/products/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-primary text-sm font-semibold rounded-lg hover:bg-yellow-400 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent-400 transition"
           >
             <Plus className="w-4 h-4" />
             Agregar producto
@@ -169,7 +169,7 @@ function RejectedState({ shop }) {
       </p>
       <Link
         to="/dashboard/store/edit"
-        className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+        className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
       >
         <Settings className="w-4 h-4" />
         Editar y reenviar
@@ -190,7 +190,7 @@ function SuspendedState({ shop }) {
       </p>
       <a
         href="mailto:soporte@conimpulso.co"
-        className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+        className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
       >
         Contactar soporte
       </a>
@@ -219,7 +219,7 @@ export default function StorePage() {
         {shop && shop.status === 'active' && (
           <Link
             to="/dashboard/store/edit"
-            className="flex items-center gap-2 px-4 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
           >
             <Settings className="w-5 h-5" />
             Configurar Tienda

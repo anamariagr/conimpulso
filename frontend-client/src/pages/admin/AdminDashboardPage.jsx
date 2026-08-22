@@ -40,7 +40,7 @@ const STATUS_LABELS = {
 
 const STATUS_COLORS = {
   active: 'bg-green-100 text-green-700',
-  pending: 'bg-yellow-100 text-yellow-700',
+  pending: 'bg-accent-100 text-accent-700',
   inactive: 'bg-gray-100 text-gray-600',
   draft: 'bg-blue-100 text-blue-700',
   rejected: 'bg-red-100 text-red-700',
@@ -317,7 +317,7 @@ export default function AdminDashboardPage() {
               {latestShops.map((shop) => (
                 <div key={shop.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-gradient-to-br from-accent-400 to-accent-600 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Store className="w-5 h-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -330,7 +330,7 @@ export default function AdminDashboardPage() {
                       <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700" title="Verificada">✓</span>
                     )}
                     {shop.is_featured && (
-                      <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700" title="Destacada">★</span>
+                      <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-accent-100 text-accent-700" title="Destacada">★</span>
                     )}
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[shop.status] || 'bg-gray-100 text-gray-600'}`}>
                       {STATUS_LABELS[shop.status] || shop.status}
@@ -383,7 +383,7 @@ export default function AdminDashboardPage() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Layout className="w-5 h-5 text-yellow-500" />
+              <Layout className="w-5 h-5 text-accent-500" />
               <h2 className="text-lg font-semibold text-gray-900">Estado del Homepage</h2>
             </div>
             <Link to="/admin/homepage-editor" className="text-sm text-accent hover:text-accent-hover font-medium flex items-center gap-1">
@@ -391,10 +391,10 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+            <div className="p-3 bg-accent-50 rounded-lg border border-accent-100">
               <div className="flex items-center gap-2 mb-1">
-                <ImageIcon className="w-4 h-4 text-yellow-600" />
-                <p className="text-xs font-medium text-yellow-700">Banners</p>
+                <ImageIcon className="w-4 h-4 text-accent-600" />
+                <p className="text-xs font-medium text-accent-700">Banners</p>
               </div>
               <p className="text-2xl font-bold text-gray-900">{totalBanners}</p>
               <p className="text-xs text-gray-500">{activeBanners} activos</p>
@@ -492,7 +492,7 @@ function StatCard({ label, value, change, up, icon: Icon, color, subtext }) {
     blue: 'bg-blue-500/20 text-blue-600',
     green: 'bg-green-500/20 text-green-600',
     purple: 'bg-purple-500/20 text-purple-600',
-    yellow: 'bg-yellow-500/20 text-yellow-600',
+    yellow: 'bg-accent-500/20 text-accent-600',
   };
 
   return (
@@ -533,7 +533,7 @@ function SmallStat({ label, value, icon: Icon }) {
 
 function QuickAccess({ to, label, sublabel, icon: Icon, color }) {
   const colorClasses = {
-    yellow: 'bg-yellow-400/20 text-yellow-600 group-hover:bg-yellow-400/30',
+    yellow: 'bg-accent-400/20 text-accent-600 group-hover:bg-accent-400/30',
     blue: 'bg-blue-500/20 text-blue-600 group-hover:bg-blue-500/30',
     green: 'bg-green-500/20 text-green-600 group-hover:bg-green-500/30',
     purple: 'bg-purple-500/20 text-purple-600 group-hover:bg-purple-500/30',
@@ -541,7 +541,7 @@ function QuickAccess({ to, label, sublabel, icon: Icon, color }) {
     gray: 'bg-gray-500/20 text-gray-600 group-hover:bg-gray-500/30',
   };
   const textClasses = {
-    yellow: 'group-hover:text-yellow-600',
+    yellow: 'group-hover:text-accent-600',
     blue: 'group-hover:text-blue-600',
     green: 'group-hover:text-green-600',
     purple: 'group-hover:text-purple-600',
@@ -563,13 +563,13 @@ function QuickAccess({ to, label, sublabel, icon: Icon, color }) {
 
 function SystemAlert({ type, title, description }) {
   const styles = {
-    warning: 'bg-yellow-50 border-yellow-100 text-yellow-700',
+    warning: 'bg-accent-50 border-accent-100 text-accent-700',
     success: 'bg-green-50 border-green-100 text-green-700',
     info: 'bg-blue-50 border-blue-100 text-blue-700',
     danger: 'bg-red-50 border-red-100 text-red-700',
   };
   const dotColors = {
-    warning: 'bg-yellow-500',
+    warning: 'bg-accent-500',
     success: 'bg-green-500',
     info: 'bg-blue-500',
     danger: 'bg-red-500',
@@ -623,7 +623,7 @@ function MessagingWidget() {
           <MessageSquare className="w-5 h-5 text-blue-500" />
           <h2 className="text-lg font-semibold text-gray-900">Control de Mensajería</h2>
         </div>
-        <Link to="/admin/users" className="text-sm text-accent hover:text-yellow-600 font-medium flex items-center gap-1">
+        <Link to="/admin/users" className="text-sm text-accent hover:text-accent-600 font-medium flex items-center gap-1">
           Gestionar todos <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
@@ -642,7 +642,7 @@ function MessagingWidget() {
             <p className="text-2xl font-bold text-red-600">{stats.messaging_disabled || 0}</p>
             <p className="text-xs text-gray-500 mt-1">Bloqueados</p>
           </div>
-          <div className="p-3 bg-yellow-50 rounded-xl text-center">
+          <div className="p-3 bg-accent-50 rounded-xl text-center">
             <p className="text-2xl font-bold text-accent">{stats.active_and_enabled || 0}</p>
             <p className="text-xs text-gray-500 mt-1">Activos y habilitados</p>
           </div>

@@ -57,7 +57,7 @@ export default function AIInsightsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl">
+        <div className="p-3 bg-gradient-to-br from-accent-500 to-orange-500 rounded-xl">
           <Sparkles className="h-8 w-8 text-black" />
         </div>
         <div>
@@ -75,7 +75,7 @@ export default function AIInsightsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'text-yellow-500 border-b-2 border-yellow-500'
+                  ? 'text-accent-500 border-b-2 border-accent-500'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -99,12 +99,12 @@ export default function AIInsightsPage() {
               value={categoryInput}
               onChange={(e) => setCategoryInput(e.target.value)}
               placeholder="Ej: Camisa de algodón premium"
-              className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-500 focus:border-transparent"
             />
             <button
               onClick={handleSuggestCategory}
               disabled={categoryLoading || !categoryInput.trim()}
-              className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+              className="px-6 py-3 bg-accent-500 hover:bg-accent-600 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
             >
               {categoryLoading ? <Loader className="animate-spin" size={20} /> : 'Analizar'}
             </button>
@@ -119,7 +119,7 @@ export default function AIInsightsPage() {
 
           {categoryResult && (
             <div className="p-4 bg-gray-800 rounded-lg">
-              <h4 className="text-lg font-semibold text-yellow-500 mb-2">
+              <h4 className="text-lg font-semibold text-accent-500 mb-2">
                 Categoría Sugerida: {categoryResult.suggested_category}
               </h4>
               <p className="text-gray-400 mb-2">Confianza: {Math.round(categoryResult.confidence * 100)}%</p>
@@ -160,7 +160,7 @@ export default function AIInsightsPage() {
           <h3 className="text-lg font-semibold text-white mb-4">Productos Trending</h3>
           {trendingLoading ? (
             <div className="flex items-center justify-center h-32">
-              <Loader className="animate-spin h-8 w-8 text-yellow-500" />
+              <Loader className="animate-spin h-8 w-8 text-accent-500" />
             </div>
           ) : trendingProducts.length > 0 ? (
             <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">

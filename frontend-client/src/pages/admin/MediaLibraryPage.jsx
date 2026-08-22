@@ -94,7 +94,7 @@ export default function MediaLibraryPage() {
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2.5 bg-accent text-primary font-semibold rounded-xl hover:bg-yellow-400 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-400 transition-colors disabled:opacity-50"
           >
             <Upload className="w-4 h-4" />
             {uploading ? 'Subiendo...' : 'Subir imagen'}

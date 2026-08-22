@@ -97,7 +97,7 @@ export default function BlogPostPage() {
 
         {/* Meta badges */}
         <div className="flex flex-wrap items-center gap-2 mb-5">
-          <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isProduct ? 'bg-accent/10 text-yellow-700' : 'bg-blue-50 text-blue-700'}`}>
+          <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isProduct ? 'bg-accent/10 text-accent-700' : 'bg-blue-50 text-blue-700'}`}>
             {isProduct ? <Package className="w-3 h-3" /> : <Store className="w-3 h-3" />}
             {isProduct ? 'Nuevo producto' : 'Nueva tienda'}
           </span>
@@ -207,14 +207,14 @@ export default function BlogPostPage() {
               {isProduct ? (
                 <Link
                   to={`/products`}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-accent text-primary font-semibold rounded-xl hover:bg-yellow-400 transition text-sm"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-400 transition text-sm"
                 >
                   <Package className="w-4 h-4" /> Ver producto
                 </Link>
               ) : (
                 <Link
                   to={`/stores/${related.slug}`}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-accent text-primary font-semibold rounded-xl hover:bg-yellow-400 transition text-sm"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-400 transition text-sm"
                 >
                   <Store className="w-4 h-4" /> Visitar tienda
                 </Link>

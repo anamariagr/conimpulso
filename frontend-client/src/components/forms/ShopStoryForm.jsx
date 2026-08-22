@@ -9,7 +9,7 @@ function Step({ number, question, hint, children, filled }) {
   return (
     <div className={`rounded-xl border-2 p-4 transition-all ${filled ? 'border-accent/40 bg-accent/5' : 'border-gray-100 bg-white'}`}>
       <div className="flex items-start gap-3">
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5 ${filled ? 'bg-accent text-primary' : 'bg-gray-100 text-gray-500'}`}>
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5 ${filled ? 'bg-accent text-white' : 'bg-gray-100 text-gray-500'}`}>
           {filled ? '✓' : number}
         </div>
         <div className="flex-1 min-w-0">

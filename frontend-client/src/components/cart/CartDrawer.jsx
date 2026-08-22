@@ -39,7 +39,7 @@ export default function CartDrawer({ open, onClose }) {
             <ShoppingCart className="w-5 h-5 text-primary" />
             <h2 className="font-bold text-gray-900 text-lg">Carrito</h2>
             {items.length > 0 && (
-              <span className="bg-accent text-primary text-xs font-bold rounded-full px-2 py-0.5">
+              <span className="bg-accent text-white text-xs font-bold rounded-full px-2 py-0.5">
                 {items.reduce((s, i) => s + i.quantity, 0)}
               </span>
             )}

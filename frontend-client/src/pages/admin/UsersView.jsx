@@ -305,7 +305,7 @@ export default function UsersView() {
                   <tr key={user.id} className="text-sm hover:bg-gray-50">
                     <td className="py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                        <div className="w-9 h-9 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                           {user.name?.charAt(0).toUpperCase() || '?'}
                         </div>
                         <div className="min-w-0">
@@ -326,7 +326,7 @@ export default function UsersView() {
                         disabled={actionLoading || user.roles?.includes('super_admin')}
                         className={`px-2 py-1 rounded-full text-xs font-medium border-0 cursor-pointer ${
                           user.status === 'active' ? 'bg-green-100 text-green-700' :
-                          user.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          user.status === 'pending' ? 'bg-accent-100 text-accent-700' :
                           user.status === 'suspended' ? 'bg-orange-100 text-orange-700' :
                           'bg-gray-100 text-gray-600'
                         }`}
@@ -437,7 +437,7 @@ export default function UsersView() {
             {modalType === 'view' && (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 pb-3 border-b">
-                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
                     {selectedUser.name?.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -462,9 +462,9 @@ export default function UsersView() {
 
             {modalType === 'disable' && (
               <div className="space-y-4">
-                <div className="flex items-start gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-yellow-800">
+                <div className="flex items-start gap-3 p-3 bg-accent-50 border border-accent-200 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-accent-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-accent-800">
                     Vas a deshabilitar la mensajería de <strong>{selectedUser.name}</strong>. El usuario no podrá enviar ni recibir mensajes hasta que sea rehabilitado.
                   </div>
                 </div>

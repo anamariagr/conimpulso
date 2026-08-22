@@ -4,7 +4,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const STATUS = {
-  pending:  { label: 'Pendiente', cls: 'bg-yellow-100 text-yellow-700', icon: Clock },
+  pending:  { label: 'Pendiente', cls: 'bg-accent-100 text-accent-700', icon: Clock },
   quoted:   { label: 'Cotizado',  cls: 'bg-green-100 text-green-700',   icon: Check },
   rejected: { label: 'Rechazado', cls: 'bg-red-100 text-red-700',       icon: XCircle },
 };
@@ -73,7 +73,7 @@ export default function QuoteRequestsPage() {
               <Package className="w-3 h-3" /> Por mayor
             </span>
             {pending > 0 && (
-              <span className="bg-yellow-400 text-primary text-xs font-bold rounded-full px-2 py-0.5">
+              <span className="bg-accent-400 text-primary text-xs font-bold rounded-full px-2 py-0.5">
                 {pending} nueva{pending !== 1 ? 's' : ''}
               </span>
             )}

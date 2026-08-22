@@ -132,7 +132,7 @@ export default function UserSettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-[#FFD700] border-t-transparent rounded-full"></div>
+        <div className="animate-spin w-8 h-8 border-4 border-[#4d3cbb] border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -140,7 +140,7 @@ export default function UserSettingsPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white pt-20 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-[#FFD700] mb-8">Configuración</h1>
+        <h1 className="text-3xl font-bold text-[#4d3cbb] mb-8">Configuración</h1>
 
         <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
           {tabs.map((tab) => (
@@ -149,7 +149,7 @@ export default function UserSettingsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition ${
                 activeTab === tab.id
-                  ? 'bg-[#FFD700] text-black'
+                  ? 'bg-[#4d3cbb] text-black'
                   : 'bg-[#1A1A1A] text-gray-400 hover:text-white'
               }`}
             >
@@ -239,7 +239,7 @@ function ProfileTab({ user, onSave }) {
             className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-4 py-2 text-white"
           />
         </div>
-        <button type="submit" className="px-6 py-2 bg-[#FFD700] text-black font-medium rounded-lg">
+        <button type="submit" className="px-6 py-2 bg-[#4d3cbb] text-black font-medium rounded-lg">
           Guardar Cambios
         </button>
       </form>
@@ -264,7 +264,7 @@ function VerificationTab({ onLoad, verification }) {
           </select>
           <input type="text" placeholder="Número de documento" className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-4 py-2 text-white" />
           <input type="file" className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-4 py-2 text-white" />
-          <button type="button" className="px-6 py-2 bg-[#FFD700] text-black font-medium rounded-lg">
+          <button type="button" className="px-6 py-2 bg-[#4d3cbb] text-black font-medium rounded-lg">
             Enviar Verificación
           </button>
         </form>
@@ -278,7 +278,7 @@ function VerificationTab({ onLoad, verification }) {
       <div className="flex items-center gap-4">
         <span className={`px-4 py-2 rounded-full text-sm font-medium ${
           verification.status === 'approved' ? 'bg-green-900 text-green-400' :
-          verification.status === 'pending' ? 'bg-yellow-900 text-yellow-400' :
+          verification.status === 'pending' ? 'bg-accent-900 text-accent-400' :
           'bg-red-900 text-red-400'
         }`}>
           {verification.status.toUpperCase()}
@@ -316,25 +316,25 @@ function PrivacyTab({ privacy, onSave }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex items-center justify-between">
           <span>Mostrar email públicamente</span>
-          <button type="button" onClick={() => toggle('show_email')} className={`w-12 h-6 rounded-full transition ${form.show_email ? 'bg-[#FFD700]' : 'bg-gray-600'}`}>
+          <button type="button" onClick={() => toggle('show_email')} className={`w-12 h-6 rounded-full transition ${form.show_email ? 'bg-[#4d3cbb]' : 'bg-gray-600'}`}>
             <div className={`w-5 h-5 bg-white rounded-full transition ${form.show_email ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
           </button>
         </div>
         <div className="flex items-center justify-between">
           <span>Mostrar teléfono públicamente</span>
-          <button type="button" onClick={() => toggle('show_phone')} className={`w-12 h-6 rounded-full transition ${form.show_phone ? 'bg-[#FFD700]' : 'bg-gray-600'}`}>
+          <button type="button" onClick={() => toggle('show_phone')} className={`w-12 h-6 rounded-full transition ${form.show_phone ? 'bg-[#4d3cbb]' : 'bg-gray-600'}`}>
             <div className={`w-5 h-5 bg-white rounded-full transition ${form.show_phone ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
           </button>
         </div>
         <div className="flex items-center justify-between">
           <span>Permitir mensajes de no contactos</span>
-          <button type="button" onClick={() => toggle('allow_messages_from_non_contacts')} className={`w-12 h-6 rounded-full transition ${form.allow_messages_from_non_contacts ? 'bg-[#FFD700]' : 'bg-gray-600'}`}>
+          <button type="button" onClick={() => toggle('allow_messages_from_non_contacts')} className={`w-12 h-6 rounded-full transition ${form.allow_messages_from_non_contacts ? 'bg-[#4d3cbb]' : 'bg-gray-600'}`}>
             <div className={`w-5 h-5 bg-white rounded-full transition ${form.allow_messages_from_non_contacts ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
           </button>
         </div>
         <div className="flex items-center justify-between">
           <span>Permitir索引ación en buscadores</span>
-          <button type="button" onClick={() => toggle('allow_search_indexing')} className={`w-12 h-6 rounded-full transition ${form.allow_search_indexing ? 'bg-[#FFD700]' : 'bg-gray-600'}`}>
+          <button type="button" onClick={() => toggle('allow_search_indexing')} className={`w-12 h-6 rounded-full transition ${form.allow_search_indexing ? 'bg-[#4d3cbb]' : 'bg-gray-600'}`}>
             <div className={`w-5 h-5 bg-white rounded-full transition ${form.allow_search_indexing ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
           </button>
         </div>
@@ -346,7 +346,7 @@ function PrivacyTab({ privacy, onSave }) {
             <option value="nobody">Nadie</option>
           </select>
         </div>
-        <button type="submit" className="px-6 py-2 bg-[#FFD700] text-black font-medium rounded-lg">
+        <button type="submit" className="px-6 py-2 bg-[#4d3cbb] text-black font-medium rounded-lg">
           Guardar Cambios
         </button>
       </form>
@@ -399,7 +399,7 @@ function NotificationsTab({ preferences, onSave }) {
           </div>
         ))}
       </div>
-      <button onClick={handleSave} className="mt-6 px-6 py-2 bg-[#FFD700] text-black font-medium rounded-lg">
+      <button onClick={handleSave} className="mt-6 px-6 py-2 bg-[#4d3cbb] text-black font-medium rounded-lg">
         Guardar Cambios
       </button>
     </div>
@@ -443,7 +443,7 @@ function SecurityTab({ sessions, onTerminate, onTerminateAll }) {
           <input type="password" placeholder="Contraseña actual" className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-4 py-2 text-white" />
           <input type="password" placeholder="Nueva contraseña" className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-4 py-2 text-white" />
           <input type="password" placeholder="Confirmar nueva contraseña" className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-4 py-2 text-white" />
-          <button type="button" className="px-6 py-2 bg-[#FFD700] text-black font-medium rounded-lg">
+          <button type="button" className="px-6 py-2 bg-[#4d3cbb] text-black font-medium rounded-lg">
             Actualizar Contraseña
           </button>
         </form>
@@ -459,7 +459,7 @@ function DataTab({ onExport }) {
       <p className="text-gray-400 mb-6">
         Descarga una copia de todos tus datos personales incluyendo perfil, actividad y configuraciones.
       </p>
-      <button onClick={onExport} className="flex items-center gap-2 px-6 py-2 bg-[#FFD700] text-black font-medium rounded-lg">
+      <button onClick={onExport} className="flex items-center gap-2 px-6 py-2 bg-[#4d3cbb] text-black font-medium rounded-lg">
         <Download className="w-5 h-5" />
         Exportar Datos (JSON)
       </button>

@@ -211,7 +211,7 @@ export default function CategoriesView() {
                       type="button"
                       onClick={() => setFormData({ ...formData, icon })}
                       className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-colors ${
-                        formData.icon === icon ? 'bg-accent ring-2 ring-yellow-400' : 'bg-gray-100 hover:bg-gray-200'
+                        formData.icon === icon ? 'bg-accent ring-2 ring-accent-400' : 'bg-gray-100 hover:bg-gray-200'
                       }`}
                     >
                       {icon}
@@ -263,7 +263,7 @@ export default function CategoriesView() {
               </button>
               <button
                 onClick={saveCategory}
-                className="flex-1 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400"
+                className="flex-1 py-2 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400"
               >
                 {editingCategory ? 'Actualizar' : 'Crear'}
               </button>

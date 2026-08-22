@@ -106,7 +106,7 @@ export default function AdminLayout() {
             ) : (
               <>
                 <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary font-bold text-xl">C</span>
+                  <span className="text-white font-bold text-xl">C</span>
                 </div>
                 {sidebarOpen && (
                   <span className="font-bold text-lg">{siteName} Admin</span>
@@ -133,7 +133,7 @@ export default function AdminLayout() {
                     to={item.path}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                       isActive(item.path)
-                        ? 'bg-accent text-primary font-semibold'
+                        ? 'bg-accent text-white font-semibold'
                         : 'text-gray-400 hover:text-white hover:bg-gray-800'
                     }`}
                   >

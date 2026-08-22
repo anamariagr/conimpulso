@@ -4,7 +4,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const STATUS = {
-  pending:          { label: 'Pendiente',        cls: 'bg-yellow-100 text-yellow-700', icon: Clock },
+  pending:          { label: 'Pendiente',        cls: 'bg-accent-100 text-accent-700', icon: Clock },
   confirmed:        { label: 'Confirmado',       cls: 'bg-blue-100 text-blue-700',     icon: CheckCircle },
   ordered_producer: { label: 'Pedido al productor', cls: 'bg-purple-100 text-purple-700', icon: Factory },
   shipped:          { label: 'Enviado',          cls: 'bg-indigo-100 text-indigo-700',  icon: Truck },

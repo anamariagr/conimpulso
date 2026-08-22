@@ -211,7 +211,7 @@ const HeroSection = ({ heroBanner }) => {
     <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-16 md:py-20">
       <div className="max-w-2xl">
         {content.badge && (
-          <div className="inline-flex items-center gap-2 bg-accent/20 text-yellow-300 border border-accent/30 rounded-full px-3 py-1 text-xs md:px-4 md:py-1.5 md:text-sm font-medium mb-4 md:mb-5">
+          <div className="inline-flex items-center gap-2 bg-accent/20 text-accent-300 border border-accent/30 rounded-full px-3 py-1 text-xs md:px-4 md:py-1.5 md:text-sm font-medium mb-4 md:mb-5">
             {content.badge}
           </div>
         )}
@@ -250,8 +250,8 @@ const StatsSection = () => (
           { value: '98%', label: 'Satisfacción' },
         ].map((stat) => (
           <div key={stat.label} className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-primary">{stat.value}</div>
-            <div className="text-sm text-primary/70 font-medium">{stat.label}</div>
+            <div className="text-3xl md:text-4xl font-bold text-white">{stat.value}</div>
+            <div className="text-sm text-white/80 font-medium">{stat.label}</div>
           </div>
         ))}
       </div>
@@ -421,7 +421,7 @@ const BannerSection = ({ section, banners }) => {
           {bannerMedia.media_url ? (
             <img src={bannerMedia.media_url} alt={bannerMedia.title} className="w-full h-48 object-cover" />
           ) : (
-            <div className="w-full h-48 bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center">
+            <div className="w-full h-48 bg-gradient-to-r from-accent-400 to-accent-600 flex items-center justify-center">
               <h3 className="text-2xl font-bold text-white">{bannerMedia.title || 'Promoción'}</h3>
             </div>
           )}
@@ -650,8 +650,8 @@ const FeaturesSection = () => (
 const CTASection = () => (
   <section className="py-16 bg-accent">
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <h2 className="text-3xl font-bold text-primary mb-4">¿Tienes un negocio o fabricas productos?</h2>
-      <p className="text-primary/70 text-lg mb-8">
+      <h2 className="text-3xl font-bold text-white mb-4">¿Tienes un negocio o fabricas productos?</h2>
+      <p className="text-white/80 text-lg mb-8">
         Únete a miles de productores que ya están vendiendo en ConImpulso.
         Sin comisiones el primer mes.
       </p>

@@ -85,7 +85,7 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 gap-3">
                 <Link
                   to="/dashboard/products"
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
                 >
                   <Package className="w-5 h-5" />
                   Productos

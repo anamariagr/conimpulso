@@ -40,7 +40,7 @@ export default function LogisticsDashboardPage() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-yellow-100 text-yellow-700',
+      pending: 'bg-accent-100 text-accent-700',
       in_transit: 'bg-blue-100 text-blue-700',
       delivered: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
@@ -51,7 +51,7 @@ export default function LogisticsDashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-[#FFD700] border-t-transparent rounded-full"></div>
+        <div className="animate-spin w-8 h-8 border-4 border-[#4d3cbb] border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -61,12 +61,12 @@ export default function LogisticsDashboardPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[#FFD700]">Logística</h1>
+            <h1 className="text-3xl font-bold text-[#4d3cbb]">Logística</h1>
             <p className="text-gray-400 mt-1">Gestiona tus envíos y pickups</p>
           </div>
           <Link
             to="/dashboard/logistics/quote"
-            className="flex items-center gap-2 px-4 py-2 bg-[#FFD700] text-black font-medium rounded-lg hover:bg-yellow-400 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-[#4d3cbb] text-black font-medium rounded-lg hover:bg-accent-400 transition"
           >
             <Calculator className="w-5 h-5" />
             Cotizar Envío
@@ -86,12 +86,12 @@ export default function LogisticsDashboardPage() {
 
           <div className="bg-[#1A1A1A] rounded-xl p-6 border border-gray-800">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-yellow-900/30 rounded-xl flex items-center justify-center">
-                <Package className="w-6 h-6 text-yellow-500" />
+              <div className="w-12 h-12 bg-accent-900/30 rounded-xl flex items-center justify-center">
+                <Package className="w-6 h-6 text-accent-500" />
               </div>
             </div>
             <p className="text-gray-400 text-sm mb-1">Pendientes de Pickup</p>
-            <p className="text-2xl font-bold text-yellow-500">{stats.pending_pickups}</p>
+            <p className="text-2xl font-bold text-accent-500">{stats.pending_pickups}</p>
           </div>
 
           <div className="bg-[#1A1A1A] rounded-xl p-6 border border-gray-800">
@@ -119,7 +119,7 @@ export default function LogisticsDashboardPage() {
           <div className="bg-[#1A1A1A] rounded-xl p-6 border border-gray-800">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white">Mis Envíos</h2>
-              <Link to="/dashboard/logistics/shipments" className="text-[#FFD700] text-sm hover:underline">
+              <Link to="/dashboard/logistics/shipments" className="text-[#4d3cbb] text-sm hover:underline">
                 Ver todos
               </Link>
             </div>
@@ -130,8 +130,8 @@ export default function LogisticsDashboardPage() {
                 {recentShipments.map((shipment) => (
                   <div key={shipment.id} className="flex items-center justify-between p-4 bg-[#0A0A0A] rounded-lg">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-[#FFD700]/10 rounded-lg flex items-center justify-center">
-                        <Truck className="w-5 h-5 text-[#FFD700]" />
+                      <div className="w-10 h-10 bg-[#4d3cbb]/10 rounded-lg flex items-center justify-center">
+                        <Truck className="w-5 h-5 text-[#4d3cbb]" />
                       </div>
                       <div>
                         <p className="text-white font-medium">{shipment.tracking_number}</p>
@@ -150,13 +150,13 @@ export default function LogisticsDashboardPage() {
           <div className="bg-[#1A1A1A] rounded-xl p-6 border border-gray-800">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white">Solicitudes de Pickup</h2>
-              <Link to="/dashboard/logistics/pickups" className="text-[#FFD700] text-sm hover:underline">
+              <Link to="/dashboard/logistics/pickups" className="text-[#4d3cbb] text-sm hover:underline">
                 Ver todos
               </Link>
             </div>
             <Link
               to="/dashboard/logistics/pickups/new"
-              className="flex items-center justify-center gap-2 w-full p-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-[#FFD700] transition text-gray-400 hover:text-[#FFD700]"
+              className="flex items-center justify-center gap-2 w-full p-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-[#4d3cbb] transition text-gray-400 hover:text-[#4d3cbb]"
             >
               <Plus className="w-5 h-5" />
               Nueva Solicitud de Pickup

@@ -77,7 +77,7 @@ export default function AdvisorLeadsPage() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-yellow-900/30 text-yellow-400 border-yellow-700',
+      pending: 'bg-accent-900/30 text-accent-400 border-accent-700',
       contacted: 'bg-blue-900/30 text-blue-400 border-blue-700',
       qualified: 'bg-green-900/30 text-green-400 border-green-700',
       converted: 'bg-purple-900/30 text-purple-400 border-purple-700',
@@ -92,12 +92,12 @@ export default function AdvisorLeadsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[#FFD700]">Mis Leads</h1>
+            <h1 className="text-3xl font-bold text-[#4d3cbb]">Mis Leads</h1>
             <p className="text-gray-400 mt-1">Gestiona tus clientes potenciales</p>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-6 py-2 bg-[#FFD700] text-black font-semibold rounded-lg hover:bg-yellow-400 transition"
+            className="flex items-center gap-2 px-6 py-2 bg-[#4d3cbb] text-black font-semibold rounded-lg hover:bg-accent-400 transition"
           >
             <Plus className="w-5 h-5" />
             Nuevo Lead
@@ -107,13 +107,13 @@ export default function AdvisorLeadsPage() {
         {/* Form */}
         {showForm && (
           <form onSubmit={handleSubmit} className="bg-[#1A1A1A] rounded-xl p-6 mb-8 border border-gray-700">
-            <h3 className="text-lg font-semibold text-[#FFD700] mb-4">Crear Nuevo Lead</h3>
+            <h3 className="text-lg font-semibold text-[#4d3cbb] mb-4">Crear Nuevo Lead</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <select
                 required
                 value={formData.shop_id}
                 onChange={(e) => setFormData({ ...formData, shop_id: e.target.value })}
-                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white focus:border-[#FFD700] focus:outline-none"
+                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white focus:border-[#4d3cbb] focus:outline-none"
               >
                 <option value="">Seleccionar tienda...</option>
                 {shops.map((shop) => (
@@ -126,7 +126,7 @@ export default function AdvisorLeadsPage() {
                 required
                 value={formData.client_name}
                 onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
-                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#FFD700] focus:outline-none"
+                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#4d3cbb] focus:outline-none"
               />
               <input
                 type="email"
@@ -134,21 +134,21 @@ export default function AdvisorLeadsPage() {
                 required
                 value={formData.client_email}
                 onChange={(e) => setFormData({ ...formData, client_email: e.target.value })}
-                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#FFD700] focus:outline-none"
+                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#4d3cbb] focus:outline-none"
               />
               <input
                 type="tel"
                 placeholder="Teléfono"
                 value={formData.client_phone}
                 onChange={(e) => setFormData({ ...formData, client_phone: e.target.value })}
-                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#FFD700] focus:outline-none"
+                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#4d3cbb] focus:outline-none"
               />
               <input
                 type="text"
                 placeholder="Empresa"
                 value={formData.client_company}
                 onChange={(e) => setFormData({ ...formData, client_company: e.target.value })}
-                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#FFD700] focus:outline-none"
+                className="px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#4d3cbb] focus:outline-none"
               />
             </div>
             <textarea
@@ -156,10 +156,10 @@ export default function AdvisorLeadsPage() {
               rows="3"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#FFD700] focus:outline-none mb-4"
+              className="w-full px-4 py-3 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#4d3cbb] focus:outline-none mb-4"
             />
             <div className="flex gap-3">
-              <button type="submit" className="px-6 py-2 bg-[#FFD700] text-black font-semibold rounded-lg hover:bg-yellow-400 transition">
+              <button type="submit" className="px-6 py-2 bg-[#4d3cbb] text-black font-semibold rounded-lg hover:bg-accent-400 transition">
                 Crear Lead
               </button>
               <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">
@@ -172,14 +172,14 @@ export default function AdvisorLeadsPage() {
         {/* Leads List */}
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin w-8 h-8 border-4 border-[#FFD700] border-t-transparent rounded-full"></div>
+            <div className="animate-spin w-8 h-8 border-4 border-[#4d3cbb] border-t-transparent rounded-full"></div>
           </div>
         ) : leads.length === 0 ? (
           <div className="bg-[#1A1A1A] rounded-xl p-12 text-center border border-gray-800">
             <p className="text-gray-500">No tienes leads registrados</p>
             <button
               onClick={() => setShowForm(true)}
-              className="mt-4 text-[#FFD700] hover:underline"
+              className="mt-4 text-[#4d3cbb] hover:underline"
             >
               Crear tu primer lead
             </button>

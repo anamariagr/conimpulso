@@ -106,7 +106,7 @@ export default function StoreProfilePage() {
     <div className="min-h-screen">
       {/* Owner banner */}
       {isOwner && (
-        <div className="bg-accent text-primary text-sm font-medium px-4 py-2.5 text-center flex items-center justify-center gap-3">
+        <div className="bg-accent text-white text-sm font-medium px-4 py-2.5 text-center flex items-center justify-center gap-3">
           <span>Estás viendo tu tienda como la ven los compradores</span>
           <Link to="/dashboard/store" className="underline font-semibold hover:no-underline">
             Ir a mi panel
@@ -159,7 +159,7 @@ export default function StoreProfilePage() {
             {isOwner ? (
               <Link
                 to="/dashboard/store/edit"
-                className="flex items-center gap-2 px-4 py-2 bg-accent text-primary text-sm font-semibold rounded-lg hover:bg-yellow-400 transition"
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent-400 transition"
               >
                 Editar tienda
               </Link>
@@ -173,7 +173,7 @@ export default function StoreProfilePage() {
                     href={`https://wa.me/${shop.phone.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-accent text-primary text-sm font-semibold rounded-lg hover:bg-yellow-400 transition"
+                    className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent-400 transition"
                   >
                     <MessageSquare className="w-4 h-4" /> Contactar
                   </a>
@@ -281,7 +281,7 @@ export default function StoreProfilePage() {
                     </p>
                     <Link
                       to="/dashboard/products/new"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
                     >
                       <Plus className="w-5 h-5" />
                       Agregar mi primer producto

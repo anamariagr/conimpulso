@@ -6,7 +6,7 @@ import api from '../../services/api';
 const TYPE_LABELS = { product: 'Producto', shop: 'Tienda', article: 'Artículo' };
 const STATUS_COLORS = {
   published: 'bg-green-100 text-green-700',
-  draft:     'bg-yellow-100 text-yellow-700',
+  draft:     'bg-accent-100 text-accent-700',
   archived:  'bg-gray-100 text-gray-500',
 };
 

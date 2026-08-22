@@ -234,7 +234,7 @@ export default function ProductsView() {
                   <td className="py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       product.status === 'active' ? 'bg-green-100 text-green-700' :
-                      product.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      product.status === 'pending' ? 'bg-accent-100 text-accent-700' :
                       'bg-gray-100 text-gray-500'
                     }`}>
                       {product.status}
@@ -260,10 +260,10 @@ export default function ProductsView() {
                               toast.error('Error al actualizar');
                             }
                           }}
-                          className="p-1.5 bg-yellow-100 hover:bg-yellow-200 rounded-lg transition-colors"
+                          className="p-1.5 bg-accent-100 hover:bg-accent-200 rounded-lg transition-colors"
                           title="Desactivar"
                         >
-                          <AlertCircle className="w-4 h-4 text-yellow-600" />
+                          <AlertCircle className="w-4 h-4 text-accent-600" />
                         </button>
                       )}
                       {(product.status === 'inactive' || product.status === 'pending') && (
@@ -354,7 +354,7 @@ export default function ProductsView() {
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                   viewingProduct.status === 'active' ? 'bg-green-100 text-green-700' :
-                  viewingProduct.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                  viewingProduct.status === 'pending' ? 'bg-accent-100 text-accent-700' :
                   'bg-gray-100 text-gray-500'
                 }`}>
                   {viewingProduct.status}
@@ -507,7 +507,7 @@ export default function ProductsView() {
               </button>
               <button
                 onClick={saveProduct}
-                className="flex-1 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400"
+                className="flex-1 py-2 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400"
               >
                 {editingProduct ? 'Actualizar' : 'Crear'}
               </button>

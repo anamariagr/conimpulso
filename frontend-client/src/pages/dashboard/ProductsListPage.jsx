@@ -6,7 +6,7 @@ import api from '../../services/api';
 const STATUS_LABELS = {
   active:   { label: 'Activo',   cls: 'bg-green-100 text-green-700' },
   inactive: { label: 'Inactivo', cls: 'bg-gray-100 text-gray-500' },
-  draft:    { label: 'Borrador', cls: 'bg-yellow-100 text-yellow-700' },
+  draft:    { label: 'Borrador', cls: 'bg-accent-100 text-accent-700' },
   pending:  { label: 'Revisión', cls: 'bg-blue-100 text-blue-700' },
 };
 
@@ -117,7 +117,7 @@ export default function ProductsListPage() {
         </div>
         <Link
           to="/dashboard/products/new"
-          className="flex items-center gap-2 px-4 py-2 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+          className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
         >
           <Plus className="w-5 h-5" />
           Nuevo producto
@@ -147,7 +147,7 @@ export default function ProductsListPage() {
           </p>
           <Link
             to="/dashboard/products/new"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 transition"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 transition"
           >
             <Plus className="w-5 h-5" />
             Agregar mi primer producto

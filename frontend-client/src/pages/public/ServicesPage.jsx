@@ -52,7 +52,7 @@ export default function ServicesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-500"></div>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function ServicesPage() {
           placeholder="Buscar servicios..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent"
         />
       </div>
 
@@ -88,8 +88,8 @@ export default function ServicesPage() {
               onClick={() => setSelectedCategory(null)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 selectedCategory === null
-                  ? 'bg-yellow-500 text-black shadow-md'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:border-yellow-500 hover:text-yellow-700'
+                  ? 'bg-accent-500 text-black shadow-md'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:border-accent-500 hover:text-accent-700'
               }`}
             >
               Todos
@@ -100,8 +100,8 @@ export default function ServicesPage() {
                 onClick={() => setSelectedCategory(cat.name)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
                   selectedCategory === cat.name
-                    ? 'bg-yellow-500 text-black shadow-md'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:border-yellow-500 hover:text-yellow-700'
+                    ? 'bg-accent-500 text-black shadow-md'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-accent-500 hover:text-accent-700'
                 }`}
               >
                 <span>{cat.icon}</span>
@@ -141,12 +141,12 @@ export default function ServicesPage() {
               </p>
 
               <div className="flex items-center justify-between">
-                <span className="text-lg font-bold text-yellow-600">
+                <span className="text-lg font-bold text-accent-600">
                   {service.price_type === 'quote' ? 'Por cotización' : `$${service.base_price || '0'}`}
                 </span>
                 <Link
                   to={`/services/${service.id}`}
-                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black text-sm font-medium rounded-lg transition-colors"
+                  className="px-4 py-2 bg-accent-500 hover:bg-accent-600 text-black text-sm font-medium rounded-lg transition-colors"
                 >
                   Ver detalles
                 </Link>

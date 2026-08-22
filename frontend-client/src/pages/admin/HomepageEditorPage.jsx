@@ -533,7 +533,7 @@ export default function HomepageEditorPage() {
           <button
             onClick={loadData}
             disabled={saving}
-            className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 disabled:opacity-50 flex items-center gap-2"
+            className="px-4 py-2 bg-accent-400 text-black font-semibold rounded-lg hover:bg-accent-500 disabled:opacity-50 flex items-center gap-2"
           >
             <Save className="w-5 h-5" />
             Actualizar
@@ -548,19 +548,19 @@ export default function HomepageEditorPage() {
             <div className="flex gap-2 mb-6 border-b pb-2 flex-wrap">
               <button
                 onClick={() => setActiveTab('banners')}
-                className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'banners' ? 'bg-accent text-primary' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'banners' ? 'bg-accent text-white' : 'text-gray-600 hover:bg-gray-100'}`}
               >
                 Banners
               </button>
               <button
                 onClick={() => setActiveTab('sections')}
-                className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'sections' ? 'bg-accent text-primary' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'sections' ? 'bg-accent text-white' : 'text-gray-600 hover:bg-gray-100'}`}
               >
                 Secciones
               </button>
               <button
                 onClick={() => setActiveTab('logo')}
-                className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'logo' ? 'bg-accent text-primary' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'logo' ? 'bg-accent text-white' : 'text-gray-600 hover:bg-gray-100'}`}
               >
                 Logo
               </button>
@@ -615,7 +615,7 @@ export default function HomepageEditorPage() {
             {/* Sections Tab */}
             {activeTab === 'sections' && (
               <div className="space-y-4">
-                <button onClick={showSectionForm} className="w-full py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400 flex items-center justify-center gap-2">
+                <button onClick={showSectionForm} className="w-full py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent-400 flex items-center justify-center gap-2">
                   <Plus className="w-5 h-5" />
                   Nueva Sección
                 </button>
@@ -715,7 +715,7 @@ export default function HomepageEditorPage() {
                     {pendingLogoUrl !== null && (
                       <button
                         onClick={handleSaveLogo}
-                        className="w-full py-2.5 bg-accent text-primary font-semibold rounded-xl hover:bg-yellow-400 flex items-center justify-center gap-2"
+                        className="w-full py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-400 flex items-center justify-center gap-2"
                       >
                         <CheckCircle className="w-4 h-4" />
                         Guardar logo
@@ -781,7 +781,7 @@ export default function HomepageEditorPage() {
             {sections.map((section) => (
               <div
                 key={section.id}
-                className={`p-4 rounded-lg border-2 ${section.is_active ? 'border-gray-200' : 'border-dashed border-yellow-300 bg-yellow-50'}`}
+                className={`p-4 rounded-lg border-2 ${section.is_active ? 'border-gray-200' : 'border-dashed border-accent-300 bg-accent-50'}`}
                 style={{
                   backgroundColor: section.background_color || '#ffffff',
                   paddingTop: section.padding_top || 16,
@@ -793,7 +793,7 @@ export default function HomepageEditorPage() {
                     <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded">{section.type}</span>
                     <span className="text-xs text-gray-400">Orden: {section.order}</span>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded ${section.is_active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                  <span className={`text-xs px-2 py-1 rounded ${section.is_active ? 'bg-green-100 text-green-700' : 'bg-accent-100 text-accent-700'}`}>
                     {section.is_active ? 'Activo' : 'Inactivo'}
                   </span>
                 </div>
@@ -868,7 +868,7 @@ export default function HomepageEditorPage() {
                     <h3 className="font-bold">Suscríbete a nuestro newsletter</h3>
                     <div className="flex gap-2 mt-4 max-w-md mx-auto">
                       <input type="email" placeholder="tu@correo.com" className="flex-1 px-4 py-2 rounded-lg text-black" />
-                      <button className="px-4 py-2 bg-accent text-primary font-semibold rounded-lg">Suscribirse</button>
+                      <button className="px-4 py-2 bg-accent text-white font-semibold rounded-lg">Suscribirse</button>
                     </div>
                   </div>
                 )}
@@ -953,7 +953,7 @@ export default function HomepageEditorPage() {
                       name="mediaInputType"
                       checked={mediaInputType === 'file'}
                       onChange={() => setMediaInputType('file')}
-                      className="text-yellow-500"
+                      className="text-accent-500"
                     />
                     <span className="text-sm">Subir archivo desde la PC</span>
                   </label>
@@ -963,7 +963,7 @@ export default function HomepageEditorPage() {
                       name="mediaInputType"
                       checked={mediaInputType === 'url'}
                       onChange={() => setMediaInputType('url')}
-                      className="text-yellow-500"
+                      className="text-accent-500"
                     />
                     <span className="text-sm">URL externa</span>
                   </label>
@@ -983,7 +983,7 @@ export default function HomepageEditorPage() {
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleDrop}
-                    style={isDragging ? { borderColor: '#FFD700', background: '#FEF3C7' } : {}}
+                    style={isDragging ? { borderColor: '#4d3cbb', background: '#FEF3C7' } : {}}
                   >
                     <input
                       id={`media-file-input-${modalId.current}`}
@@ -1005,7 +1005,7 @@ export default function HomepageEditorPage() {
                         <button
                           type="button"
                           onClick={openFilePicker}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-accent-400 text-black font-semibold rounded-lg hover:bg-accent-500 transition-colors"
                         >
                           <FolderOpen className="w-4 h-4" />
                           Explorar PC
@@ -1017,11 +1017,11 @@ export default function HomepageEditorPage() {
                       <div className="py-3">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-gray-700 font-medium">Subiendo archivo...</span>
-                          <span className="text-sm text-yellow-600 font-semibold">{uploadProgress}%</span>
+                          <span className="text-sm text-accent-600 font-semibold">{uploadProgress}%</span>
                         </div>
                         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-yellow-400 transition-all"
+                            className="h-full bg-accent-400 transition-all"
                             style={{ width: `${uploadProgress}%` }}
                           />
                         </div>
@@ -1054,7 +1054,7 @@ export default function HomepageEditorPage() {
                           <button
                             type="button"
                             onClick={openFilePicker}
-                            className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                            className="text-xs px-3 py-1 bg-accent-100 text-accent-800 rounded hover:bg-accent-200"
                           >
                             Cambiar archivo
                           </button>
@@ -1109,8 +1109,8 @@ export default function HomepageEditorPage() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Texto por rol (opcional)</p>
                   <p className="text-xs text-gray-400 -mt-2">Si se llena, reemplaza el título/descripción general según quién visita el sitio.</p>
 
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
-                    <p className="text-xs font-semibold text-yellow-700 flex items-center gap-1">🏪 Para vendedores</p>
+                  <div className="bg-accent-50 border border-accent-200 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-semibold text-accent-700 flex items-center gap-1">🏪 Para vendedores</p>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Título</label>
                       <input
@@ -1162,7 +1162,7 @@ export default function HomepageEditorPage() {
             </div>
             <div className="flex gap-3 p-6 pt-4 border-t border-gray-100 flex-shrink-0">
               <button onClick={() => setShowBannerModal(false)} className="flex-1 py-2 border rounded-lg">Cancelar</button>
-              <button onClick={saveBanner} className="flex-1 py-2 bg-accent text-primary font-semibold rounded-lg">Guardar</button>
+              <button onClick={saveBanner} className="flex-1 py-2 bg-accent text-white font-semibold rounded-lg">Guardar</button>
             </div>
           </div>
         </div>
@@ -1315,7 +1315,7 @@ export default function HomepageEditorPage() {
             </div>
             <div className="flex gap-3 p-6 pt-4 border-t border-gray-100 flex-shrink-0">
               <button onClick={() => setShowSectionModal(false)} className="flex-1 py-2 border rounded-lg">Cancelar</button>
-              <button onClick={saveSection} className="flex-1 py-2 bg-accent text-primary font-semibold rounded-lg">Guardar</button>
+              <button onClick={saveSection} className="flex-1 py-2 bg-accent text-white font-semibold rounded-lg">Guardar</button>
             </div>
           </div>
         </div>

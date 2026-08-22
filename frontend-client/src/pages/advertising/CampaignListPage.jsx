@@ -27,7 +27,7 @@ export default function CampaignListPage() {
   const getStatusBadge = (status) => {
     const styles = {
       active: 'bg-green-900 text-green-400',
-      paused: 'bg-yellow-900 text-yellow-400',
+      paused: 'bg-accent-900 text-accent-400',
       ended: 'bg-gray-700 text-gray-400',
       draft: 'bg-blue-900 text-blue-400',
     };
@@ -44,7 +44,7 @@ export default function CampaignListPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-500"></div>
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function CampaignListPage() {
         <h1 className="text-2xl font-bold text-white">Campañas Publicitarias</h1>
         <Link
           to="/advertising/campaigns/new"
-          className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-accent-500 hover:bg-accent-600 text-black font-medium rounded-lg transition-colors"
         >
           <Plus size={20} />
           Nueva Campaña
@@ -75,7 +75,7 @@ export default function CampaignListPage() {
           <p className="text-gray-500 mb-6">Crea tu primera campaña publicitaria para promover tus productos.</p>
           <Link
             to="/advertising/campaigns/new"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-accent-500 hover:bg-accent-600 text-black font-medium rounded-lg"
           >
             <Plus size={20} />
             Crear Campaña
@@ -96,7 +96,7 @@ export default function CampaignListPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-yellow-500">{formatCurrency(campaign.budget)}</p>
+                  <p className="text-lg font-bold text-accent-500">{formatCurrency(campaign.budget)}</p>
                   <p className="text-sm text-gray-500">presupuesto</p>
                 </div>
               </div>

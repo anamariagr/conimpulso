@@ -14,7 +14,7 @@ const STATUS_LABELS = {
 
 const STATUS_DOT = {
   active: 'bg-green-500',
-  pending: 'bg-yellow-500',
+  pending: 'bg-accent-500',
   suspended: 'bg-red-500',
   rejected: 'bg-red-500',
   draft: 'bg-gray-400',
@@ -59,7 +59,7 @@ export default function NewProductGatePage() {
           </p>
           <button
             onClick={goCreateShop}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-accent text-primary font-semibold rounded-xl hover:bg-yellow-400 transition"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-400 transition"
           >
             <Plus className="w-5 h-5" />
             Crear mi tienda

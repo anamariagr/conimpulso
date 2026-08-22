@@ -59,7 +59,7 @@ function StarRating({ value, count }) {
     <div className="flex items-center gap-1.5">
       <div className="flex">
         {[1, 2, 3, 4, 5].map(s => (
-          <Star key={s} className={`w-4 h-4 ${s <= Math.round(value) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+          <Star key={s} className={`w-4 h-4 ${s <= Math.round(value) ? 'fill-accent-400 text-accent-400' : 'text-gray-300'}`} />
         ))}
       </div>
       <span className="text-sm text-gray-500">{value?.toFixed(1)} ({count} reseñas)</span>
@@ -364,7 +364,7 @@ export default function ProductDetailPage() {
             {product.stock !== null && (
               <div className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full ${
                 product.stock > 10 ? 'bg-green-100 text-green-700' :
-                product.stock > 0 ? 'bg-yellow-100 text-yellow-700' :
+                product.stock > 0 ? 'bg-accent-100 text-accent-700' :
                 'bg-red-100 text-red-700'
               }`}>
                 <Package className="w-4 h-4" />
@@ -378,8 +378,8 @@ export default function ProductDetailPage() {
               </div>
             )}
             {product.is_featured && (
-              <div className="flex items-center gap-1.5 text-sm text-yellow-700 bg-yellow-100 px-3 py-1.5 rounded-full">
-                <Star className="w-4 h-4 fill-yellow-500" />
+              <div className="flex items-center gap-1.5 text-sm text-accent-700 bg-accent-100 px-3 py-1.5 rounded-full">
+                <Star className="w-4 h-4 fill-accent-500" />
                 Destacado
               </div>
             )}
@@ -389,8 +389,8 @@ export default function ProductDetailPage() {
           <div className="space-y-3">
             {is_owner ? (
               /* Owner view: only edit button */
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center justify-between gap-3">
-                <p className="text-sm text-yellow-700 font-medium">Estás viendo tu producto como lo ven los compradores</p>
+              <div className="bg-accent-50 border border-accent-200 rounded-xl p-4 flex items-center justify-between gap-3">
+                <p className="text-sm text-accent-700 font-medium">Estás viendo tu producto como lo ven los compradores</p>
                 <Link
                   to={`/dashboard/products/${product.slug || product.id}/edit`}
                   className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors text-sm flex-shrink-0"
@@ -621,7 +621,7 @@ export default function ProductDetailPage() {
                   </span>
                 </div>
 
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
+                <div className="p-3 bg-accent-50 border border-accent-200 rounded-xl text-sm text-accent-800">
                   El vendedor recibirá tu solicitud y te responderá con el precio unitario y el total.
                 </div>
 

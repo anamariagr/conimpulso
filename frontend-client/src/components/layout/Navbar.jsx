@@ -47,7 +47,7 @@ export default function Navbar() {
             ) : (
               <>
                 <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-                  <span className="text-primary font-bold text-xl">C</span>
+                  <span className="text-white font-bold text-xl">C</span>
                 </div>
                 <span className="text-primary font-bold text-xl hidden sm:block">{siteName}</span>
               </>
@@ -80,7 +80,7 @@ export default function Navbar() {
             >
               <ShoppingCart className="w-5 h-5 text-primary" />
               {totalItems() > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-accent text-primary text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {totalItems() > 9 ? '9+' : totalItems()}
                 </span>
               )}
@@ -323,7 +323,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     to="/register"
-                    className="px-4 py-2 text-center bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-400"
+                    className="px-4 py-2 text-center bg-accent text-white font-semibold rounded-lg hover:bg-accent-400"
                     onClick={() => setMobileOpen(false)}
                   >
                     Registrarse

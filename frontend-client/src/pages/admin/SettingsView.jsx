@@ -118,7 +118,7 @@ export default function SettingsView() {
               </div>
               <Link
                 to="/admin/homepage-editor"
-                className="flex items-center gap-2 px-4 py-2 bg-accent text-primary font-medium rounded-xl hover:bg-yellow-400 transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-medium rounded-xl hover:bg-accent-400 transition-colors text-sm"
               >
                 Editar logo <ArrowRight className="w-4 h-4" />
               </Link>
@@ -262,8 +262,8 @@ export default function SettingsView() {
           {/* Notificaciones */}
           <div className="card">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-yellow-500/20 rounded-xl flex items-center justify-center">
-                <Bell className="w-5 h-5 text-yellow-600" />
+              <div className="w-10 h-10 bg-accent-500/20 rounded-xl flex items-center justify-center">
+                <Bell className="w-5 h-5 text-accent-600" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Notificaciones</h3>
@@ -382,8 +382,8 @@ export default function SettingsView() {
                   al <strong>+34 644 59 11 89</strong> en WhatsApp. Te responderán con tu API key.
                 </p>
               </div>
-              <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${settings.callmebotApiKey ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${settings.callmebotApiKey ? 'bg-green-500' : 'bg-yellow-500'}`} />
+              <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${settings.callmebotApiKey ? 'bg-green-50 text-green-700' : 'bg-accent-50 text-accent-700'}`}>
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${settings.callmebotApiKey ? 'bg-green-500' : 'bg-accent-500'}`} />
                 {settings.callmebotApiKey
                   ? `Activo — las notificaciones llegarán al ${settings.whatsappPhone}`
                   : 'Sin configurar — las notificaciones WhatsApp están desactivadas'}

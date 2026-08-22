@@ -89,7 +89,7 @@ export default function CampaignFormPage() {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-500 focus:border-transparent"
               placeholder="Mi campaña publicitaria"
             />
           </div>
@@ -102,7 +102,7 @@ export default function CampaignFormPage() {
               name="type"
               value={formData.type}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-500 focus:border-transparent"
             >
               <option value="banner">Banner</option>
               <option value="product">Producto</option>
@@ -123,7 +123,7 @@ export default function CampaignFormPage() {
               required
               min="0"
               step="0.01"
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-500 focus:border-transparent"
               placeholder="100000"
             />
           </div>
@@ -139,7 +139,7 @@ export default function CampaignFormPage() {
               onChange={handleChange}
               min="0"
               step="0.01"
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-500 focus:border-transparent"
               placeholder="10000"
             />
           </div>
@@ -153,7 +153,7 @@ export default function CampaignFormPage() {
               name="start_date"
               value={formData.start_date}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-500 focus:border-transparent"
             />
           </div>
 
@@ -166,7 +166,7 @@ export default function CampaignFormPage() {
               name="end_date"
               value={formData.end_date}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-500 focus:border-transparent"
             />
           </div>
 
@@ -178,7 +178,7 @@ export default function CampaignFormPage() {
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-500 focus:border-transparent"
             >
               <option value="draft">Borrador</option>
               <option value="active">Activo</option>
@@ -199,7 +199,7 @@ export default function CampaignFormPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-3 bg-accent-500 hover:bg-accent-600 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
           >
             <Save size={20} />
             {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear Campaña'}
