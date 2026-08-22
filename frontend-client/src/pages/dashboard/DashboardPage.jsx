@@ -4,12 +4,12 @@ import { useSiteStore } from '../../stores/siteStore';
 import { Package, ShoppingBag, Target, TrendingUp, Users, Briefcase, Star, Eye, EyeOff, Sparkles } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { user, viewAsVendor, viewAsAdvisor, clearActiveRole, activeRole } = useAuthStore();
+  const { user, viewAsVendor, viewAsAdvisor, setActiveRole, activeRole } = useAuthStore();
   const { aiInsightsEnabled } = useSiteStore();
 
   const showVendorContent = viewAsVendor();
   const showAdvisorContent = viewAsAdvisor();
-  const isInRoleView = activeRole !== null;
+  const isInRoleView = activeRole === 'vendor' || activeRole === 'advisor';
 
   // Determine current view mode
   const currentView = activeRole === 'vendor' ? 'vendor' : activeRole === 'advisor' ? 'advisor' : 'client';
@@ -42,7 +42,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <button
-              onClick={clearActiveRole}
+              onClick={() => setActiveRole('buyer')}
               className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm font-medium"
             >
               <EyeOff className="w-4 h-4" />

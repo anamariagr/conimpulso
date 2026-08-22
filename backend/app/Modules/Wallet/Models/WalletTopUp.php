@@ -17,6 +17,8 @@ class WalletTopUp extends Model
         'payment_method',
         'payment_reference',
         'payment_proof_url',
+        'reference',
+        'wompi_transaction_id',
         'status',
         'verified_at',
         'verified_by',

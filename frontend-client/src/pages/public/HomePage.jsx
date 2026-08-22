@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Truck, Users, Star, Zap, Globe, Mail, ShoppingBag, MapPin, CheckCircle, X, Store } from 'lucide-react';
+import { ArrowRight, Shield, Truck, Users, Star, Zap, Globe, Mail, ShoppingBag, MapPin, CheckCircle, X, Store, Wrench, Calendar } from 'lucide-react';
 import api from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -327,7 +327,11 @@ const getLayoutItemClass = (section) => {
   return '';
 };
 
-const FeaturedProductsSection = ({ products, section }) => (
+const FeaturedProductsSection = ({ products, section }) => {
+  const picked = section?.picked_products;
+  const list = picked?.length ? picked : (products || []).slice(0, 8);
+
+  return (
   <section style={getSectionStyle(section, '#ffffff')}>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between mb-8">
@@ -340,7 +344,7 @@ const FeaturedProductsSection = ({ products, section }) => (
         </Link>
       </div>
       <div className={getLayoutClass(section, 4)}>
-        {(products || []).slice(0, 8).map((product) => (
+        {list.map((product) => (
           <Link
             key={product.id}
             to={`/products/${product.slug}`}
@@ -362,7 +366,8 @@ const FeaturedProductsSection = ({ products, section }) => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 const StoresSection = ({ shops, section }) => (
   <section style={getSectionStyle(section, '#f9fafb')}>
@@ -422,6 +427,93 @@ const BannerSection = ({ section, banners }) => {
           )}
         </Link>
       </div>
+    </section>
+  );
+};
+
+const SliderContentSection = ({ section }) => {
+  const items = section?.items || [];
+  return (
+    <section style={getSectionStyle(section, '#ffffff')}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {(section?.title || section?.subtitle) && (
+          <div className="text-center mb-8">
+            {section?.title && <h2 className="text-3xl font-bold text-primary mb-2">{section.title}</h2>}
+            {section?.subtitle && <p className="text-text-secondary">{section.subtitle}</p>}
+          </div>
+        )}
+        {items.length > 0 ? (
+          <div className="flex gap-6 overflow-x-auto pb-3 snap-x">
+            {items.map((item, i) => (
+              <div key={i} className="min-w-[260px] sm:min-w-[300px] snap-start card overflow-hidden">
+                {item.image && <img src={item.image} alt={item.title || ''} className="w-full h-40 object-cover" />}
+                {item.title && <h3 className="font-semibold text-primary mt-2 px-1">{item.title}</h3>}
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+};
+
+const CardsGridSection = ({ section }) => {
+  const items = section?.items || [];
+  return (
+    <section style={getSectionStyle(section, '#ffffff')}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {(section?.title || section?.subtitle) && (
+          <div className="text-center mb-8">
+            {section?.title && <h2 className="text-3xl font-bold text-primary mb-2">{section.title}</h2>}
+            {section?.subtitle && <p className="text-text-secondary">{section.subtitle}</p>}
+          </div>
+        )}
+        {items.length > 0 && (
+          <div className={`grid ${getGridClass(section, 3)} gap-6`}>
+            {items.map((item, i) => (
+              <div key={i} className="card overflow-hidden">
+                {item.image && <img src={item.image} alt={item.title || ''} className="w-full h-32 object-cover" />}
+                {item.title && <h3 className="font-semibold text-primary mt-2 px-1">{item.title}</h3>}
+                {item.description && <p className="text-sm text-text-secondary px-1 pb-2">{item.description}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+const TestimonialsSection = ({ section }) => {
+  const items = section?.items || [];
+  return (
+    <section style={getSectionStyle(section, '#f9fafb')}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-primary mb-2">{section?.title || 'Lo que dicen nuestros clientes'}</h2>
+          {section?.subtitle && <p className="text-text-secondary">{section.subtitle}</p>}
+        </div>
+        {items.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {items.map((item, i) => (
+              <div key={i} className="card">
+                <p className="text-text-secondary italic mb-3">"{item.quote}"</p>
+                <p className="font-semibold text-primary text-sm">{item.author}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+const CustomHtmlSection = ({ section }) => {
+  const html = section?.configuration?.html;
+  if (!html) return null;
+  return (
+    <section style={getSectionStyle(section, '#ffffff')}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" dangerouslySetInnerHTML={{ __html: html }} />
     </section>
   );
 };
@@ -570,6 +662,77 @@ const CTASection = () => (
   </section>
 );
 
+const ServicesSection = ({ services }) => {
+  if (!services?.length) return null;
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-primary mb-2">Servicios disponibles</h2>
+            <p className="text-text-secondary">Encuentra profesionales y soluciones para tu negocio.</p>
+          </div>
+          <Link to="/services" className="text-accent hover:text-accent-hover font-medium flex items-center gap-1">Ver todos <ArrowRight className="w-4 h-4" /></Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((service) => (
+            <Link key={service.id} to="/services" className="card p-6 hover:shadow-card transition-shadow">
+              <div className="w-11 h-11 rounded-xl bg-accent/15 text-accent flex items-center justify-center mb-4"><Wrench className="w-5 h-5" /></div>
+              <h3 className="font-semibold text-primary mb-1">{service.name}</h3>
+              <p className="text-sm text-text-secondary line-clamp-2 mb-4">{service.description || 'Servicio disponible para cotizar.'}</p>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-text-secondary">{service.shop?.name || 'Proveedor'}</span>
+                <span className="font-semibold text-accent">{service.price_type === 'quote' ? 'Cotizar' : `$${formatPrice(service.base_price)}`}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const BlogSection = ({ posts }) => {
+  if (!posts?.length) return null;
+
+  return (
+    <section className="py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-primary mb-2">Historias de la comunidad</h2>
+            <p className="text-text-secondary">Conoce productos y emprendimientos que impulsan nuestra comunidad.</p>
+          </div>
+          <Link to="/blog" className="text-accent hover:text-accent-hover font-medium flex items-center gap-1">Ver blog <ArrowRight className="w-4 h-4" /></Link>
+        </div>
+        <div className="flex gap-6 overflow-x-auto pb-3 snap-x">
+          {posts.map((post) => (
+            <Link key={post.id} to={`/blog/${post.slug}`} className="card overflow-hidden min-w-[280px] sm:min-w-[340px] max-w-[340px] snap-start hover:shadow-card transition-shadow">
+              <div className="aspect-[16/9] bg-primary/90">
+                {post.cover_image ? <img src={post.cover_image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-accent text-4xl"><Calendar /></div>}
+              </div>
+              <div className="p-5">
+                <h3 className="font-semibold text-primary line-clamp-2">{post.title}</h3>
+                {post.excerpt && <p className="mt-2 text-sm text-text-secondary line-clamp-2">{post.excerpt}</p>}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const DefaultHomepageSections = ({ products, shops, services, posts }) => (
+  <>
+    {products?.length > 0 && <FeaturedProductsSection products={products} section={{ title: 'Productos recientes', subtitle: 'Nuevos productos publicados por nuestra comunidad', layout: 'slider' }} />}
+    {shops?.length > 0 && <StoresSection shops={shops} section={{ title: 'Tiendas recientes', subtitle: 'Conoce los negocios que ya hacen parte de ConImpulso', layout: 'slider' }} />}
+    <ServicesSection services={services} />
+    <BlogSection posts={posts} />
+  </>
+);
+
 // Render section based on type
 const renderSection = (section, data) => {
   const { type } = section;
@@ -584,6 +747,14 @@ const renderSection = (section, data) => {
       return <BannerSection key={section.id} section={section} banners={data.banners} />;
     case 'newsletter':
       return <NewsletterSection key={section.id} section={section} />;
+    case 'slider':
+      return <SliderContentSection key={section.id} section={section} />;
+    case 'cards_grid':
+      return <CardsGridSection key={section.id} section={section} />;
+    case 'testimonials':
+      return <TestimonialsSection key={section.id} section={section} />;
+    case 'custom_html':
+      return <CustomHtmlSection key={section.id} section={section} />;
     default:
       return null;
   }
@@ -595,7 +766,12 @@ export default function HomePage() {
     sections: [],
     featured_products: [],
     categories: [],
-    featured_shops: []
+    featured_shops: [],
+    use_default_homepage: false,
+    default_products: [],
+    default_shops: [],
+    default_services: [],
+    default_posts: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -634,7 +810,10 @@ export default function HomePage() {
     };
   }, []);
 
-  const { banners, sections, featured_products, categories, featured_shops } = homepageData;
+  const {
+    banners, sections, featured_products, categories, featured_shops,
+    use_default_homepage, default_products, default_shops, default_services, default_posts,
+  } = homepageData;
 
   // Get hero banner
   const heroBanner = banners?.find(b => b.position === 'hero' && b.is_active);
@@ -662,8 +841,17 @@ export default function HomePage() {
       <SidebarBannerSection banner={sidebarBanner} />
 
       {/* Dynamic Sections from Editor */}
-      {sections?.filter(s => s.is_active).sort((a, b) => a.order - b.order).map((section) =>
-        renderSection(section, { featured_products, categories, featured_shops, banners })
+      {use_default_homepage ? (
+        <DefaultHomepageSections
+          products={default_products}
+          shops={default_shops}
+          services={default_services}
+          posts={default_posts}
+        />
+      ) : (
+        sections?.filter(s => s.is_active).sort((a, b) => a.order - b.order).map((section) =>
+          renderSection(section, { featured_products, categories, featured_shops, banners })
+        )
       )}
 
       {/* Static Features (shown at end) */}

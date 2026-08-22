@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
         "predis/predis": "^3.4",
+        "resend/resend-php": "^1.4",
         "spatie/laravel-activitylog": "^4.7",
         "spatie/laravel-permission": "^7.4",
         "stevebauman/purify": "^6.3"

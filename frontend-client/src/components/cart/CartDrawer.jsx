@@ -1,12 +1,21 @@
-import { X, Trash2, Plus, Minus, ShoppingCart, Package } from 'lucide-react';
+import { useState } from 'react';
+import { X, Trash2, Plus, Minus, ShoppingCart, Package, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useCartStore } from '../../stores/cartStore';
+import { useCartStore, unitPriceFor } from '../../stores/cartStore';
+import CartCheckoutModal from './CartCheckoutModal';
 
 const fmt = (n) =>
   parseFloat(n).toLocaleString('es-CO', { maximumFractionDigits: 0 });
 
 export default function CartDrawer({ open, onClose }) {
   const { items, removeItem, updateQty, clearCart, totalPrice } = useCartStore();
+  const [showCheckout, setShowCheckout] = useState(false);
+
+  const handleCheckoutSuccess = () => {
+    clearCart();
+    setShowCheckout(false);
+    onClose();
+  };
 
   return (
     <>
@@ -67,7 +76,10 @@ export default function CartDrawer({ open, onClose }) {
               </button>
             </div>
           ) : (
-            items.map((item) => (
+            items.map((item) => {
+              const unitPrice = unitPriceFor(item);
+              const isWholesale = item.price_wholesale && unitPrice === item.price_wholesale;
+              return (
               <div key={item.product_id} className="flex gap-3 bg-gray-50 rounded-xl p-3">
                 {/* Image */}
                 <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
@@ -93,10 +105,19 @@ export default function CartDrawer({ open, onClose }) {
                     <p className="text-xs text-gray-400 mt-0.5">{item.shop_name}</p>
                   )}
                   <p className="text-sm font-bold text-primary mt-1">
-                    ${fmt(item.price * item.quantity)}
+                    ${fmt(unitPrice * item.quantity)}
                   </p>
                   {item.quantity > 1 && (
-                    <p className="text-xs text-gray-400">${fmt(item.price)} c/u</p>
+                    <p className="text-xs text-gray-400">${fmt(unitPrice)} c/u</p>
+                  )}
+                  {isWholesale ? (
+                    <p className="text-xs text-green-600 flex items-center gap-1 mt-0.5">
+                      <Tag className="w-3 h-3" /> Precio mayoreo aplicado
+                    </p>
+                  ) : item.price_wholesale && (
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Desde {item.minimum_wholesale_quantity} unidades: ${fmt(item.price_wholesale)} c/u
+                    </p>
                   )}
                 </div>
 
@@ -127,7 +148,8 @@ export default function CartDrawer({ open, onClose }) {
                   </div>
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
 
@@ -141,10 +163,10 @@ export default function CartDrawer({ open, onClose }) {
               </span>
             </div>
             <p className="text-xs text-gray-400 text-center">
-              Los precios no incluyen envío. El vendedor te contactará para coordinar el pago.
+              Los precios no incluyen envío.
             </p>
             <button
-              onClick={onClose}
+              onClick={() => setShowCheckout(true)}
               className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors"
             >
               Proceder a compra
@@ -152,6 +174,15 @@ export default function CartDrawer({ open, onClose }) {
           </div>
         )}
       </div>
+
+      {showCheckout && (
+        <CartCheckoutModal
+          items={items}
+          totalPrice={totalPrice()}
+          onClose={() => setShowCheckout(false)}
+          onSuccess={handleCheckoutSuccess}
+        />
+      )}
     </>
   );
 }

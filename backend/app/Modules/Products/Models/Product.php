@@ -146,6 +146,19 @@ class Product extends Model
         return $this->stock > 0;
     }
 
+    // Mirrors the wholesale rule shown on the product page: once quantity meets the
+    // minimum, the wholesale price applies to the whole quantity (not just the excess).
+    public function unitPriceForQuantity(int $quantity): float
+    {
+        $minWholesale = $this->minimum_wholesale_quantity ?: 5;
+
+        if ($this->price_wholesale && $quantity >= $minWholesale) {
+            return (float) $this->price_wholesale;
+        }
+
+        return (float) $this->price;
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active')

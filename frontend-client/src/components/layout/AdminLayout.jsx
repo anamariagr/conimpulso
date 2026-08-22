@@ -34,7 +34,7 @@ const adminMenuItems = [
   { name: 'Productos', icon: Package, path: '/admin/products' },
   { name: 'Categorías', icon: Grid3X3, path: '/admin/categories' },
   { name: 'Saldo / Wallet', icon: Wallet, path: '/admin/wallet' },
-  { name: 'Solicitudes de compra', icon: ShoppingBag, path: '/admin/purchase-requests' },
+  { name: 'Pedidos', icon: ShoppingBag, path: '/admin/product-orders' },
   { name: 'Mensajes', icon: MessageSquare, path: '/admin/messages' },
   { name: 'Blog', icon: BookOpen, path: '/admin/blog' },
   { name: 'Banner Logística', icon: Truck, path: '/admin/logistics-banner' },
@@ -51,7 +51,7 @@ export default function AdminLayout() {
 
   useEffect(() => {
     const fetchPending = () => {
-      api.get('/admin/purchase-requests/pending-count')
+      api.get('/admin/product-orders/pending-count')
         .then((r) => setPendingCount(r.data.data?.count || 0))
         .catch(() => {});
     };
@@ -126,7 +126,7 @@ export default function AdminLayout() {
         <nav className="flex-1 p-4">
           <ul className="space-y-1">
             {adminMenuItems.map((item) => {
-              const isPurchase = item.path === '/admin/purchase-requests';
+              const isPurchase = item.path === '/admin/product-orders';
               return (
                 <li key={item.path}>
                   <Link

@@ -18,7 +18,6 @@ const bannerSlots = [
 ];
 
 const sectionTypes = [
-  { value: 'hero', label: 'Hero con Slider' },
   { value: 'featured_products', label: 'Productos Destacados' },
   { value: 'categories', label: 'Categorías' },
   { value: 'stores', label: 'Tiendas Destacadas' },
@@ -75,8 +74,14 @@ export default function HomepageEditorPage() {
   });
   const [sectionForm, setSectionForm] = useState({
     name: '', type: 'featured_products', title: '', subtitle: '', layout: 'grid', columns: 4,
-    background_color: '#ffffff', padding_top: 16, padding_bottom: 16, is_active: true
+    background_color: '#ffffff', padding_top: 16, padding_bottom: 16, is_active: true, items: []
   });
+
+  // Product picker (for the "featured_products" section type)
+  const [productSearch, setProductSearch] = useState('');
+  const [productResults, setProductResults] = useState([]);
+  const [searchingProducts, setSearchingProducts] = useState(false);
+  const productSearchTimeout = useRef(null);
 
   // Banner media upload states
   const [mediaInputType, setMediaInputType] = useState('file');
@@ -380,15 +385,53 @@ export default function HomepageEditorPage() {
     setEditingSection(null);
     setSectionForm({
       name: '', type: 'featured_products', title: '', subtitle: '', layout: 'grid', columns: 4,
-      background_color: '#ffffff', padding_top: 16, padding_bottom: 16, is_active: true
+      background_color: '#ffffff', padding_top: 16, padding_bottom: 16, is_active: true, items: []
     });
+    setProductSearch('');
+    setProductResults([]);
     setShowSectionModal(true);
   };
 
   const editSection = (section) => {
     setEditingSection(section.id);
-    setSectionForm({ ...section });
+    setSectionForm({ items: [], ...section });
+    setProductSearch('');
+    setProductResults([]);
     setShowSectionModal(true);
+  };
+
+  const handleProductSearch = (value) => {
+    setProductSearch(value);
+    clearTimeout(productSearchTimeout.current);
+    if (!value.trim()) {
+      setProductResults([]);
+      return;
+    }
+    productSearchTimeout.current = setTimeout(async () => {
+      setSearchingProducts(true);
+      try {
+        const res = await api.get('/products', { params: { search: value, per_page: 8 } });
+        setProductResults(res.data.data || []);
+      } catch {
+        setProductResults([]);
+      } finally {
+        setSearchingProducts(false);
+      }
+    }, 300);
+  };
+
+  const addPickedProduct = (product) => {
+    setSectionForm((prev) => {
+      const items = prev.items || [];
+      if (items.some((i) => i.id === product.id)) return prev;
+      return { ...prev, items: [...items, { id: product.id, name: product.name, image: getProductImage(product) }] };
+    });
+    setProductSearch('');
+    setProductResults([]);
+  };
+
+  const removePickedProduct = (id) => {
+    setSectionForm((prev) => ({ ...prev, items: (prev.items || []).filter((i) => i.id !== id) }));
   };
 
   const saveSection = async () => {
@@ -763,16 +806,16 @@ export default function HomepageEditorPage() {
 
                 {section.type === 'featured_products' && (
                   <div className="grid grid-cols-4 gap-4">
-                    {featuredProducts.slice(0, section.columns || 4).map(product => (
+                    {(section.items?.length ? section.items : featuredProducts).slice(0, section.columns || 4).map(product => (
                       <div key={product.id} className="bg-gray-100 rounded-lg p-2">
                         <div className="aspect-square bg-gray-200 rounded mb-2 overflow-hidden">
-                          <img src={getProductImage(product)} alt="" className="w-full h-full object-cover" />
+                          <img src={product.image || getProductImage(product)} alt="" className="w-full h-full object-cover" />
                         </div>
                         <p className="text-sm font-medium truncate">{product.name}</p>
-                        <p className="text-xs text-gray-500">${product.price}</p>
+                        {product.price != null && <p className="text-xs text-gray-500">${product.price}</p>}
                       </div>
                     ))}
-                    {featuredProducts.length === 0 && (
+                    {!section.items?.length && featuredProducts.length === 0 && (
                       <div className="col-span-4 text-center py-4 text-gray-400 text-sm">
                         No hay productos destacados
                       </div>
@@ -1127,12 +1170,13 @@ export default function HomepageEditorPage() {
 
       {/* Section Modal */}
       {showSectionModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg flex flex-col" style={{ maxHeight: '85vh' }}>
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 flex-shrink-0">
               <h3 className="text-lg font-bold">{editingSection ? 'Editar Sección' : 'Nueva Sección'}</h3>
               <button onClick={() => setShowSectionModal(false)}><X className="w-5 h-5" /></button>
             </div>
+            <div className="overflow-y-auto flex-1 p-6 pt-4">
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Nombre</label>
@@ -1173,6 +1217,56 @@ export default function HomepageEditorPage() {
                   className="input-field w-full"
                 />
               </div>
+
+              {sectionForm.type === 'featured_products' && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Productos específicos (opcional)</label>
+                  <p className="text-xs text-gray-400 mb-2">
+                    Si no eliges ninguno, se muestran automáticamente los productos marcados como "destacados".
+                  </p>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={productSearch}
+                      onChange={e => handleProductSearch(e.target.value)}
+                      placeholder="Buscar producto por nombre..."
+                      className="input-field w-full"
+                    />
+                    {searchingProducts && (
+                      <span className="text-xs text-gray-400 absolute right-3 top-1/2 -translate-y-1/2">Buscando...</span>
+                    )}
+                  </div>
+                  {productResults.length > 0 && (
+                    <div className="mt-2 border border-gray-200 rounded-lg max-h-48 overflow-y-auto divide-y divide-gray-100">
+                      {productResults.map(p => (
+                        <button
+                          type="button"
+                          key={p.id}
+                          onClick={() => addPickedProduct(p)}
+                          className="w-full flex items-center gap-2 p-2 hover:bg-gray-50 text-left"
+                        >
+                          <img src={getProductImage(p)} alt="" className="w-8 h-8 rounded object-cover bg-gray-100 flex-shrink-0" />
+                          <span className="text-sm truncate flex-1">{p.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {(sectionForm.items || []).length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {sectionForm.items.map(p => (
+                        <span key={p.id} className="flex items-center gap-1.5 bg-gray-100 rounded-full pl-1 pr-2 py-1 text-xs">
+                          <img src={p.image} alt="" className="w-5 h-5 rounded-full object-cover bg-gray-200" />
+                          <span className="max-w-[120px] truncate">{p.name}</span>
+                          <button type="button" onClick={() => removePickedProduct(p.id)} className="text-gray-400 hover:text-red-500">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Layout</label>
@@ -1218,7 +1312,8 @@ export default function HomepageEditorPage() {
                 </label>
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
+            </div>
+            <div className="flex gap-3 p-6 pt-4 border-t border-gray-100 flex-shrink-0">
               <button onClick={() => setShowSectionModal(false)} className="flex-1 py-2 border rounded-lg">Cancelar</button>
               <button onClick={saveSection} className="flex-1 py-2 bg-accent text-primary font-semibold rounded-lg">Guardar</button>
             </div>

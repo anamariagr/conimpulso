@@ -58,7 +58,7 @@ export const advertisingService = {
 };
 
 export const shopService = {
-  index: () => api.get('/shops'),
+  index: (params = {}) => api.get('/shops', { params }),
   show: (slug) => api.get(`/shops/${slug}`),
   myShop: () => api.get('/my/shops'),
   store: (data) => api.post('/shops', data),

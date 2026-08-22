@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Wallet as WalletIcon, Plus, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle, QrCode } from 'lucide-react';
 import api from '../../services/api';
 import { useSiteStore } from '../../stores/siteStore';
@@ -9,6 +10,8 @@ const MANUAL_PROOF_METHODS = ['bre_b_llave', 'bre_b_qr'];
 
 export default function WalletPage() {
   const { walletCoinValueCop, breBKey, breBQrImageUrl, wompiEnabled, fetchSettings } = useSiteStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [checkingWompi, setCheckingWompi] = useState(false);
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [pendingTopUps, setPendingTopUps] = useState([]);
@@ -21,6 +24,35 @@ export default function WalletPage() {
   useEffect(() => {
     fetchData();
     fetchSettings();
+  }, []);
+
+  // After returning from the Wompi checkout redirect (?wompi=1&id=<transaction_id>),
+  // ask the backend to confirm the real status — never trust the redirect itself.
+  useEffect(() => {
+    const transactionId = searchParams.get('id');
+    if (!searchParams.get('wompi') || !transactionId) return;
+
+    setCheckingWompi(true);
+    api.get(`/wallet/wompi/status/${transactionId}`)
+      .then((res) => {
+        const status = res.data?.data?.status;
+        if (status === 'approved') {
+          toast.success('¡Pago confirmado! Tus monedas ya están en tu billetera.');
+        } else if (status === 'rejected') {
+          toast.error('El pago no se completó con Wompi.');
+        } else {
+          toast('Tu pago sigue en proceso. Te avisaremos cuando se confirme.', { icon: '⏳' });
+        }
+        fetchData();
+      })
+      .catch(() => toast.error('No pudimos confirmar el estado del pago con Wompi.'))
+      .finally(() => {
+        setCheckingWompi(false);
+        searchParams.delete('wompi');
+        searchParams.delete('id');
+        setSearchParams(searchParams, { replace: true });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -64,6 +96,21 @@ export default function WalletPage() {
       return;
     }
     setSubmittingTopUp(true);
+
+    if (topUpData.payment_method === 'wompi') {
+      try {
+        const res = await api.post('/wallet/wompi/init', { amount: topUpData.amount });
+        const { checkout_url, params } = res.data.data;
+        const url = new URL(checkout_url);
+        Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+        window.location.href = url.toString();
+      } catch (error) {
+        setTopUpError(error.response?.data?.message || 'Error al iniciar el pago con Wompi');
+        setSubmittingTopUp(false);
+      }
+      return;
+    }
+
     try {
       await api.post('/wallet/top-up', topUpData);
       toast.success('Solicitud de recarga enviada. Te avisaremos cuando sea aprobada.');
@@ -126,6 +173,13 @@ export default function WalletPage() {
             Recargar
           </a>
         </div>
+
+        {checkingWompi && (
+          <div className="mb-6 p-4 bg-[#1A1A1A] border border-[#FFD700]/30 rounded-xl flex items-center gap-3 text-sm text-gray-300">
+            <div className="w-5 h-5 border-2 border-[#FFD700] border-t-transparent rounded-full animate-spin flex-shrink-0" />
+            Confirmando tu pago con Wompi...
+          </div>
+        )}
 
         {/* Balance Card */}
         <div className="bg-gradient-to-br from-[#FFD700]/20 to-[#FFD700]/5 border border-[#FFD700]/30 rounded-2xl p-8 mb-8">

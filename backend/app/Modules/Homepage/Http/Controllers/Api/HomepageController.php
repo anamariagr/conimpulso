@@ -164,8 +164,15 @@ class HomepageController extends Controller
             ], 422);
         }
 
+        $baseKey = Str::slug($request->name) ?: 'section';
+        $key = $baseKey;
+        $suffix = 1;
+        while (HomepageSection::where('key', $key)->exists()) {
+            $key = $baseKey . '-' . (++$suffix);
+        }
+
         $section = HomepageSection::create([
-            'key' => Str::slug($request->name),
+            'key' => $key,
             'name' => $request->name,
             'type' => $request->type,
             'title' => $request->title,
@@ -279,16 +286,56 @@ class HomepageController extends Controller
             $promotions = [];
         }
 
+        $sections = HomepageSection::active()->get();
+        $this->attachPickedProducts($sections);
+
+        // A homepage must remain useful before an administrator has configured it.
+        // The editor takes precedence as soon as it contains at least one active section.
+        $useDefaultHomepage = $sections->isEmpty();
+        $defaultProducts = collect();
+        $defaultShops = collect();
+        $defaultServices = collect();
+        $defaultPosts = collect();
+
+        if ($useDefaultHomepage) {
+            $defaultProducts = \App\Modules\Products\Models\Product::active()
+                ->with('shop:id,name,logo')
+                ->latest()
+                ->limit(12)
+                ->get(['id', 'name', 'slug', 'images', 'price', 'price_wholesale', 'shop_id', 'rating_count', 'sales_count']);
+
+            $defaultShops = \App\Modules\Shops\Models\Shop::active()
+                ->latest()
+                ->limit(12)
+                ->get(['id', 'name', 'slug', 'logo', 'banner', 'city', 'address', 'is_verified']);
+
+            $defaultServices = \App\Modules\Services\Models\Service::active()
+                ->with('shop:id,name,logo')
+                ->latest()
+                ->limit(6)
+                ->get(['id', 'name', 'slug', 'description', 'images', 'base_price', 'price_type', 'shop_id']);
+
+            $defaultPosts = \App\Modules\Blog\Models\BlogPost::published()
+                ->latest('published_at')
+                ->limit(6)
+                ->get(['id', 'title', 'slug', 'excerpt', 'cover_image', 'type', 'published_at']);
+        }
+
         if (!$layout) {
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'sections' => HomepageSection::active()->get(),
+                    'sections' => $sections,
                     'banners' => HomepageBanner::active()->get(),
                     'featured_products' => $featuredProducts,
                     'categories' => $categories,
                     'featured_shops' => $featuredShops,
                     'promotions' => $promotions,
+                    'use_default_homepage' => $useDefaultHomepage,
+                    'default_products' => $defaultProducts,
+                    'default_shops' => $defaultShops,
+                    'default_services' => $defaultServices,
+                    'default_posts' => $defaultPosts,
                 ],
             ]);
         }
@@ -297,14 +344,63 @@ class HomepageController extends Controller
             'success' => true,
             'data' => [
                 'layout' => $layout,
-                'sections' => HomepageSection::active()->get(),
+                'sections' => $sections,
                 'banners' => HomepageBanner::active()->get(),
                 'featured_products' => $featuredProducts,
                 'categories' => $categories,
                 'featured_shops' => $featuredShops,
                 'promotions' => $promotions,
+                'use_default_homepage' => $useDefaultHomepage,
+                'default_products' => $defaultProducts,
+                'default_shops' => $defaultShops,
+                'default_services' => $defaultServices,
+                'default_posts' => $defaultPosts,
             ],
         ]);
+    }
+
+    // Sections of type featured_products can hand-pick specific products (stored as
+    // [{id, ...}] in `items`) instead of relying on the global "featured" flag.
+    private function attachPickedProducts($sections): void
+    {
+        $idsBySection = [];
+        $allIds = collect();
+
+        foreach ($sections as $section) {
+            if ($section->type !== 'featured_products' || empty($section->items)) {
+                continue;
+            }
+
+            $ids = collect($section->items)
+                ->map(fn ($item) => is_array($item) ? ($item['id'] ?? null) : $item)
+                ->filter()
+                ->values();
+
+            $idsBySection[$section->id] = $ids;
+            $allIds = $allIds->merge($ids);
+        }
+
+        if ($allIds->isEmpty()) {
+            return;
+        }
+
+        $products = \App\Modules\Products\Models\Product::whereIn('id', $allIds->unique())
+            ->with('shop:id,name,logo')
+            ->get(['id', 'name', 'slug', 'images', 'price', 'price_wholesale', 'shop_id', 'rating_count', 'sales_count', 'is_featured'])
+            ->keyBy('id');
+
+        foreach ($sections as $section) {
+            if (!isset($idsBySection[$section->id])) {
+                continue;
+            }
+
+            $picked = $idsBySection[$section->id]
+                ->map(fn ($id) => $products->get($id))
+                ->filter()
+                ->values();
+
+            $section->setAttribute('picked_products', $picked);
+        }
     }
 
     public function updateLayout(Request $request): JsonResponse

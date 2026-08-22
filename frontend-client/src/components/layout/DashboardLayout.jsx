@@ -187,7 +187,7 @@ export default function DashboardLayout() {
               label: 'Ser Comprador',
               icon: ShoppingBag,
               className: 'bg-gray-600 hover:bg-gray-700',
-              onClick: () => { clearActiveRole(); navigate('/dashboard'); },
+              onClick: () => { setActiveRole('buyer'); navigate('/dashboard'); },
             },
             {
               key: 'vendor',

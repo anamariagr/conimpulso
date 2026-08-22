@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, Store, Tag, Clock, Package, ShoppingCart, MessageSquare, Wrench, ChevronLeft, ChevronRight, Share2, Pencil, X, Send } from 'lucide-react';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Star, Store, Tag, Clock, Package, ShoppingCart, MessageSquare, Wrench, ChevronLeft, ChevronRight, Share2, Pencil, X, Send, Home } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useCartStore } from '../../stores/cartStore';
+import { useSiteStore } from '../../stores/siteStore';
+import { useAuthStore } from '../../stores/authStore';
 
 function ImageGallery({ images }) {
   const [current, setCurrent] = useState(0);
@@ -68,16 +70,61 @@ function StarRating({ value, count }) {
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { wompiEnabled, fetchSettings } = useSiteStore();
+  const { user } = useAuthStore();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactType, setContactType] = useState('contact'); // 'contact' | 'quote'
-  const [contactForm, setContactForm] = useState({ message: '', contact_phone: '', quantity: 1 });
+  const [contactForm, setContactForm] = useState({ message: '', contact_phone: '', quantity: 1, delivery_address: '' });
+  const [codForm, setCodForm] = useState({ full_name: '', document_id: '', contact_phone: '', delivery_address: '' });
   const [sending, setSending] = useState(false);
   const [paymentStep, setPaymentStep] = useState('method'); // 'method' | 'form'
   const [paymentMethod, setPaymentMethod] = useState(null);
+  const [checkingWompi, setCheckingWompi] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+
+  // Pre-fill "pago en casa" with whatever is already on file — only the missing fields stay empty.
+  useEffect(() => {
+    if (paymentMethod !== 'cod' || paymentStep !== 'form') return;
+    setCodForm((f) => ({
+      full_name: f.full_name || user?.name || '',
+      document_id: f.document_id || user?.document_id || '',
+      contact_phone: f.contact_phone || user?.phone || '',
+      delivery_address: f.delivery_address || user?.address || '',
+    }));
+  }, [paymentMethod, paymentStep, user]);
+
+  useEffect(() => { fetchSettings(); }, []);
+
+  // After returning from the Wompi checkout redirect (?wompi=1&id=<transaction_id>)
+  useEffect(() => {
+    const transactionId = searchParams.get('id');
+    if (!searchParams.get('wompi') || !transactionId) return;
+
+    setCheckingWompi(true);
+    api.get(`/products/wompi/status/${transactionId}`)
+      .then((res) => {
+        const status = res.data?.data?.status;
+        if (status === 'paid') {
+          toast.success('¡Pago confirmado! Ya avisamos al vendedor para que coordine la entrega.');
+        } else if (status === 'failed') {
+          toast.error('El pago no se completó con Wompi.');
+        } else {
+          toast('Tu pago sigue en proceso. Te avisaremos cuando se confirme.', { icon: '⏳' });
+        }
+      })
+      .catch(() => toast.error('No pudimos confirmar el estado del pago con Wompi.'))
+      .finally(() => {
+        setCheckingWompi(false);
+        searchParams.delete('wompi');
+        searchParams.delete('id');
+        setSearchParams(searchParams, { replace: true });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const fetch = async () => {
@@ -125,7 +172,7 @@ export default function ProductDetailPage() {
     return [];
   })();
 
-  const isWholesale = product.price_wholesale && quantity >= (product.minimum_wholesale_quantity || 10);
+  const isWholesale = product.price_wholesale && quantity >= (product.minimum_wholesale_quantity || 5);
   const displayPrice = isWholesale ? product.price_wholesale : product.price;
   const wholesaleDiscount = product.price_wholesale
     ? Math.round(((product.price - product.price_wholesale) / product.price) * 100)
@@ -165,6 +212,57 @@ export default function ProductDetailPage() {
     }
   };
 
+  const handlePayWithWompi = async (e) => {
+    e.preventDefault();
+    const qty = parseInt(contactForm.quantity);
+    if (!qty || qty < 1) { toast.error('Ingresa una cantidad válida'); return; }
+    if (sending) return;
+    setSending(true);
+    try {
+      const res = await api.post('/products/wompi/init', {
+        product_id: product.id,
+        quantity: qty,
+        contact_phone: contactForm.contact_phone,
+        delivery_address: contactForm.delivery_address,
+      });
+      const { checkout_url, params } = res.data.data;
+      const url = new URL(checkout_url);
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+      window.location.href = url.toString();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al iniciar el pago con Wompi');
+      setSending(false);
+    }
+  };
+
+  const handleCodOrder = async (e) => {
+    e.preventDefault();
+    const qty = parseInt(contactForm.quantity);
+    if (!qty || qty < 1) { toast.error('Ingresa una cantidad válida'); return; }
+    if (!codForm.full_name.trim() || !codForm.document_id.trim() || !codForm.contact_phone.trim() || !codForm.delivery_address.trim()) {
+      toast.error('Completa todos los datos para el pago en casa');
+      return;
+    }
+    if (sending) return;
+    setSending(true);
+    try {
+      await api.post('/products/orders/cod', {
+        product_id: product.id,
+        quantity: qty,
+        full_name: codForm.full_name,
+        document_id: codForm.document_id,
+        contact_phone: codForm.contact_phone,
+        delivery_address: codForm.delivery_address,
+      });
+      toast.success('¡Pedido registrado! El vendedor coordinará la entrega y el pago en efectivo.');
+      setShowContactModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al registrar el pedido');
+    } finally {
+      setSending(false);
+    }
+  };
+
   const handleSendQuote = async (e) => {
     e.preventDefault();
     const qty = parseInt(contactForm.quantity);
@@ -192,6 +290,13 @@ export default function ProductDetailPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      {checkingWompi && (
+        <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl flex items-center gap-3 text-sm text-purple-700">
+          <div className="w-5 h-5 border-2 border-[#7B2FBE] border-t-transparent rounded-full animate-spin flex-shrink-0" />
+          Confirmando tu pago con Wompi...
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 mb-6 text-sm text-gray-500">
         <Link to="/products" className="flex items-center gap-1 hover:text-primary transition-colors">
@@ -248,7 +353,7 @@ export default function ProductDetailPage() {
                 </span>
                 <span className="text-gray-500">
                   Precio mayoreo: ${parseFloat(product.price_wholesale).toLocaleString('es-CO', { maximumFractionDigits: 0 })}
-                  (mín. {product.minimum_wholesale_quantity || 10} unidades)
+                  (mín. {product.minimum_wholesale_quantity || 5} unidades)
                 </span>
               </div>
             )}
@@ -561,8 +666,9 @@ export default function ProductDetailPage() {
                 <p className="text-sm text-gray-500 mb-4">Selecciona cómo quieres pagar</p>
 
                 <button
-                  onClick={() => { setPaymentMethod('wompi'); }}
-                  className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-primary/40 hover:bg-gray-50 transition-all"
+                  onClick={() => { if (wompiEnabled) { setPaymentMethod('wompi'); setPaymentStep('form'); } }}
+                  disabled={!wompiEnabled}
+                  className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-primary/40 hover:bg-gray-50 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-transparent"
                 >
                   <div className="w-10 h-10 rounded-xl bg-[#7B2FBE]/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-[#7B2FBE] font-bold text-sm">W</span>
@@ -571,21 +677,22 @@ export default function ProductDetailPage() {
                     <p className="font-semibold text-gray-900">Wompi</p>
                     <p className="text-xs text-gray-400">Tarjeta crédito / débito, Nequi, Bancolombia</p>
                   </div>
-                  <span className="ml-auto text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">Próximamente</span>
+                  {!wompiEnabled && (
+                    <span className="ml-auto text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">Próximamente</span>
+                  )}
                 </button>
 
                 <button
-                  onClick={() => { setPaymentMethod('pse'); }}
+                  onClick={() => { setPaymentMethod('cod'); setPaymentStep('form'); }}
                   className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-primary/40 hover:bg-gray-50 transition-all"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-blue-700 font-bold text-sm">PSE</span>
+                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <Home className="w-5 h-5 text-green-700" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-gray-900">PSE</p>
-                    <p className="text-xs text-gray-400">Débito directo desde tu cuenta bancaria</p>
+                    <p className="font-semibold text-gray-900">Pago en casa</p>
+                    <p className="text-xs text-gray-400">Pagas en efectivo cuando te llega el pedido</p>
                   </div>
-                  <span className="ml-auto text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">Próximamente</span>
                 </button>
 
                 <button
@@ -651,6 +758,136 @@ export default function ProductDetailPage() {
                     className="flex-1 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 text-sm">
                     <Send className="w-4 h-4" />
                     {sending ? 'Enviando...' : 'Enviar solicitud'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* ── COMPRAR paso 2: pagar con Wompi ── */}
+            {contactType === 'contact' && paymentStep === 'form' && paymentMethod === 'wompi' && (
+              <form onSubmit={handlePayWithWompi} className="space-y-4">
+                <div className="p-3 bg-purple-50 rounded-xl text-sm text-purple-700">
+                  Pagas ahora con Wompi. Al confirmarse el pago, el vendedor recibe tus datos para coordinar la entrega directamente contigo.
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={contactForm.quantity}
+                    onChange={(e) => setContactForm((f) => ({ ...f, quantity: parseInt(e.target.value) || 1 }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                {product?.price && (
+                  <div className="bg-gray-50 rounded-xl p-3 text-sm text-center text-gray-700">
+                    Total a pagar: <strong className="text-gray-900">
+                      ${(parseFloat(product.price) * (contactForm.quantity || 1)).toLocaleString('es-CO')}
+                    </strong>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tu teléfono</label>
+                  <input
+                    type="tel"
+                    placeholder="Ej: 3001234567"
+                    value={contactForm.contact_phone}
+                    onChange={(e) => setContactForm((f) => ({ ...f, contact_phone: e.target.value }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Dirección de entrega</label>
+                  <input
+                    type="text"
+                    placeholder="Calle, número, ciudad"
+                    value={contactForm.delivery_address}
+                    onChange={(e) => setContactForm((f) => ({ ...f, delivery_address: e.target.value }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setPaymentStep('method')}
+                    className="flex-1 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium text-sm">
+                    Atrás
+                  </button>
+                  <button type="submit" disabled={sending}
+                    className="flex-1 py-2.5 bg-[#7B2FBE] text-white font-semibold rounded-xl hover:bg-[#6a279f] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 text-sm">
+                    {sending ? 'Redirigiendo...' : 'Pagar con Wompi'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* ── COMPRAR paso 2: pago en casa (contra entrega) ── */}
+            {contactType === 'contact' && paymentStep === 'form' && paymentMethod === 'cod' && (
+              <form onSubmit={handleCodOrder} className="space-y-4">
+                <div className="p-3 bg-green-50 rounded-xl text-sm text-green-700">
+                  Pagas en efectivo cuando te llega el pedido. Completa (o corrige) tus datos de entrega — la próxima vez ya quedan guardados.
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={contactForm.quantity}
+                    onChange={(e) => setContactForm((f) => ({ ...f, quantity: parseInt(e.target.value) || 1 }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                {product?.price && (
+                  <div className="bg-gray-50 rounded-xl p-3 text-sm text-center text-gray-700">
+                    Total a pagar en efectivo: <strong className="text-gray-900">
+                      ${(parseFloat(product.price) * (contactForm.quantity || 1)).toLocaleString('es-CO')}
+                    </strong>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+                  <input
+                    type="text"
+                    value={codForm.full_name}
+                    onChange={(e) => setCodForm((f) => ({ ...f, full_name: e.target.value }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cédula</label>
+                  <input
+                    type="text"
+                    value={codForm.document_id}
+                    onChange={(e) => setCodForm((f) => ({ ...f, document_id: e.target.value }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                  <input
+                    type="tel"
+                    placeholder="Ej: 3001234567"
+                    value={codForm.contact_phone}
+                    onChange={(e) => setCodForm((f) => ({ ...f, contact_phone: e.target.value }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Dirección de entrega</label>
+                  <input
+                    type="text"
+                    placeholder="Calle, número, ciudad"
+                    value={codForm.delivery_address}
+                    onChange={(e) => setCodForm((f) => ({ ...f, delivery_address: e.target.value }))}
+                    className="input-field w-full"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setPaymentStep('method')}
+                    className="flex-1 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium text-sm">
+                    Atrás
+                  </button>
+                  <button type="submit" disabled={sending}
+                    className="flex-1 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 text-sm">
+                    {sending ? 'Enviando...' : 'Confirmar pedido'}
                   </button>
                 </div>
               </form>

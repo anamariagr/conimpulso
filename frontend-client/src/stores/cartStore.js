@@ -1,6 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+// Mirrors the wholesale rule on the product page: once quantity meets the minimum,
+// the wholesale price applies to the whole quantity (not just the units above it).
+export const unitPriceFor = (item) => {
+  const minWholesale = item.minimum_wholesale_quantity || 5;
+  if (item.price_wholesale && item.quantity >= minWholesale) {
+    return item.price_wholesale;
+  }
+  return item.price;
+};
+
 export const useCartStore = create(
   persist(
     (set, get) => ({
@@ -26,6 +36,8 @@ export const useCartStore = create(
                 slug: product.slug,
                 name: product.name,
                 price: parseFloat(product.price) || 0,
+                price_wholesale: product.price_wholesale ? parseFloat(product.price_wholesale) : null,
+                minimum_wholesale_quantity: product.minimum_wholesale_quantity || 5,
                 image: Array.isArray(product.images) ? product.images[0] : product.image || null,
                 shop_name: product.shop?.name || '',
                 quantity,
@@ -51,7 +63,7 @@ export const useCartStore = create(
 
       totalItems: () => get().items.reduce((s, i) => s + i.quantity, 0),
 
-      totalPrice: () => get().items.reduce((s, i) => s + i.price * i.quantity, 0),
+      totalPrice: () => get().items.reduce((s, i) => s + unitPriceFor(i) * i.quantity, 0),
     }),
     { name: 'conimpulso-cart' }
   )

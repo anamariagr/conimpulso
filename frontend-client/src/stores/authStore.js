@@ -7,7 +7,7 @@ export const useAuthStore = create((set, get) => ({
   isAuthenticated: !!localStorage.getItem('auth_token'),
   isLoading: false,
   error: null,
-  activeRole: null, // 'vendor', 'advisor', or null for client view
+  activeRole: null, // 'vendor' | 'advisor' | 'buyer' | null. 'buyer' forces the client view even if the user also has vendor/advisor roles — without it, clearing the override falls back to the actual role and the switch has no visible effect.
 
   // Actual role checks (from user data)
   isVendor: () => {
@@ -33,7 +33,7 @@ export const useAuthStore = create((set, get) => ({
     const { activeRole, isVendor } = get();
     // If activeRole is set, use it; otherwise use actual vendor status
     if (activeRole === 'vendor') return true;
-    if (activeRole === 'advisor') return false;
+    if (activeRole === 'advisor' || activeRole === 'buyer') return false;
     // activeRole is null, check actual status
     return isVendor();
   },
@@ -41,14 +41,15 @@ export const useAuthStore = create((set, get) => ({
   viewAsAdvisor: () => {
     const { activeRole, isAdvisor } = get();
     if (activeRole === 'advisor') return true;
-    if (activeRole === 'vendor') return false;
+    if (activeRole === 'vendor' || activeRole === 'buyer') return false;
     return isAdvisor();
   },
 
-  // Is viewing as a plain client (no activeRole and not actual vendor/advisor)
+  // Is viewing as a plain client (activeRole forced to 'buyer', or no override and no actual vendor/advisor role)
   isClientView: () => {
     const { activeRole, isVendor, isAdvisor } = get();
-    if (activeRole) return false; // Has an active role view
+    if (activeRole === 'buyer') return true;
+    if (activeRole) return false; // Has a vendor/advisor active role view
     // Check if user has actual vendor or advisor role
     return !isVendor() && !isAdvisor();
   },

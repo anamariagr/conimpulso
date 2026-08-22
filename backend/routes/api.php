@@ -36,6 +36,9 @@ Route::get('/health', function () {
     ]);
 });
 
+// Wompi webhook — llamado directamente por los servidores de Wompi, sin auth
+Route::post('/webhooks/wompi', [\App\Http\Controllers\Api\WompiWebhookController::class, 'handle']);
+
 // Auth routes
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -125,6 +128,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Purchase requests (buyer → admin)
     Route::post('/purchase-requests', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'store']);
+
+    // Product orders paid via Wompi
+    Route::post('/products/wompi/init', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'wompiInit']);
+    Route::get('/products/wompi/status/{transactionId}', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'wompiStatus']);
+    Route::post('/products/orders/cod', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'codStore']);
+    Route::get('/orders', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'myOrders']);
+    Route::get('/vendor/orders', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'vendorOrders']);
 
     // Quote requests (buyer ↔ shop owner)
     Route::post('/quote-requests', [\App\Modules\Products\Http\Controllers\Api\QuoteRequestController::class, 'store']);
@@ -240,6 +250,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wallet/top-ups', [WalletController::class, 'myTopUps']);
     Route::post('/wallet/debit', [WalletController::class, 'debit']);
     Route::post('/wallet/credit', [WalletController::class, 'credit']);
+    Route::post('/wallet/wompi/init', [WalletController::class, 'wompiInit']);
+    Route::get('/wallet/wompi/status/{transactionId}', [WalletController::class, 'wompiStatus']);
 
     // Logistics
     Route::get('/logistics/quotes', [LogisticsController::class, 'getQuote']);
@@ -348,10 +360,15 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // Admin messages
     Route::get('/messages', [\App\Modules\Messages\Http\Controllers\Api\MessagesController::class, 'adminIndex']);
 
-    // Admin purchase requests
+    // Admin purchase requests (legacy — no longer receives new records, see product-orders below)
     Route::get('/purchase-requests', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'adminIndex']);
     Route::get('/purchase-requests/pending-count', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'adminPendingCount']);
     Route::put('/purchase-requests/{id}', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'adminUpdate']);
+
+    // Admin product orders (unified: Wompi, pago en casa, cuadrado con el vendedor)
+    Route::get('/product-orders', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminIndex']);
+    Route::get('/product-orders/pending-count', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminPendingCount']);
+    Route::put('/product-orders/{id}/status', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminUpdateStatus']);
 
     // Admin products management
     Route::get('/products', [\App\Modules\Products\Http\Controllers\Api\ProductController::class, 'adminIndex']);

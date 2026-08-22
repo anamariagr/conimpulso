@@ -55,6 +55,7 @@ import TermsPage from './pages/public/TermsPage';
 // Admin pages
 import MessagesView from './pages/admin/MessagesView';
 import PurchaseRequestsView from './pages/admin/PurchaseRequestsView';
+import ProductOrdersView from './pages/admin/ProductOrdersView';
 import HomepageEditorPage from './pages/admin/HomepageEditorPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import UsersView from './pages/admin/UsersView';
@@ -245,6 +246,7 @@ function App() {
             <Route path="media" element={<MediaLibraryPage />} />
             <Route path="messages" element={<MessagesView />} />
             <Route path="purchase-requests" element={<PurchaseRequestsView />} />
+            <Route path="product-orders" element={<ProductOrdersView />} />
           </Route>
         </Routes>
       </BrowserRouter>

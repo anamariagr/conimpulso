@@ -3,18 +3,19 @@
 namespace App\Modules\Products\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Messages\Models\Message;
 use App\Modules\Products\Models\Product;
+use App\Modules\Products\Models\ProductOrder;
 use App\Modules\Products\Models\PurchaseRequest;
-use App\Modules\Shops\Models\ShopBenefit;
-use App\Services\SiteSettings;
-use App\Services\WhatsAppNotifier;
+use App\Services\ProductOrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 
 class PurchaseRequestController extends Controller
 {
+    // "Cuadrar pago con el vendedor" — creates a vendor_arranged ProductOrder (unified
+    // with Wompi/COD orders in the admin panel) instead of the legacy PurchaseRequest.
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -29,51 +30,31 @@ class PurchaseRequestController extends Controller
         }
 
         $product = Product::with('shop')->findOrFail($request->product_id);
+        $quantity = $request->quantity ?? 1;
+        $unitPrice = $product->price ? $product->unitPriceForQuantity($quantity) : 0.0;
 
-        $pr = PurchaseRequest::create([
-            'buyer_id'      => $request->user()->id,
-            'product_id'    => $product->id,
-            'shop_id'       => $product->shop_id,
-            'message'       => $request->message,
+        $order = ProductOrder::create([
+            'buyer_id' => $request->user()->id,
+            'product_id' => $product->id,
+            'shop_id' => $product->shop_id,
+            'quantity' => $quantity,
+            'unit_price' => $unitPrice,
+            'total_amount' => round($unitPrice * $quantity, 2),
+            'payment_method' => 'vendor_arranged',
+            'reference' => 'VA-' . now()->format('YmdHis') . '-' . Str::random(6),
             'contact_phone' => $request->contact_phone,
-            'quantity'      => $request->quantity ?? 1,
+            'message' => $request->message,
+            'status' => 'pending',
         ]);
 
-        $pr->load(['buyer', 'product', 'shop']);
+        $order->load(['buyer', 'product', 'shop']);
 
-        $this->notifyWhatsApp($pr);
+        $message = ProductOrderService::notifyNewVendorArrangedOrder($order);
 
-        $message = $this->sendInterestMessage($pr);
+        $order->setAttribute('message_id', $message?->id);
+        $order->setAttribute('vendor_id', $order->shop->user_id);
 
-        $pr->setAttribute('message_id', $message?->id);
-        $pr->setAttribute('vendor_id', $pr->shop->user_id);
-
-        return $this->successResponse($pr, 'Solicitud enviada. El equipo se pondrá en contacto contigo pronto.', 201);
-    }
-
-    private function sendInterestMessage(PurchaseRequest $pr): ?Message
-    {
-        $vendorId = $pr->shop->user_id;
-
-        // Nothing to message if the shop has no owner, or the buyer is somehow the owner.
-        if (!$vendorId || $vendorId === $pr->buyer_id) {
-            return null;
-        }
-
-        $body = "Estoy interesado en el producto \"{$pr->product->name}\".\n"
-            . "Cantidad: {$pr->quantity}.\n\n"
-            . $pr->message;
-
-        if ($pr->contact_phone) {
-            $body .= "\n\nTeléfono de contacto: {$pr->contact_phone}";
-        }
-
-        return Message::create([
-            'sender_id' => $pr->buyer_id,
-            'receiver_id' => $vendorId,
-            'subject' => 'Interés en: ' . $pr->product->name,
-            'body' => $body,
-        ]);
+        return $this->successResponse($order, 'Solicitud enviada. El equipo se pondrá en contacto contigo pronto.', 201);
     }
 
     public function adminIndex(Request $request): JsonResponse
@@ -120,24 +101,5 @@ class PurchaseRequestController extends Controller
         $pr->update($validator->validated());
 
         return $this->successResponse($pr, 'Solicitud actualizada');
-    }
-
-    private function notifyWhatsApp(PurchaseRequest $pr): void
-    {
-        $text = "🛒 *Nueva solicitud de compra* en ConImpulso\n\n"
-            . "📦 Producto: {$pr->product->name}\n"
-            . "🏪 Tienda: {$pr->shop->name}\n"
-            . "👤 Comprador: {$pr->buyer->name} ({$pr->buyer->email})\n"
-            . "📞 Teléfono: " . ($pr->contact_phone ?: 'No indicado') . "\n"
-            . "🔢 Cantidad: {$pr->quantity}\n"
-            . "💬 Mensaje: {$pr->message}";
-
-        // Admin always gets notified, no exceptions.
-        WhatsAppNotifier::send(SiteSettings::get('whatsapp_phone'), $text);
-
-        // Vendor gets notified only if the shop has this benefit enabled, and only about their own product.
-        if ($pr->shop->hasBenefit(ShopBenefit::BUYER_WHATSAPP_NOTIFICATIONS) && $pr->shop->phone) {
-            WhatsAppNotifier::send($pr->shop->phone, $text);
-        }
     }
 }

@@ -8,9 +8,12 @@ use App\Modules\Wallet\Models\Wallet;
 use App\Modules\Wallet\Models\WalletTransaction;
 use App\Modules\Wallet\Models\WalletTopUp;
 use App\Services\SiteSettings;
+use App\Services\WalletTopUpService;
 use App\Services\WhatsAppNotifier;
+use App\Services\WompiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 
 class WalletController extends Controller
@@ -98,14 +101,70 @@ class WalletController extends Controller
         return $this->successResponse($topUp, 'Solicitud de recarga creada. Pendiente de verificación.', 201);
     }
 
-    protected function coinRate(): float
+    public function wompiInit(Request $request): JsonResponse
     {
-        return (float) SiteSettings::get('wallet_coin_value_cop', 3000);
+        if (!SiteSettings::get('wompi_enabled')) {
+            return $this->errorResponse('Wompi no está habilitado', 422);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'amount' => ['required', 'numeric', 'min:1', 'max:1000000'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $request->user()->id],
+            ['balance' => 0, 'currency' => 'USD']
+        );
+
+        $reference = 'CI-' . now()->format('YmdHis') . '-' . Str::random(6);
+
+        $topUp = WalletTopUp::create([
+            'user_id' => $request->user()->id,
+            'wallet_id' => $wallet->id,
+            'amount' => $request->amount,
+            'payment_method' => 'wompi',
+            'reference' => $reference,
+            'status' => 'pending',
+        ]);
+
+        $redirectUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/') . '/dashboard/wallet?wompi=1';
+
+        $params = WompiService::checkoutParams($reference, (float) $topUp->amount, $redirectUrl);
+
+        return $this->successResponse([
+            'checkout_url' => 'https://checkout.wompi.co/p/',
+            'params' => $params,
+        ], 'Checkout de Wompi iniciado');
+    }
+
+    public function wompiStatus(Request $request, string $transactionId): JsonResponse
+    {
+        $data = WompiService::fetchTransaction($transactionId);
+
+        if (!$data) {
+            return $this->errorResponse('No se pudo consultar la transacción con Wompi', 502);
+        }
+
+        $topUp = WalletTopUp::where('reference', $data['reference'] ?? null)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$topUp) {
+            return $this->errorResponse('Recarga no encontrada', 404);
+        }
+
+        WalletTopUpService::resolveFromWompi($topUp, $data['status'] ?? '', $transactionId);
+
+        return $this->successResponse($topUp->fresh());
     }
 
     protected function notifyAdminOfTopUp(WalletTopUp $topUp): void
     {
-        $coins = round((float) $topUp->amount / $this->coinRate(), 2);
+        $coins = round((float) $topUp->amount / WalletTopUpService::coinRate(), 2);
 
         $text = "💰 *Nueva solicitud de recarga* en ConImpulso\n\n"
             . "👤 Cliente: {$topUp->user->name} ({$topUp->user->email})\n"
@@ -231,32 +290,13 @@ class WalletController extends Controller
         }
 
         if ($request->action === 'approve') {
-            $wallet = Wallet::firstOrCreate(
-                ['user_id' => $topUp->user_id],
-                ['balance' => 0, 'currency' => 'USD']
-            );
+            WalletTopUpService::approve($topUp, $request->user()->id);
 
-            $coins = round((float) $topUp->amount / $this->coinRate(), 2);
-
-            $wallet->credit($coins, 'Recarga aprobada: ' . $topUp->payment_reference, 'deposit');
-
-            $topUp->update([
-                'status' => 'approved',
-                'wallet_id' => $wallet->id,
-                'coins_credited' => $coins,
-                'verified_at' => now(),
-                'verified_by' => $request->user()->id,
-            ]);
-
-            return $this->successResponse($topUp, 'Recarga aprobada y monedas acreditadas');
+            return $this->successResponse($topUp->fresh(), 'Recarga aprobada y monedas acreditadas');
         } else {
-            $topUp->update([
-                'status' => 'rejected',
-                'verified_at' => now(),
-                'verified_by' => $request->user()->id,
-            ]);
+            WalletTopUpService::reject($topUp, $request->user()->id);
 
-            return $this->successResponse($topUp, 'Top-up rejected');
+            return $this->successResponse($topUp->fresh(), 'Top-up rejected');
         }
     }
 
