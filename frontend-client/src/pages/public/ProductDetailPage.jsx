@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Star, Store, Tag, Clock, Package, ShoppingCart, MessageSquare, Wrench, ChevronLeft, ChevronRight, Share2, Pencil, X, Send, Home } from 'lucide-react';
+import { ArrowLeft, Star, Store, Tag, Clock, Package, ShoppingCart, MessageSquare, Wrench, ChevronLeft, ChevronRight, Share2, Pencil, X, Send, Home, MessageCircle } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useCartStore } from '../../stores/cartStore';
@@ -290,6 +290,20 @@ export default function ProductDetailPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <a
+        href="https://wa.me/573170999213?text=Hola%2C%20quiero%20consultar%20por%20este%20producto."
+        target="_blank"
+        rel="noreferrer"
+        className="fixed bottom-5 right-5 z-50 flex h-[120px] w-[120px] items-center justify-center rounded-full padding-color transition-transform hover:scale-105"
+        aria-label="WhatsApp"
+      >
+        <div className="relative flex h-full w-full items-center justify-center rounded-[46%] padding-color">
+          <div className="flex h-full w-full items-center justify-center rounded-[42%] bg-[#1EBE4B]">
+            <i className="bi bi-whatsapp text-[64px] leading-none text-white" aria-hidden="true" />
+          </div>
+        </div>
+      </a>
+
       {checkingWompi && (
         <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl flex items-center gap-3 text-sm text-purple-700">
           <div className="w-5 h-5 border-2 border-[#7B2FBE] border-t-transparent rounded-full animate-spin flex-shrink-0" />
@@ -444,6 +458,16 @@ export default function ProductDetailPage() {
                   <ShoppingCart className="w-5 h-5" />
                   Agregar al carrito
                 </button>
+
+                <a
+                  href={`https://wa.me/573170999213?text=${encodeURIComponent(`Hola, quiero consultar por el producto: ${product.name}. Quiero ${quantity} unidad(es).`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-semibold py-3 rounded-xl hover:bg-[#20bd5a] transition-colors"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  Llevar a WhatsApp 3170999213
+                </a>
 
                 <div className="grid grid-cols-2 gap-3">
                   {product.allow_quotation && (

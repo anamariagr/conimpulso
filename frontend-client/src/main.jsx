@@ -4,8 +4,8 @@ import './index.css'
 import App from './App.jsx'
 import { checkForUpdates } from './utils/serviceWorkerUtils'
 
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
+// Register Service Worker for PWA only in production to avoid stale cached CSS during development.
+if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')

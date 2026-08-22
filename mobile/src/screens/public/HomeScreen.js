@@ -112,6 +112,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.cardBg,
     borderRadius: 12,
     overflow: 'hidden',
+    width: 300,
+
   },
   productImage: {
     height: 120,

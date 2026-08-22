@@ -68,7 +68,7 @@ import BlogView from './pages/admin/BlogView';
 import LogisticsBannerView from './pages/admin/LogisticsBannerView';
 import MediaLibraryPage from './pages/admin/MediaLibraryPage';
 
-import './index.css';
+import './App.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

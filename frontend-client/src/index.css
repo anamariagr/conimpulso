@@ -13,8 +13,9 @@
     @apply bg-background text-primary font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   
+    
   }
-
+  
   #root {
     @apply min-h-screen flex flex-col;
   }
@@ -51,6 +52,13 @@
 }
 
 @layer utilities {
+  .padding-color {
+    padding: 30px;
+    background: #40ce4b;
+    width: 5px;
+    height: 10px;
+  }
+
   .scrollbar-dark {
     scrollbar-color: #000000 #000000;
     scrollbar-width: auto;

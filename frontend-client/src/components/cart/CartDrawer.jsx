@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Trash2, Plus, Minus, ShoppingCart, Package, Tag } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingCart, Package, Tag, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCartStore, unitPriceFor } from '../../stores/cartStore';
 import CartCheckoutModal from './CartCheckoutModal';
@@ -15,6 +15,12 @@ export default function CartDrawer({ open, onClose }) {
     clearCart();
     setShowCheckout(false);
     onClose();
+  };
+
+  const whatsappUrl = () => {
+    const products = items.map((item) => `• ${item.name} x${item.quantity} — $${fmt(unitPriceFor(item) * item.quantity)}`).join('\n');
+    const message = `Hola, quiero consultar por estos productos:\n\n${products}\n\nTotal estimado: $${fmt(totalPrice())}`;
+    return `https://wa.me/573170999213?text=${encodeURIComponent(message)}`;
   };
 
   return (
@@ -171,6 +177,15 @@ export default function CartDrawer({ open, onClose }) {
             >
               Proceder a compra
             </button>
+            <a
+              href={whatsappUrl()}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold rounded-xl transition-colors inline-flex items-center justify-center gap-2"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Consultar por WhatsApp
+            </a>
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Truck, Users, Star, Zap, Globe, Mail, ShoppingBag, MapPin, CheckCircle, X, Store, Wrench, Calendar } from 'lucide-react';
+import { ArrowRight, Shield, Truck, Users, Star, Zap, Globe, Mail, ShoppingBag, MapPin, CheckCircle, X, Store, Wrench, Calendar, MessageCircle } from 'lucide-react';
 import api from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -311,7 +311,7 @@ const getLayoutClass = (section, fallbackColumns = 4) => {
   }
 
   if (layout === 'slider') {
-    return 'flex gap-6 overflow-x-auto pb-3 snap-x';
+    return 'flex gap-6 overflow-x-auto pb-3 snap-x home-scroll';
   }
 
   if (layout === 'masonry') {
@@ -322,7 +322,7 @@ const getLayoutClass = (section, fallbackColumns = 4) => {
 };
 
 const getLayoutItemClass = (section) => {
-  if (section?.layout === 'slider') return 'min-w-[260px] sm:min-w-[300px] snap-start';
+  if (section?.layout === 'slider') return 'min-w-[300px] w-[300px] snap-start';
   if (section?.layout === 'masonry') return 'mb-6 break-inside-avoid';
   return '';
 };
@@ -443,9 +443,9 @@ const SliderContentSection = ({ section }) => {
           </div>
         )}
         {items.length > 0 ? (
-          <div className="flex gap-6 overflow-x-auto pb-3 snap-x">
+          <div className="flex gap-6 overflow-x-auto pb-3 snap-x home-scroll">
             {items.map((item, i) => (
-              <div key={i} className="min-w-[260px] sm:min-w-[300px] snap-start card overflow-hidden">
+              <div key={i} className="min-w-[300px] snap-start card overflow-hidden">
                 {item.image && <img src={item.image} alt={item.title || ''} className="w-full h-40 object-cover" />}
                 {item.title && <h3 className="font-semibold text-primary mt-2 px-1">{item.title}</h3>}
               </div>
@@ -636,7 +636,7 @@ const FeaturesSection = () => (
         ].map((f) => (
           <div key={f.title} className="card-dark text-center">
             <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
-              <f.icon className="w-6 h-6 text-primary" />
+              <f.icon className="w-6 h-6 text-white" />
             </div>
             <h3 className="text-xl font-semibold mb-2">{f.title}</h3>
             <p className="text-gray-400 text-sm">{f.desc}</p>
@@ -706,7 +706,7 @@ const BlogSection = ({ posts }) => {
           </div>
           <Link to="/blog" className="text-accent hover:text-accent-hover font-medium flex items-center gap-1">Ver blog <ArrowRight className="w-4 h-4" /></Link>
         </div>
-        <div className="flex gap-6 overflow-x-auto pb-3 snap-x">
+        <div className="flex gap-6 overflow-x-auto pb-3 snap-x home-scroll">
           {posts.map((post) => (
             <Link key={post.id} to={`/blog/${post.slug}`} className="card overflow-hidden min-w-[280px] sm:min-w-[340px] max-w-[340px] snap-start hover:shadow-card transition-shadow">
               <div className="aspect-[16/9] bg-primary/90">
@@ -863,6 +863,20 @@ export default function HomePage() {
       <FloatingBanner banner={floatingLeftBanner} side="left" />
       <FloatingBanner banner={floatingRightBanner} side="right" />
       <PopupBanner banner={popupBanner} />
+
+      <a
+        href="https://wa.me/573170999213?text=Hola%2C%20quiero%20consultar%20por%20sus%20productos%20de%20ConImpulso."
+        target="_blank"
+        rel="noreferrer"
+        className="fixed bottom-5 right-5 z-50 flex h-[120px] w-[120px] items-center justify-center rounded-full padding-color transition-transform hover:scale-105"
+        aria-label="WhatsApp"
+      >
+        <div className="relative flex h-full w-full items-center justify-center rounded-[46%] padding-color">
+          <div className="flex h-full w-full items-center justify-center rounded-[42%] bg-[#1EBE4B]">
+            <i className="bi bi-whatsapp text-[64px] leading-none text-white" aria-hidden="true" />
+          </div>
+        </div>
+      </a>
     </div>
   );
 }
