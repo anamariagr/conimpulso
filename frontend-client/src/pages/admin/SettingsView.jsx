@@ -9,7 +9,7 @@ export default function SettingsView() {
   const {
     logoUrl, siteName, aiInsightsEnabled, whatsappPhone, callmebotApiKey,
     walletCoinValueCop, breBKey, breBQrImageUrl, wompiEnabled, wompiPublicKey,
-    loaded, fetchSettings, updateSettings,
+    productOrderCommissionRate, loaded, fetchSettings, updateSettings,
   } = useSiteStore();
 
   // Settings are only safe to save once the real values have loaded from the
@@ -28,6 +28,7 @@ export default function SettingsView() {
       breBQrImageUrl: breBQrImageUrl || '',
       wompiEnabled: wompiEnabled || false,
       wompiPublicKey: wompiPublicKey || '',
+      productOrderCommissionRate: productOrderCommissionRate || 5,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
@@ -53,6 +54,7 @@ export default function SettingsView() {
     breBQrImageUrl: breBQrImageUrl || '',
     wompiEnabled: wompiEnabled || false,
     wompiPublicKey: wompiPublicKey || '',
+    productOrderCommissionRate: productOrderCommissionRate || 5,
   });
   const [showApiKey, setShowApiKey] = useState(false);
 
@@ -69,6 +71,7 @@ export default function SettingsView() {
         bre_b_qr_image_url: settings.breBQrImageUrl,
         wompi_enabled: settings.wompiEnabled,
         wompi_public_key: settings.wompiPublicKey,
+        product_order_commission_rate: settings.productOrderCommissionRate,
       });
       toast.success('Configuración guardada');
     } catch {
@@ -388,6 +391,38 @@ export default function SettingsView() {
                   ? `Activo — las notificaciones llegarán al ${settings.whatsappPhone}`
                   : 'Sin configurar — las notificaciones WhatsApp están desactivadas'}
               </div>
+            </div>
+          </div>
+
+          {/* Comisión de pedidos cuadrados */}
+          <div className="card">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-accent/20 rounded-xl flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Comisión de plataforma</h3>
+                <p className="text-sm text-gray-500">Pago en casa y cuadrado con el vendedor</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Porcentaje de comisión por defecto (%)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={settings.productOrderCommissionRate}
+                onChange={(e) => set('productOrderCommissionRate', e.target.value)}
+                className="input-field w-full"
+                placeholder="5"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Estos pedidos quedan "En revisión" hasta que un admin los procesa y cobra la comisión — recién ahí se le avisa al vendedor.
+                Este porcentaje se usa por defecto, pero se puede ajustar manualmente al procesar cada solicitud.
+              </p>
             </div>
           </div>
 

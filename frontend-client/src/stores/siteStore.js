@@ -12,6 +12,7 @@ export const useSiteStore = create((set, get) => ({
   breBQrImageUrl: '',
   wompiEnabled: false,
   wompiPublicKey: '',
+  productOrderCommissionRate: 5,
   loaded: false,
 
   fetchSettings: async () => {
@@ -30,6 +31,7 @@ export const useSiteStore = create((set, get) => ({
         breBQrImageUrl: settings.bre_b_qr_image_url || '',
         wompiEnabled: settings.wompi_enabled === true,
         wompiPublicKey: settings.wompi_public_key || '',
+        productOrderCommissionRate: Number(settings.product_order_commission_rate) || 5,
         loaded: true,
       });
     } catch {
@@ -49,6 +51,7 @@ export const useSiteStore = create((set, get) => ({
       bre_b_qr_image_url: get().breBQrImageUrl,
       wompi_enabled: get().wompiEnabled,
       wompi_public_key: get().wompiPublicKey,
+      product_order_commission_rate: get().productOrderCommissionRate,
     };
     const merged = { ...current, ...patch };
     await api.put('/admin/homepage/layout', { settings: merged });
@@ -63,6 +66,7 @@ export const useSiteStore = create((set, get) => ({
       breBQrImageUrl: merged.bre_b_qr_image_url || '',
       wompiEnabled: merged.wompi_enabled === true,
       wompiPublicKey: merged.wompi_public_key || '',
+      productOrderCommissionRate: Number(merged.product_order_commission_rate) || 5,
     });
   },
 }));

@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Package, X, Phone, MapPin, CreditCard, Truck, CheckCircle, Clock, XCircle, Ban, Factory } from 'lucide-react';
+import { Package, X, Phone, MapPin, CreditCard, Truck, CheckCircle, Clock, XCircle, Ban, Factory, ShieldCheck } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { useSiteStore } from '../../stores/siteStore';
 
 const STATUS = {
+  pending_admin_review: { label: 'En revisión (admin)', cls: 'bg-orange-100 text-orange-700', icon: ShieldCheck },
   pending:          { label: 'Pendiente',        cls: 'bg-accent-100 text-accent-700', icon: Clock },
   confirmed:        { label: 'Confirmado',       cls: 'bg-blue-100 text-blue-700',     icon: CheckCircle },
   ordered_producer: { label: 'Pedido al productor', cls: 'bg-purple-100 text-purple-700', icon: Factory },
@@ -29,12 +31,21 @@ const NEXT_STATUS = {
 const fmt = (n) => '$' + parseFloat(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
 
 export default function ProductOrdersView() {
+  const { productOrderCommissionRate, fetchSettings } = useSiteStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [selected, setSelected] = useState(null);
   const [updating, setUpdating] = useState(false);
+  const [commissionRate, setCommissionRate] = useState('');
   const requestIdRef = useRef(0);
+
+  useEffect(() => { fetchSettings(); }, [fetchSettings]);
+  useEffect(() => {
+    if (selected?.status === 'pending_admin_review') {
+      setCommissionRate(String(productOrderCommissionRate || 5));
+    }
+  }, [selected, productOrderCommissionRate]);
 
   const fetchOrders = useCallback(async () => {
     const requestId = ++requestIdRef.current;
@@ -68,7 +79,27 @@ export default function ProductOrdersView() {
     }
   };
 
-  const pendingCount = orders.filter((o) => o.status === 'pending').length;
+  const handleProcess = async () => {
+    if (!selected || updating) return;
+    const rate = parseFloat(commissionRate);
+    if (Number.isNaN(rate) || rate < 0 || rate > 100) {
+      toast.error('Ingresa un porcentaje de comisión válido (0-100)');
+      return;
+    }
+    setUpdating(true);
+    try {
+      const res = await api.put(`/admin/product-orders/${selected.id}/process`, { commission_rate: rate });
+      toast.success('Comisión cobrada y solicitud enviada al vendedor');
+      setSelected(res.data.data);
+      fetchOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al procesar la solicitud');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const pendingCount = orders.filter((o) => o.status === 'pending_admin_review').length;
 
   return (
     <div className="space-y-6">
@@ -204,14 +235,57 @@ export default function ProductOrdersView() {
                 </div>
               )}
 
-              {selected.message && (
+              {selected.message && selected.status !== 'pending_admin_review' && (
                 <div className="bg-orange-50 rounded-xl p-3">
                   <p className="text-xs text-orange-600 font-medium mb-1">Mensaje del cliente</p>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{selected.message}</p>
                 </div>
               )}
+
+              {selected.commission_amount != null && (
+                <div className="bg-green-50 rounded-xl p-3 flex items-center justify-between">
+                  <p className="text-xs text-green-700">Comisión cobrada ({selected.commission_rate}%)</p>
+                  <p className="text-sm font-bold text-green-800">{fmt(selected.commission_amount)}</p>
+                </div>
+              )}
             </div>
 
+            {selected.status === 'pending_admin_review' ? (
+              <div className="space-y-3">
+                <div className="bg-orange-50 rounded-xl p-3">
+                  <p className="text-xs text-orange-700">
+                    Esta solicitud está oculta para el vendedor hasta que cobres la comisión de la plataforma.
+                    {selected.payment_method === 'cod'
+                      ? ' Al procesarla se confirma el pedido y se avisa al vendedor y al comprador.'
+                      : ' Al procesarla se le avisa al vendedor para que coordine el pago con el cliente.'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Comisión a cobrar (%)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number" min="0" max="100" step="0.5"
+                      value={commissionRate}
+                      onChange={(e) => setCommissionRate(e.target.value)}
+                      className="input-field flex-1"
+                    />
+                    <span className="flex items-center px-3 text-sm text-gray-500 bg-gray-50 rounded-xl">
+                      ≈ {fmt((selected.total_amount * (parseFloat(commissionRate) || 0)) / 100)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={handleProcess} disabled={updating}
+                    className="flex-1 py-2 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 text-sm disabled:opacity-60">
+                    Procesar y cobrar comisión
+                  </button>
+                  <button onClick={() => handleUpdateStatus('cancelled')} disabled={updating}
+                    className="px-4 py-2 border border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50 text-sm disabled:opacity-60">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
             <div className="flex gap-2 flex-wrap">
               {NEXT_STATUS[selected.status] && (
                 <button onClick={() => handleUpdateStatus(NEXT_STATUS[selected.status])} disabled={updating}
@@ -226,6 +300,7 @@ export default function ProductOrdersView() {
                 </button>
               )}
             </div>
+            )}
           </div>
         </div>
       )}

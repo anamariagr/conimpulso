@@ -311,8 +311,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/users/available', [App\Modules\Auth\Http\Controllers\Api\AuthController::class, 'availableForMessaging']);
 });
 
-// Homepage Module Routes (Admin - no auth for testing)
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+// Admin panel routes — requires an authenticated user with an admin role.
+Route::middleware(['auth:sanctum', 'role:super_admin,admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard/stats', [App\Modules\Admin\Http\Controllers\Api\DashboardController::class, 'stats']);
 
     // Admin users management (messaging enable/disable)
@@ -368,6 +368,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // Admin product orders (unified: Wompi, pago en casa, cuadrado con el vendedor)
     Route::get('/product-orders', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminIndex']);
     Route::get('/product-orders/pending-count', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminPendingCount']);
+    Route::put('/product-orders/{id}/process', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminProcess']);
     Route::put('/product-orders/{id}/status', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminUpdateStatus']);
 
     // Admin products management

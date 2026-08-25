@@ -60,7 +60,7 @@ export default function CartCheckoutModal({ items, totalPrice, onClose, onSucces
     setSending(true);
     try {
       await api.post('/products/orders/cod', { items: lineItems, ...codForm });
-      toast.success('¡Pedido registrado! Te avisamos por correo con el resumen.');
+      toast.success('¡Pedido registrado y en revisión! Te avisamos por correo apenas se confirme.');
       onSuccess();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al registrar el pedido');
@@ -83,9 +83,9 @@ export default function CartCheckoutModal({ items, totalPrice, onClose, onSucces
           quantity: item.quantity,
         })
       ));
-      toast.success('¡Pedido enviado! Los vendedores te contactarán para coordinar el pago.');
+      toast.success('¡Pedido enviado y en revisión! Los vendedores te contactarán apenas se confirme.');
       onSuccess();
-      navigate('/dashboard/messages?tab=sent');
+      navigate('/dashboard/orders');
     } catch (err) {
       toast.error(err.response?.data?.message || 'No pudimos enviar tu pedido. Intenta de nuevo.');
     } finally {

@@ -187,18 +187,18 @@ class ProductOrderController extends Controller
                 'contact_phone' => $request->contact_phone,
                 'delivery_address' => $request->delivery_address,
                 'document_id' => $request->document_id,
-                'status' => 'pending',
+                'status' => 'pending_admin_review',
             ]));
         }
 
-        ProductOrderService::confirmCodGroup($orders);
-
-        return $this->successResponse($orders->fresh(), 'Pedido registrado. Te avisamos por correo con el resumen.', 201);
+        // Stays in 'pending_admin_review' until an admin charges the platform commission —
+        // only then is it confirmed and vendor/buyer notified (see adminProcess below).
+        return $this->successResponse($orders->fresh(), 'Pedido registrado y en revisión. Te avisamos por correo apenas se confirme.', 201);
     }
 
     public function adminPendingCount(): JsonResponse
     {
-        $count = ProductOrder::where('status', 'pending')->count();
+        $count = ProductOrder::where('status', 'pending_admin_review')->count();
         return $this->successResponse(['count' => $count]);
     }
 
@@ -227,12 +227,14 @@ class ProductOrderController extends Controller
     }
 
     // Vendor: incoming orders for products in shops they own (Wompi, pago en casa, cuadrado con el vendedor)
+    // Orders still awaiting the admin's commission review are never surfaced here.
     public function vendorOrders(Request $request): JsonResponse
     {
         $shopIds = \App\Modules\Shops\Models\Shop::where('user_id', $request->user()->id)->pluck('id');
 
         $query = ProductOrder::with(['buyer', 'product', 'shop'])
             ->whereIn('shop_id', $shopIds)
+            ->where('status', '!=', 'pending_admin_review')
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('status')) {
@@ -277,6 +279,39 @@ class ProductOrderController extends Controller
                 'total' => $orders->total(),
             ],
         ]);
+    }
+
+    // Admin: charge the platform commission on a 'pending_admin_review' order (cod or
+    // vendor_arranged) and release it — this is what finally notifies vendor/buyer.
+    // Groups sibling rows sharing the same checkout reference (a COD cart) so the whole
+    // group is released and charged together.
+    public function adminProcess(Request $request, int $id): JsonResponse
+    {
+        $order = ProductOrder::findOrFail($id);
+
+        if ($order->status !== 'pending_admin_review') {
+            return $this->errorResponse('Esta solicitud ya fue procesada', 422);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'commission_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $rate = $request->filled('commission_rate')
+            ? (float) $request->commission_rate
+            : (float) SiteSettings::get('product_order_commission_rate', 5);
+
+        $group = ProductOrder::where('reference', $order->reference)
+            ->where('status', 'pending_admin_review')
+            ->get();
+
+        ProductOrderService::releaseFromAdminReview($group, $rate);
+
+        return $this->successResponse($order->fresh(), 'Solicitud procesada: comisión cobrada y enviada al vendedor');
     }
 
     public function adminUpdateStatus(Request $request, int $id): JsonResponse

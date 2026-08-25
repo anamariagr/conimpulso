@@ -41,14 +41,39 @@ class ProductOrderService
         self::confirmGroup($orders, 'cod');
     }
 
-    public static function notifyNewVendorArrangedOrder(ProductOrder $order): ?Message
+    // Called by the admin after charging the platform commission on a 'pending_admin_review'
+    // order (cod or vendor_arranged) — only now do vendor/buyer get notified.
+    public static function releaseFromAdminReview(Collection $orders, float $commissionRate): void
     {
-        return self::notifyVendor($order, 'vendor_arranged');
+        $orders = $orders->filter(fn (ProductOrder $order) => $order->status === 'pending_admin_review');
+
+        if ($orders->isEmpty()) {
+            return;
+        }
+
+        $orders->each(function (ProductOrder $order) use ($commissionRate) {
+            $order->update([
+                'commission_rate' => $commissionRate,
+                'commission_amount' => round($order->total_amount * $commissionRate / 100, 2),
+            ]);
+        });
+
+        $context = $orders->first()->payment_method;
+
+        if ($context === 'cod') {
+            self::confirmGroup($orders, 'cod');
+            return;
+        }
+
+        $orders->each(function (ProductOrder $order) {
+            $order->update(['status' => 'pending']);
+            self::notifyVendor($order->fresh(), 'vendor_arranged');
+        });
     }
 
     protected static function confirmGroup(Collection $orders, string $context): void
     {
-        $orders = $orders->filter(fn (ProductOrder $order) => in_array($order->status, ['pending', 'confirmed'], true));
+        $orders = $orders->filter(fn (ProductOrder $order) => in_array($order->status, ['pending', 'confirmed', 'pending_admin_review'], true));
 
         if ($orders->isEmpty()) {
             return;

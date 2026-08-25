@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Clock, CheckCircle, Truck, XCircle, Ban, Factory, CreditCard } from 'lucide-react';
+import { Package, Clock, CheckCircle, Truck, XCircle, Ban, Factory, CreditCard, ShieldCheck } from 'lucide-react';
 import api from '../../services/api';
 
 const STATUS = {
+  pending_admin_review: { label: 'En revisión',     cls: 'bg-orange-100 text-orange-700', icon: ShieldCheck },
   pending:          { label: 'Pendiente',           cls: 'bg-accent-100 text-accent-700', icon: Clock },
   confirmed:        { label: 'Confirmado',          cls: 'bg-blue-100 text-blue-700',     icon: CheckCircle },
   ordered_producer: { label: 'Preparando tu pedido',cls: 'bg-purple-100 text-purple-700', icon: Factory },

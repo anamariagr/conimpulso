@@ -22,6 +22,8 @@ class ProductOrder extends Model
         'document_id',
         'message',
         'status',
+        'commission_rate',
+        'commission_amount',
         'paid_at',
     ];
 
@@ -30,6 +32,8 @@ class ProductOrder extends Model
         return [
             'unit_price' => 'decimal:2',
             'total_amount' => 'decimal:2',
+            'commission_rate' => 'decimal:2',
+            'commission_amount' => 'decimal:2',
             'quantity' => 'integer',
             'paid_at' => 'datetime',
         ];

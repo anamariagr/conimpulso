@@ -195,16 +195,15 @@ export default function ProductDetailPage() {
     if (sending) return;
     setSending(true);
     try {
-      const res = await api.post('/purchase-requests', {
+      await api.post('/purchase-requests', {
         product_id: product.id,
         message: contactForm.message,
         contact_phone: contactForm.contact_phone,
         quantity: contactForm.quantity || 1,
       });
-      toast.success('¡Solicitud enviada! Te llevamos a tu conversación con el vendedor.');
+      toast.success('¡Solicitud enviada y en revisión! Te avisaremos apenas el vendedor pueda contactarte.');
       setShowContactModal(false);
-      const messageId = res.data?.data?.message_id;
-      navigate(`/dashboard/messages?tab=sent${messageId ? `&open=${messageId}` : ''}`);
+      navigate('/dashboard/orders');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al enviar solicitud');
     } finally {

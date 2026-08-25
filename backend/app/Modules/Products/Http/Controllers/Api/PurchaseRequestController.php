@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Modules\Products\Models\Product;
 use App\Modules\Products\Models\ProductOrder;
 use App\Modules\Products\Models\PurchaseRequest;
-use App\Services\ProductOrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -16,6 +15,8 @@ class PurchaseRequestController extends Controller
 {
     // "Cuadrar pago con el vendedor" — creates a vendor_arranged ProductOrder (unified
     // with Wompi/COD orders in the admin panel) instead of the legacy PurchaseRequest.
+    // Stays in 'pending_admin_review' until an admin charges the platform commission —
+    // only then is the vendor notified (see ProductOrderController::adminProcess).
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -44,17 +45,13 @@ class PurchaseRequestController extends Controller
             'reference' => 'VA-' . now()->format('YmdHis') . '-' . Str::random(6),
             'contact_phone' => $request->contact_phone,
             'message' => $request->message,
-            'status' => 'pending',
+            'status' => 'pending_admin_review',
         ]);
 
         $order->load(['buyer', 'product', 'shop']);
-
-        $message = ProductOrderService::notifyNewVendorArrangedOrder($order);
-
-        $order->setAttribute('message_id', $message?->id);
         $order->setAttribute('vendor_id', $order->shop->user_id);
 
-        return $this->successResponse($order, 'Solicitud enviada. El equipo se pondrá en contacto contigo pronto.', 201);
+        return $this->successResponse($order, 'Solicitud enviada y en revisión. Te avisaremos apenas el vendedor pueda contactarte.', 201);
     }
 
     public function adminIndex(Request $request): JsonResponse
