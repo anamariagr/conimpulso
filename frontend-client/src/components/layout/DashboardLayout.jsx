@@ -144,7 +144,7 @@ export default function DashboardLayout() {
         </button>
 
         {/* Navigation */}
-        <nav className="flex-1 p-2 overflow-y-auto">
+        <nav className="flex-1 p-2 overflow-y-auto scrollbar-accent">
           <ul className="space-y-1">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.href ||
@@ -289,7 +289,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 relative">
+        <div className="flex-1 overflow-y-auto p-2 relative">
           {/* Loading Overlay */}
           {isLoading && (
             <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-50">
@@ -298,7 +298,7 @@ export default function DashboardLayout() {
                 <p className="text-gray-500">Cargando...</p>
               </div>
             </div>
-          )}
+          )}x
 
           <Outlet />
         </div>

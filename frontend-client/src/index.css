@@ -67,6 +67,17 @@
     scrollbar-width: auto;
   }
 
+  .scrollbar-accent {
+    overflow-y: scroll;
+    scrollbar-color: #00007700 #bada5500;
+    scrollbar-width: auto;
+  }
+
+  nav.flex-1.p-2.overflow-y-auto {
+    overflow-y: scroll;
+    scrollbar-color: #00007700 #bada5500;
+  }
+
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-accent to-accent-400;
   }
