@@ -71,6 +71,38 @@ class ProductOrderService
         });
     }
 
+    // Admin asks the vendor, before charging any commission, whether they can take a
+    // 'pending_admin_review' order — only product/quantity is shared, never the buyer's
+    // contact info or message, so the vendor can't bypass the platform at this stage.
+    public static function askVendor(ProductOrder $order): ?Message
+    {
+        $order->loadMissing(['buyer', 'product', 'shop']);
+        $order->update(['asked_vendor_at' => now()]);
+
+        $text = "📦 *Nueva solicitud de pedido* en ConImpulso\n\n"
+            . "Producto: {$order->product->name}\n"
+            . "Cantidad: {$order->quantity}\n\n"
+            . "¿Puedes tomar este pedido? Ingresa a tu panel de pedidos para confirmar.";
+
+        $vendorId = $order->shop->user_id;
+        $message = null;
+
+        if ($vendorId && $vendorId !== $order->buyer_id) {
+            $message = Message::create([
+                'sender_id' => $order->buyer_id,
+                'receiver_id' => $vendorId,
+                'subject' => 'Nueva solicitud de pedido: ' . $order->product->name,
+                'body' => $text,
+            ]);
+        }
+
+        if ($order->shop->hasBenefit(ShopBenefit::BUYER_WHATSAPP_NOTIFICATIONS) && $order->shop->phone) {
+            WhatsAppNotifier::send($order->shop->phone, $text);
+        }
+
+        return $message;
+    }
+
     protected static function confirmGroup(Collection $orders, string $context): void
     {
         $orders = $orders->filter(fn (ProductOrder $order) => in_array($order->status, ['pending', 'confirmed', 'pending_admin_review'], true));

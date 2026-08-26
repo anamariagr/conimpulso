@@ -227,14 +227,19 @@ class ProductOrderController extends Controller
     }
 
     // Vendor: incoming orders for products in shops they own (Wompi, pago en casa, cuadrado con el vendedor)
-    // Orders still awaiting the admin's commission review are never surfaced here.
+    // Orders still awaiting the admin's commission review are hidden, UNLESS the admin has
+    // already asked the vendor to confirm they can take it — in that case it's shown, but
+    // with the buyer's contact info/message stripped until the commission is actually charged.
     public function vendorOrders(Request $request): JsonResponse
     {
         $shopIds = \App\Modules\Shops\Models\Shop::where('user_id', $request->user()->id)->pluck('id');
 
         $query = ProductOrder::with(['buyer', 'product', 'shop'])
             ->whereIn('shop_id', $shopIds)
-            ->where('status', '!=', 'pending_admin_review')
+            ->where(function ($q) {
+                $q->where('status', '!=', 'pending_admin_review')
+                    ->orWhereNotNull('asked_vendor_at');
+            })
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('status')) {
@@ -242,6 +247,16 @@ class ProductOrderController extends Controller
         }
 
         $orders = $query->paginate(20);
+
+        $orders->getCollection()->transform(function (ProductOrder $order) {
+            if ($order->status === 'pending_admin_review') {
+                $order->setAttribute('contact_phone', null);
+                $order->setAttribute('delivery_address', null);
+                $order->setAttribute('message', null);
+                $order->setAttribute('document_id', null);
+            }
+            return $order;
+        });
 
         return response()->json([
             'success' => true,
@@ -252,6 +267,56 @@ class ProductOrderController extends Controller
                 'total' => $orders->total(),
             ],
         ]);
+    }
+
+    // Admin: ask the vendor (before charging any commission) whether they can take a
+    // 'pending_admin_review' order. Reveals only product/quantity to the vendor.
+    public function adminAskVendor(int $id): JsonResponse
+    {
+        $order = ProductOrder::findOrFail($id);
+
+        if ($order->status !== 'pending_admin_review') {
+            return $this->errorResponse('Esta solicitud ya no está pendiente de revisión', 422);
+        }
+
+        if ($order->asked_vendor_at) {
+            return $this->errorResponse('Ya se le preguntó al vendedor por este pedido', 422);
+        }
+
+        ProductOrderService::askVendor($order);
+
+        return $this->successResponse($order->fresh(), 'Se le preguntó al vendedor si puede tomar el pedido');
+    }
+
+    // Vendor: respond to an admin's "can you take this order?" question.
+    public function vendorRespond(Request $request, int $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'accept' => ['required', 'boolean'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $shopIds = \App\Modules\Shops\Models\Shop::where('user_id', $request->user()->id)->pluck('id');
+        $order = ProductOrder::whereIn('shop_id', $shopIds)->findOrFail($id);
+
+        if ($order->status !== 'pending_admin_review' || !$order->asked_vendor_at) {
+            return $this->errorResponse('Este pedido no está esperando tu respuesta', 422);
+        }
+
+        if ($order->vendor_confirmed_at) {
+            return $this->errorResponse('Ya respondiste a este pedido', 422);
+        }
+
+        if ($request->boolean('accept')) {
+            $order->update(['vendor_confirmed_at' => now()]);
+        } else {
+            $order->update(['status' => 'cancelled']);
+        }
+
+        return $this->successResponse($order->fresh(), 'Respuesta registrada');
     }
 
     // Admin: unified list of orders (Wompi, pago en casa, cuadrado con el vendedor)
@@ -317,7 +382,7 @@ class ProductOrderController extends Controller
     public function adminUpdateStatus(Request $request, int $id): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'status' => ['required', 'in:pending,confirmed,ordered_producer,shipped,delivered,failed,cancelled'],
+            'status' => ['required', 'in:pending_admin_review,pending,confirmed,ordered_producer,shipped,delivered,failed,cancelled'],
         ]);
 
         if ($validator->fails()) {
@@ -325,7 +390,22 @@ class ProductOrderController extends Controller
         }
 
         $order = ProductOrder::findOrFail($id);
-        ProductOrderService::updateStatus($order, $request->status);
+
+        // Reverting to 'pending_admin_review' is only allowed to undo an accidental
+        // cancellation — never as a way to skip the commission-review step.
+        if ($request->status === 'pending_admin_review' && $order->status !== 'cancelled') {
+            return $this->errorResponse('Solo se puede volver a revisión desde un pedido cancelado', 422);
+        }
+
+        if ($request->status === 'pending_admin_review') {
+            $order->update([
+                'status' => 'pending_admin_review',
+                'asked_vendor_at' => null,
+                'vendor_confirmed_at' => null,
+            ]);
+        } else {
+            ProductOrderService::updateStatus($order, $request->status);
+        }
 
         return $this->successResponse($order->fresh(), 'Estado actualizado');
     }

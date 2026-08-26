@@ -135,6 +135,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products/orders/cod', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'codStore']);
     Route::get('/orders', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'myOrders']);
     Route::get('/vendor/orders', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'vendorOrders']);
+    Route::put('/vendor/orders/{id}/respond', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'vendorRespond']);
 
     // Quote requests (buyer ↔ shop owner)
     Route::post('/quote-requests', [\App\Modules\Products\Http\Controllers\Api\QuoteRequestController::class, 'store']);
@@ -368,6 +369,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // Admin product orders (unified: Wompi, pago en casa, cuadrado con el vendedor)
     Route::get('/product-orders', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminIndex']);
     Route::get('/product-orders/pending-count', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminPendingCount']);
+    Route::put('/product-orders/{id}/ask-vendor', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminAskVendor']);
     Route::middleware('role:super_admin,admin')->put('/product-orders/{id}/process', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminProcess']);
     Route::put('/product-orders/{id}/status', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'adminUpdateStatus']);
 

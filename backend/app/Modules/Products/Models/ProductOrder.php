@@ -24,6 +24,8 @@ class ProductOrder extends Model
         'status',
         'commission_rate',
         'commission_amount',
+        'asked_vendor_at',
+        'vendor_confirmed_at',
         'paid_at',
     ];
 
@@ -35,6 +37,8 @@ class ProductOrder extends Model
             'commission_rate' => 'decimal:2',
             'commission_amount' => 'decimal:2',
             'quantity' => 'integer',
+            'asked_vendor_at' => 'datetime',
+            'vendor_confirmed_at' => 'datetime',
             'paid_at' => 'datetime',
         ];
     }

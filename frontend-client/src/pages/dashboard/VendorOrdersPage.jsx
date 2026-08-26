@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Package, Clock, CheckCircle, Truck, XCircle, Ban, Factory, CreditCard, Phone, MapPin } from 'lucide-react';
+import { Package, Clock, CheckCircle, Truck, XCircle, Ban, Factory, CreditCard, Phone, MapPin, HelpCircle } from 'lucide-react';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 const STATUS = {
+  pending_admin_review: { label: 'Nueva solicitud',  cls: 'bg-blue-100 text-blue-700',     icon: HelpCircle },
   pending:          { label: 'Pendiente',            cls: 'bg-accent-100 text-accent-700', icon: Clock },
   confirmed:        { label: 'Confirmado',           cls: 'bg-blue-100 text-blue-700',     icon: CheckCircle },
   ordered_producer: { label: 'Pedido al productor',  cls: 'bg-purple-100 text-purple-700', icon: Factory },
@@ -24,6 +26,7 @@ export default function VendorOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [respondingId, setRespondingId] = useState(null);
   const requestIdRef = useRef(0);
 
   const fetchOrders = useCallback(async () => {
@@ -43,7 +46,22 @@ export default function VendorOrdersPage() {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
+  const handleRespond = async (order, accept) => {
+    if (respondingId) return;
+    setRespondingId(order.id);
+    try {
+      await api.put(`/vendor/orders/${order.id}/respond`, { accept });
+      toast.success(accept ? 'Confirmaste que puedes tomar el pedido' : 'Rechazaste el pedido');
+      fetchOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al responder');
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
   const pendingCount = orders.filter((o) => o.status === 'pending').length;
+  const newRequestCount = orders.filter((o) => o.status === 'pending_admin_review').length;
 
   return (
     <div>
@@ -51,6 +69,11 @@ export default function VendorOrdersPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             Pedidos
+            {newRequestCount > 0 && (
+              <span className="bg-blue-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
+                {newRequestCount} nueva{newRequestCount !== 1 ? 's' : ''}
+              </span>
+            )}
             {pendingCount > 0 && (
               <span className="bg-accent text-white text-xs font-bold rounded-full px-2 py-0.5">
                 {pendingCount} pendiente{pendingCount !== 1 ? 's' : ''}
@@ -128,7 +151,29 @@ export default function VendorOrdersPage() {
                   </div>
                 </div>
 
-                {(order.contact_phone || order.delivery_address || order.message) && (
+                {order.status === 'pending_admin_review' ? (
+                  <div className="border-t border-gray-100 pt-3 flex flex-col gap-2">
+                    <p className="text-sm text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
+                      ¿Puedes tomar este pedido? Cuando confirmes, el equipo de ConImpulso te compartirá los datos de contacto y entrega.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleRespond(order, true)}
+                        disabled={respondingId === order.id}
+                        className="flex-1 py-2 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 text-sm disabled:opacity-60"
+                      >
+                        Sí, la tomo
+                      </button>
+                      <button
+                        onClick={() => handleRespond(order, false)}
+                        disabled={respondingId === order.id}
+                        className="px-4 py-2 border border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50 text-sm disabled:opacity-60"
+                      >
+                        No puedo
+                      </button>
+                    </div>
+                  </div>
+                ) : (order.contact_phone || order.delivery_address || order.message) && (
                   <div className="border-t border-gray-100 pt-3 flex flex-col gap-1.5 text-sm text-gray-600">
                     {order.contact_phone && (
                       <p className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-gray-400" />{order.contact_phone}</p>
