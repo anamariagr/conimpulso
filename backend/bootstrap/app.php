@@ -65,4 +65,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 401);
             }
         });
+        $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permisos para realizar esta acción.',
+                ], 403);
+            }
+        });
     })->create();
