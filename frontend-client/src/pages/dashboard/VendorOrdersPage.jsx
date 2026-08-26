@@ -52,13 +52,19 @@ export default function VendorOrdersPage() {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  // After returning from the Wompi commission checkout (?commission_wompi=1&id=<transactionId>)
+  // After returning from the Wompi commission checkout (?commission_wompi=1&id=<transactionId>).
+  // This same page loads both when Wompi redirects the payment popup AND (as a fallback,
+  // e.g. if the popup got blocked and we fell back to a full redirect) the main window —
+  // if we're inside a popup, resolve silently and close so the opener can pick it up.
   useEffect(() => {
     const transactionId = searchParams.get('id');
     if (!searchParams.get('commission_wompi') || !transactionId) return;
 
+    const isPopup = !!window.opener;
+
     api.get(`/vendor/orders/commission/status/${transactionId}`)
       .then((res) => {
+        if (isPopup) return;
         if (res.data?.data?.vendor_confirmed_at) {
           toast.success('¡Comisión pagada! El pedido quedó confirmado.');
         } else {
@@ -66,8 +72,14 @@ export default function VendorOrdersPage() {
         }
         fetchOrders();
       })
-      .catch(() => toast.error('No pudimos confirmar el pago de la comisión con Wompi.'))
+      .catch(() => {
+        if (!isPopup) toast.error('No pudimos confirmar el pago de la comisión con Wompi.');
+      })
       .finally(() => {
+        if (isPopup) {
+          window.close();
+          return;
+        }
         searchParams.delete('commission_wompi');
         searchParams.delete('id');
         setSearchParams(searchParams, { replace: true });
@@ -91,14 +103,31 @@ export default function VendorOrdersPage() {
 
   const handlePayCommission = async (order) => {
     if (respondingId) return;
+
+    // Open the popup synchronously (still inside the click gesture) so browsers don't
+    // block it — we navigate it to the real checkout URL once we have it from the API.
+    const popup = window.open('', 'wompi_checkout', 'width=480,height=720');
+    if (!popup) {
+      toast.error('Tu navegador bloqueó la ventana de pago. Permite ventanas emergentes para este sitio e intenta de nuevo.');
+      return;
+    }
+
     setRespondingId(order.id);
     try {
       const res = await api.put(`/vendor/orders/${order.id}/pay-commission`);
       const { checkout_url, params } = res.data.data;
       const url = new URL(checkout_url);
       Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-      window.location.href = url.toString();
+      popup.location.href = url.toString();
+
+      const poll = setInterval(() => {
+        if (!popup.closed) return;
+        clearInterval(poll);
+        fetchOrders();
+        setRespondingId(null);
+      }, 1000);
     } catch (err) {
+      popup.close();
       toast.error(err.response?.data?.message || 'Error al iniciar el pago de la comisión');
       setRespondingId(null);
     }
