@@ -28,7 +28,7 @@ export default function SettingsView() {
       breBQrImageUrl: breBQrImageUrl || '',
       wompiEnabled: wompiEnabled || false,
       wompiPublicKey: wompiPublicKey || '',
-      productOrderCommissionRate: productOrderCommissionRate || 5,
+      productOrderCommissionRate: productOrderCommissionRate || 10,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
@@ -54,7 +54,7 @@ export default function SettingsView() {
     breBQrImageUrl: breBQrImageUrl || '',
     wompiEnabled: wompiEnabled || false,
     wompiPublicKey: wompiPublicKey || '',
-    productOrderCommissionRate: productOrderCommissionRate || 5,
+    productOrderCommissionRate: productOrderCommissionRate || 10,
   });
   const [showApiKey, setShowApiKey] = useState(false);
 
@@ -417,10 +417,10 @@ export default function SettingsView() {
                 value={settings.productOrderCommissionRate}
                 onChange={(e) => set('productOrderCommissionRate', e.target.value)}
                 className="input-field w-full"
-                placeholder="5"
+                placeholder="10"
               />
               <p className="text-xs text-gray-400 mt-1">
-                Estos pedidos quedan "En revisión" hasta que un admin los procesa y cobra la comisión — recién ahí se le avisa al vendedor.
+                Estos pedidos quedan "En revisión" hasta que el vendedor paga la comisión con Wompi (o un admin la procesa manualmente) — recién ahí se comparten los datos de contacto.
                 Este porcentaje se usa por defecto, pero se puede ajustar manualmente al procesar cada solicitud.
               </p>
             </div>

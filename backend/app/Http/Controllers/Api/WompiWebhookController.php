@@ -43,6 +43,8 @@ class WompiWebhookController extends Controller
                 ProductOrder::where('reference', $reference)->exists()
                     ? ProductOrderService::resolveGroupFromWompi($reference, $status, $transactionId)
                     : Log::warning('Wompi webhook: no matching product order for reference ' . $reference);
+            } elseif (str_starts_with($reference, 'COMM-')) {
+                ProductOrderService::resolveCommissionFromWompi($reference, $status, $transactionId);
             } else {
                 Log::warning('Wompi webhook: unrecognized reference prefix ' . $reference);
             }

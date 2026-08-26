@@ -46,6 +46,43 @@ class ProductOrderService
         }
     }
 
+    // Resolves a vendor's commission payment (reference 'COMM-{orderId}-...') coming back
+    // from Wompi — either via webhook or the redirect-triggered status check. On approval,
+    // this pays the platform commission and releases the order exactly like an admin
+    // manually processing it (see adminProcess/releaseFromAdminReview).
+    public static function resolveCommissionFromWompi(string $reference, string $wompiStatus, string $transactionId): void
+    {
+        if (!preg_match('/^COMM-(\d+)-/', $reference, $matches)) {
+            return;
+        }
+
+        $order = ProductOrder::find((int) $matches[1]);
+
+        if (!$order || $order->status !== 'pending_admin_review' || $order->vendor_confirmed_at) {
+            return;
+        }
+
+        if ($wompiStatus !== 'APPROVED') {
+            return; // vendor can retry the payment; nothing to persist for a declined/voided attempt
+        }
+
+        $order->update(['vendor_confirmed_at' => now()]);
+
+        $rate = (float) SiteSettings::get('product_order_commission_rate', 10);
+        $group = ProductOrder::where('reference', $order->reference)
+            ->where('status', 'pending_admin_review')
+            ->get();
+
+        self::releaseFromAdminReview($group, $rate);
+
+        self::notifyAdmin(
+            'vendor_confirmed',
+            'El vendedor pagó la comisión con Wompi',
+            "✅ *Comisión pagada automáticamente*\n\n"
+            . "El vendedor pagó el {$rate}% de comisión con Wompi y el pedido #{$order->id} ya se liberó."
+        );
+    }
+
     public static function confirmCodOrder(ProductOrder $order): void
     {
         self::confirmGroup(new Collection([$order]), 'cod');

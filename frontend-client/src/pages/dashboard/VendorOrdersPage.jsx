@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Package, Clock, CheckCircle, Truck, XCircle, Ban, Factory, CreditCard, Phone, MapPin, HelpCircle } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { useSiteStore } from '../../stores/siteStore';
 
 const STATUS = {
   pending_admin_review: { label: 'Nueva solicitud',  cls: 'bg-blue-100 text-blue-700',     icon: HelpCircle },
@@ -23,11 +25,15 @@ const PAYMENT_METHOD = {
 const fmt = (n) => '$' + parseFloat(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
 
 export default function VendorOrdersPage() {
+  const { productOrderCommissionRate, fetchSettings } = useSiteStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [respondingId, setRespondingId] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestIdRef = useRef(0);
+
+  useEffect(() => { fetchSettings(); }, [fetchSettings]);
 
   const fetchOrders = useCallback(async () => {
     const requestId = ++requestIdRef.current;
@@ -46,16 +52,54 @@ export default function VendorOrdersPage() {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  const handleRespond = async (order, accept) => {
+  // After returning from the Wompi commission checkout (?commission_wompi=1&id=<transactionId>)
+  useEffect(() => {
+    const transactionId = searchParams.get('id');
+    if (!searchParams.get('commission_wompi') || !transactionId) return;
+
+    api.get(`/vendor/orders/commission/status/${transactionId}`)
+      .then((res) => {
+        if (res.data?.data?.vendor_confirmed_at) {
+          toast.success('¡Comisión pagada! El pedido quedó confirmado.');
+        } else {
+          toast('Tu pago sigue en proceso. Te avisaremos cuando se confirme.', { icon: '⏳' });
+        }
+        fetchOrders();
+      })
+      .catch(() => toast.error('No pudimos confirmar el pago de la comisión con Wompi.'))
+      .finally(() => {
+        searchParams.delete('commission_wompi');
+        searchParams.delete('id');
+        setSearchParams(searchParams, { replace: true });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleDecline = async (order) => {
     if (respondingId) return;
     setRespondingId(order.id);
     try {
-      await api.put(`/vendor/orders/${order.id}/respond`, { accept });
-      toast.success(accept ? 'Confirmaste que puedes tomar el pedido' : 'Rechazaste el pedido');
+      await api.put(`/vendor/orders/${order.id}/respond`, { accept: false });
+      toast.success('Rechazaste el pedido');
       fetchOrders();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al responder');
     } finally {
+      setRespondingId(null);
+    }
+  };
+
+  const handlePayCommission = async (order) => {
+    if (respondingId) return;
+    setRespondingId(order.id);
+    try {
+      const res = await api.put(`/vendor/orders/${order.id}/pay-commission`);
+      const { checkout_url, params } = res.data.data;
+      const url = new URL(checkout_url);
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+      window.location.href = url.toString();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al iniciar el pago de la comisión');
       setRespondingId(null);
     }
   };
@@ -154,18 +198,18 @@ export default function VendorOrdersPage() {
                 {order.status === 'pending_admin_review' ? (
                   <div className="border-t border-gray-100 pt-3 flex flex-col gap-2">
                     <p className="text-sm text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
-                      ¿Puedes tomar este pedido? Cuando confirmes, el equipo de ConImpulso te compartirá los datos de contacto y entrega.
+                      ¿Puedes tomar este pedido? Para confirmarlo, pagas la comisión de la plataforma ({productOrderCommissionRate || 10}% ≈ {fmt((order.total_amount * (productOrderCommissionRate || 10)) / 100)}) con Wompi, y de inmediato te compartimos los datos de contacto y entrega.
                     </p>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleRespond(order, true)}
+                        onClick={() => handlePayCommission(order)}
                         disabled={respondingId === order.id}
                         className="flex-1 py-2 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 text-sm disabled:opacity-60"
                       >
-                        Sí, la tomo
+                        Pagar comisión y tomar pedido
                       </button>
                       <button
-                        onClick={() => handleRespond(order, false)}
+                        onClick={() => handleDecline(order)}
                         disabled={respondingId === order.id}
                         className="px-4 py-2 border border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50 text-sm disabled:opacity-60"
                       >

@@ -43,7 +43,7 @@ export default function ProductOrdersView() {
   useEffect(() => { fetchSettings(); }, [fetchSettings]);
   useEffect(() => {
     if (selected?.status === 'pending_admin_review') {
-      setCommissionRate(String(productOrderCommissionRate || 5));
+      setCommissionRate(String(productOrderCommissionRate || 10));
     }
   }, [selected, productOrderCommissionRate]);
 

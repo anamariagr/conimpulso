@@ -298,7 +298,8 @@ class ProductOrderController extends Controller
         return $this->successResponse($order->fresh(), 'Se le preguntó al vendedor si puede tomar el pedido');
     }
 
-    // Vendor: respond to an admin's "can you take this order?" question.
+    // Vendor: decline an admin's "can you take this order?" question. Accepting is done by
+    // paying the commission instead (see vendorPayCommissionInit) — there's no free accept.
     public function vendorRespond(Request $request, int $id): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -307,6 +308,10 @@ class ProductOrderController extends Controller
 
         if ($validator->fails()) {
             return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        if ($request->boolean('accept')) {
+            return $this->errorResponse('Para aceptar el pedido debes pagar la comisión', 422);
         }
 
         $shopIds = \App\Modules\Shops\Models\Shop::where('user_id', $request->user()->id)->pluck('id');
@@ -320,22 +325,72 @@ class ProductOrderController extends Controller
             return $this->errorResponse('Ya respondiste a este pedido', 422);
         }
 
-        if ($request->boolean('accept')) {
-            $order->update(['vendor_confirmed_at' => now()]);
-            $order->loadMissing(['product', 'shop']);
-            ProductOrderService::notifyAdmin(
-                'vendor_confirmed',
-                'El vendedor confirmó un pedido',
-                "✅ *El vendedor confirmó un pedido*\n\n"
-                . "Tienda: {$order->shop->name}\n"
-                . "Producto: {$order->product->name}\n\n"
-                . "Ya puedes procesar y cobrar la comisión en el panel admin."
-            );
-        } else {
-            $order->update(['status' => 'cancelled']);
-        }
+        $order->update(['status' => 'cancelled']);
 
         return $this->successResponse($order->fresh(), 'Respuesta registrada');
+    }
+
+    // Vendor: start paying the platform commission with Wompi to accept a pending order.
+    // On approval (see ProductOrderService::resolveCommissionFromWompi), the order is
+    // released automatically — no admin action needed.
+    public function vendorPayCommissionInit(Request $request, int $id): JsonResponse
+    {
+        if (!SiteSettings::get('wompi_enabled')) {
+            return $this->errorResponse('Wompi no está habilitado', 422);
+        }
+
+        $shopIds = \App\Modules\Shops\Models\Shop::where('user_id', $request->user()->id)->pluck('id');
+        $order = ProductOrder::whereIn('shop_id', $shopIds)->findOrFail($id);
+
+        if ($order->status !== 'pending_admin_review' || !$order->asked_vendor_at) {
+            return $this->errorResponse('Este pedido no está esperando tu respuesta', 422);
+        }
+
+        if ($order->vendor_confirmed_at) {
+            return $this->errorResponse('Ya confirmaste este pedido', 422);
+        }
+
+        $rate = (float) SiteSettings::get('product_order_commission_rate', 10);
+        $amount = round($order->total_amount * $rate / 100, 2);
+
+        $reference = 'COMM-' . $order->id . '-' . now()->format('YmdHis') . '-' . Str::random(6);
+        $redirectUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/') . '/dashboard/orders?commission_wompi=1';
+
+        $params = WompiService::checkoutParams($reference, $amount, $redirectUrl);
+
+        return $this->successResponse([
+            'checkout_url' => 'https://checkout.wompi.co/p/',
+            'params' => $params,
+            'commission_rate' => $rate,
+            'commission_amount' => $amount,
+        ], 'Checkout de comisión iniciado');
+    }
+
+    // Vendor: fallback check after returning from the Wompi redirect, in case the webhook
+    // hasn't landed yet (same pattern as ProductOrderController::wompiStatus for buyers).
+    public function vendorCommissionStatus(Request $request, string $transactionId): JsonResponse
+    {
+        $data = WompiService::fetchTransaction($transactionId);
+
+        if (!$data) {
+            return $this->errorResponse('No se pudo consultar la transacción con Wompi', 502);
+        }
+
+        $reference = $data['reference'] ?? '';
+
+        if (!preg_match('/^COMM-(\d+)-/', $reference, $matches)) {
+            return $this->errorResponse('Referencia inválida', 404);
+        }
+
+        $order = ProductOrder::find((int) $matches[1]);
+
+        if (!$order) {
+            return $this->errorResponse('Pedido no encontrado', 404);
+        }
+
+        ProductOrderService::resolveCommissionFromWompi($reference, $data['status'] ?? '', $transactionId);
+
+        return $this->successResponse($order->fresh());
     }
 
     // Admin: unified list of orders (Wompi, pago en casa, cuadrado con el vendedor)
@@ -387,7 +442,7 @@ class ProductOrderController extends Controller
 
         $rate = $request->filled('commission_rate')
             ? (float) $request->commission_rate
-            : (float) SiteSettings::get('product_order_commission_rate', 5);
+            : (float) SiteSettings::get('product_order_commission_rate', 10);
 
         $group = ProductOrder::where('reference', $order->reference)
             ->where('status', 'pending_admin_review')

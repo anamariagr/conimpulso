@@ -136,6 +136,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'myOrders']);
     Route::get('/vendor/orders', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'vendorOrders']);
     Route::put('/vendor/orders/{id}/respond', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'vendorRespond']);
+    Route::put('/vendor/orders/{id}/pay-commission', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'vendorPayCommissionInit']);
+    Route::get('/vendor/orders/commission/status/{transactionId}', [\App\Modules\Products\Http\Controllers\Api\ProductOrderController::class, 'vendorCommissionStatus']);
 
     // Quote requests (buyer ↔ shop owner)
     Route::post('/quote-requests', [\App\Modules\Products\Http\Controllers\Api\QuoteRequestController::class, 'store']);
