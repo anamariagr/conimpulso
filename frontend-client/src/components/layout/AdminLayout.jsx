@@ -48,6 +48,10 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   useEffect(() => {
     const fetchPending = () => {
@@ -59,6 +63,49 @@ export default function AdminLayout() {
     const interval = setInterval(fetchPending, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const fetchUnread = () => {
+      api.get('/admin/notifications/unread-count')
+        .then((r) => setUnreadCount(r.data.data?.count || 0))
+        .catch(() => {});
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const toggleNotifications = () => {
+    const opening = !notifOpen;
+    setNotifOpen(opening);
+    if (opening) {
+      setNotifLoading(true);
+      api.get('/admin/notifications')
+        .then((r) => setNotifications(r.data.data || []))
+        .catch(() => setNotifications([]))
+        .finally(() => setNotifLoading(false));
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.post('/admin/notifications/read-all');
+      setUnreadCount(0);
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    } catch {
+      // ignore
+    }
+  };
+
+  const timeAgo = (dateStr) => {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 1) return 'ahora';
+    if (minutes < 60) return `hace ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `hace ${hours} h`;
+    return `hace ${Math.floor(hours / 24)} d`;
+  };
 
   const isActive = (path) => {
     if (path === '/admin') {
@@ -194,11 +241,54 @@ export default function AdminLayout() {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors relative">
+            <div className="flex items-center gap-4 relative">
+              <button
+                onClick={toggleNotifications}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
+              >
                 <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
               </button>
+
+              {notifOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
+                  <div className="absolute right-0 top-12 w-80 max-h-96 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-100 z-40">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                      <p className="font-semibold text-gray-900 text-sm">Notificaciones</p>
+                      {unreadCount > 0 && (
+                        <button onClick={handleMarkAllRead} className="text-xs text-primary hover:underline">
+                          Marcar todas como leídas
+                        </button>
+                      )}
+                    </div>
+                    {notifLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-8">Sin notificaciones</p>
+                    ) : (
+                      <ul className="divide-y divide-gray-100">
+                        {notifications.map((n) => (
+                          <li key={n.id} className={`px-4 py-3 ${!n.is_read ? 'bg-accent-50/40' : ''}`}>
+                            <div className="flex items-start gap-2">
+                              {!n.is_read && <span className="w-1.5 h-1.5 mt-1.5 rounded-full bg-accent flex-shrink-0" />}
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-gray-900">{n.title}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
+                                <p className="text-xs text-gray-400 mt-1">{timeAgo(n.created_at)}</p>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>

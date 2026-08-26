@@ -3,15 +3,30 @@
 namespace App\Services;
 
 use App\Mail\OrderConfirmationMail;
+use App\Modules\Admin\Models\AdminNotification;
 use App\Modules\Messages\Models\Message;
 use App\Modules\Products\Models\ProductOrder;
 use App\Modules\Shops\Models\ShopBenefit;
+use App\Modules\Shops\Models\ShopNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class ProductOrderService
 {
+    // Tells the admin something needs their attention: a bell notification in the admin
+    // panel, plus a WhatsApp to 'whatsapp_phone' (same number used for vendor notifications).
+    public static function notifyAdmin(string $type, string $title, string $text): void
+    {
+        AdminNotification::create([
+            'type' => $type,
+            'title' => $title,
+            'message' => $text,
+        ]);
+
+        WhatsAppNotifier::send(SiteSettings::get('whatsapp_phone'), $text);
+    }
+
     // A "reference" groups one or more ProductOrder rows created from a single checkout
     // (one product from the product page, or several from the cart) sharing one payment.
     public static function resolveGroupFromWompi(string $reference, string $wompiStatus, string $transactionId): void
@@ -94,6 +109,15 @@ class ProductOrderService
                 'subject' => 'Nueva solicitud de pedido: ' . $order->product->name,
                 'body' => $text,
             ]);
+
+            ShopNotification::create([
+                'shop_id' => $order->shop_id,
+                'user_id' => $vendorId,
+                'type' => ShopNotification::TYPE_ORDER,
+                'title' => 'Nueva solicitud de pedido',
+                'message' => "¿Puedes tomar el pedido de {$order->product->name} (cantidad: {$order->quantity})?",
+                'data' => ['order_id' => $order->id],
+            ]);
         }
 
         if ($order->shop->hasBenefit(ShopBenefit::BUYER_WHATSAPP_NOTIFICATIONS) && $order->shop->phone) {
@@ -156,6 +180,15 @@ class ProductOrderService
                 'receiver_id' => $vendorId,
                 'subject' => 'Nuevo pedido: ' . $order->product->name,
                 'body' => $text,
+            ]);
+
+            ShopNotification::create([
+                'shop_id' => $order->shop_id,
+                'user_id' => $vendorId,
+                'type' => ShopNotification::TYPE_ORDER,
+                'title' => 'Nuevo pedido',
+                'message' => "{$order->product->name} (cantidad: {$order->quantity}) — {$closing}",
+                'data' => ['order_id' => $order->id],
             ]);
         }
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Products\Models\Product;
 use App\Modules\Products\Models\ProductOrder;
 use App\Modules\Products\Models\PurchaseRequest;
+use App\Services\ProductOrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -50,6 +51,17 @@ class PurchaseRequestController extends Controller
 
         $order->load(['buyer', 'product', 'shop']);
         $order->setAttribute('vendor_id', $order->shop->user_id);
+
+        ProductOrderService::notifyAdmin(
+            'purchase_request',
+            'Nueva solicitud: cuadrar con el vendedor',
+            "🆕 *Nueva solicitud: cuadrar con el vendedor*\n\n"
+            . "Cliente: {$request->user()->name}\n"
+            . "Producto: {$product->name}\n"
+            . "Cantidad: {$quantity}\n"
+            . "Total: $" . number_format($order->total_amount, 0, ',', '.') . "\n\n"
+            . "Entra al panel admin para cobrar la comisión y liberarla."
+        );
 
         return $this->successResponse($order, 'Solicitud enviada y en revisión. Te avisaremos apenas el vendedor pueda contactarte.', 201);
     }

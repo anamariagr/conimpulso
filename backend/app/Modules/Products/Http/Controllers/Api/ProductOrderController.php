@@ -193,6 +193,16 @@ class ProductOrderController extends Controller
 
         // Stays in 'pending_admin_review' until an admin charges the platform commission —
         // only then is it confirmed and vendor/buyer notified (see adminProcess below).
+        ProductOrderService::notifyAdmin(
+            'purchase_request',
+            'Nueva solicitud: pago en casa',
+            "🆕 *Nueva solicitud: pago en casa*\n\n"
+            . "Cliente: {$user->name}\n"
+            . "Producto(s): " . $orders->count() . "\n"
+            . "Total: $" . number_format($orders->sum('total_amount'), 0, ',', '.') . "\n\n"
+            . "Entra al panel admin para cobrar la comisión y liberarla."
+        );
+
         return $this->successResponse($orders->fresh(), 'Pedido registrado y en revisión. Te avisamos por correo apenas se confirme.', 201);
     }
 
@@ -312,6 +322,15 @@ class ProductOrderController extends Controller
 
         if ($request->boolean('accept')) {
             $order->update(['vendor_confirmed_at' => now()]);
+            $order->loadMissing(['product', 'shop']);
+            ProductOrderService::notifyAdmin(
+                'vendor_confirmed',
+                'El vendedor confirmó un pedido',
+                "✅ *El vendedor confirmó un pedido*\n\n"
+                . "Tienda: {$order->shop->name}\n"
+                . "Producto: {$order->product->name}\n\n"
+                . "Ya puedes procesar y cobrar la comisión en el panel admin."
+            );
         } else {
             $order->update(['status' => 'cancelled']);
         }

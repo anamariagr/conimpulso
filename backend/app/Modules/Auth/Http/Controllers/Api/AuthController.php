@@ -3,6 +3,7 @@
 namespace App\Modules\Auth\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Admin\Models\AdminNotification;
 use App\Modules\Auth\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,6 +43,13 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        AdminNotification::create([
+            'type' => AdminNotification::TYPE_REGISTRATION,
+            'title' => 'Nuevo usuario registrado',
+            'message' => "{$user->name} ({$user->email}) se registró en la plataforma.",
+            'data' => ['user_id' => $user->id],
+        ]);
 
         return response()->json([
             'success' => true,

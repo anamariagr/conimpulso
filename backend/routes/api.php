@@ -316,6 +316,12 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/dashboard/stats', [App\Modules\Admin\Http\Controllers\Api\DashboardController::class, 'stats']);
 
+    // Admin notifications (bell icon): new registrations, purchase requests, vendor confirmations
+    Route::get('/notifications', [App\Modules\Admin\Http\Controllers\Api\AdminNotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [App\Modules\Admin\Http\Controllers\Api\AdminNotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [App\Modules\Admin\Http\Controllers\Api\AdminNotificationController::class, 'markRead']);
+    Route::post('/notifications/read-all', [App\Modules\Admin\Http\Controllers\Api\AdminNotificationController::class, 'markAllRead']);
+
     // Admin users management (messaging enable/disable)
     Route::get('/users', [App\Modules\Auth\Http\Controllers\Api\AdminUserController::class, 'index']);
     Route::get('/users/messaging-stats', [App\Modules\Auth\Http\Controllers\Api\AdminUserController::class, 'messagingStats']);
