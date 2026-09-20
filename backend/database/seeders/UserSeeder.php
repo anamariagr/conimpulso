@@ -23,6 +23,19 @@ class UserSeeder extends Seeder
         );
         $user->assignRole('super_admin');
 
+        // Super Admin for conimpulso (requested)
+        $user = User::firstOrCreate(
+            ['email' => 'admin@conimpulso.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('pass-147'),
+                'phone' => '+0000000000',
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+        $user->assignRole('super_admin');
+
         // Admin
         $user = User::firstOrCreate(
             ['email' => 'admin2@nexuslab.com'],
