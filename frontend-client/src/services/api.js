@@ -159,4 +159,9 @@ export const vendorService = {
   unreadNotificationCount: () => api.get('/vendor/shop/notifications/count'),
 };
 
+export const logsService = {
+  // Visor de logs del backend. Hoy la ruta es pública (ver routes/api.php).
+  list: (params) => api.get('/admin/logs', { params }),
+};
+
 export default api;

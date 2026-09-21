@@ -67,6 +67,7 @@ import WalletView from './pages/admin/WalletView';
 import BlogView from './pages/admin/BlogView';
 import LogisticsBannerView from './pages/admin/LogisticsBannerView';
 import MediaLibraryPage from './pages/admin/MediaLibraryPage';
+import LogsView from './pages/admin/LogsView';
 
 import './App.css';
 
@@ -223,6 +224,9 @@ function App() {
             path="/api-docs"
             element={<APIDocumentationPage />}
           />
+
+          {/* Visor de logs — temporalmente abierto, sin AdminRoute */}
+          <Route path="/logs" element={<LogsView />} />
 
           {/* Admin Routes */}
           <Route
