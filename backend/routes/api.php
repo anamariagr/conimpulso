@@ -416,16 +416,11 @@ Route::get('/homepage/sections/active', [App\Modules\Homepage\Http\Controllers\A
 
 /*
 |--------------------------------------------------------------------------
-| Visor de logs (ABIERTO — sin autenticación)
+| Visor de logs (protegido — solo admin)
 |--------------------------------------------------------------------------
-| Expuesto a propósito y de forma temporal para poder debuggear sin login.
-|
-| OJO: devuelve stack traces con rutas del servidor, SQL con sus parámetros y
-| el contexto de cada excepción. Para cerrarlo, borra la ruta de abajo y
-| descomenta el bloque protegido: queda solo para el rol admin.
-|
-| Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
-|     Route::get('/logs', [App\Modules\Admin\Http\Controllers\Api\LogViewerController::class, 'index']);
-| });
+| Devuelve stack traces con rutas del servidor, SQL con sus parámetros y el
+| contexto de cada excepción, así que requiere sesión autenticada con rol admin.
 */
-Route::get('/admin/logs', [App\Modules\Admin\Http\Controllers\Api\LogViewerController::class, 'index']);
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/logs', [App\Modules\Admin\Http\Controllers\Api\LogViewerController::class, 'index']);
+});
