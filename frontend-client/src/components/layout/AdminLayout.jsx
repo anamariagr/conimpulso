@@ -23,6 +23,7 @@ import {
   Images,
   MessageSquare,
   ShoppingBag,
+  FileText,
 } from 'lucide-react';
 
 const adminMenuItems = [
@@ -39,6 +40,7 @@ const adminMenuItems = [
   { name: 'Blog', icon: BookOpen, path: '/admin/blog' },
   { name: 'Banner Logística', icon: Truck, path: '/admin/logistics-banner' },
   { name: 'Configuración', icon: Settings, path: '/admin/settings' },
+  { name: 'Logs', icon: FileText, path: '/logs' },
 ];
 
 export default function AdminLayout() {
