@@ -48,10 +48,6 @@ class ProductOrderController extends Controller
 
     public function wompiInit(Request $request): JsonResponse
     {
-        if (!SiteSettings::get('wompi_enabled')) {
-            return $this->errorResponse('Wompi no está habilitado', 422);
-        }
-
         $lineItems = $this->parseLineItems($request);
         if ($lineItems instanceof JsonResponse) {
             return $lineItems;
@@ -335,10 +331,6 @@ class ProductOrderController extends Controller
     // released automatically — no admin action needed.
     public function vendorPayCommissionInit(Request $request, int $id): JsonResponse
     {
-        if (!SiteSettings::get('wompi_enabled')) {
-            return $this->errorResponse('Wompi no está habilitado', 422);
-        }
-
         $shopIds = \App\Modules\Shops\Models\Shop::where('user_id', $request->user()->id)->pluck('id');
         $order = ProductOrder::whereIn('shop_id', $shopIds)->findOrFail($id);
 

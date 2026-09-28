@@ -103,10 +103,6 @@ class WalletController extends Controller
 
     public function wompiInit(Request $request): JsonResponse
     {
-        if (!SiteSettings::get('wompi_enabled')) {
-            return $this->errorResponse('Wompi no está habilitado', 422);
-        }
-
         $validator = Validator::make($request->all(), [
             'amount' => ['required', 'numeric', 'min:1', 'max:1000000'],
         ]);

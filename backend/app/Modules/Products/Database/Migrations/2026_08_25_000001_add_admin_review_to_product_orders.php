@@ -9,11 +9,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement(
-            "ALTER TABLE product_orders MODIFY COLUMN status " .
-            "ENUM('pending_admin_review','pending','confirmed','ordered_producer','shipped','delivered','failed','cancelled') " .
-            "NOT NULL DEFAULT 'pending'"
-        );
+        // ENUM sólo existe en MySQL; en SQLite la columna queda como varchar.
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement(
+                "ALTER TABLE product_orders MODIFY COLUMN status " .
+                "ENUM('pending_admin_review','pending','confirmed','ordered_producer','shipped','delivered','failed','cancelled') " .
+                "NOT NULL DEFAULT 'pending'"
+            );
+        }
 
         Schema::table('product_orders', function (Blueprint $table) {
             $table->decimal('commission_rate', 5, 2)->nullable()->after('status');

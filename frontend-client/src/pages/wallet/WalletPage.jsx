@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 const MANUAL_PROOF_METHODS = ['bre_b_llave', 'bre_b_qr'];
 
 export default function WalletPage() {
-  const { walletCoinValueCop, breBKey, breBQrImageUrl, wompiEnabled, fetchSettings } = useSiteStore();
+  const { walletCoinValueCop, breBKey, breBQrImageUrl, fetchSettings } = useSiteStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const [checkingWompi, setCheckingWompi] = useState(false);
   const [wallet, setWallet] = useState(null);
@@ -240,7 +240,7 @@ export default function WalletPage() {
                   <option value="cash">Efectivo</option>
                   <option value="bre_b_llave">Bre-B (llave)</option>
                   <option value="bre_b_qr">Bre-B (QR)</option>
-                  <option value="wompi" disabled={!wompiEnabled}>Wompi {wompiEnabled ? '' : '(Próximamente)'}</option>
+                  <option value="wompi">Wompi</option>
                   <option value="other">Otro</option>
                 </select>
               </div>

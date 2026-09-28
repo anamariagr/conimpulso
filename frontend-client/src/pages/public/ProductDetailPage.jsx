@@ -71,7 +71,7 @@ export default function ProductDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { wompiEnabled, fetchSettings } = useSiteStore();
+  const { fetchSettings } = useSiteStore();
   const { user } = useAuthStore();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -689,9 +689,8 @@ export default function ProductDetailPage() {
                 <p className="text-sm text-gray-500 mb-4">Selecciona cómo quieres pagar</p>
 
                 <button
-                  onClick={() => { if (wompiEnabled) { setPaymentMethod('wompi'); setPaymentStep('form'); } }}
-                  disabled={!wompiEnabled}
-                  className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-primary/40 hover:bg-gray-50 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-transparent"
+                  onClick={() => { setPaymentMethod('wompi'); setPaymentStep('form'); }}
+                  className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-primary/40 hover:bg-gray-50 transition-all"
                 >
                   <div className="w-10 h-10 rounded-xl bg-[#7B2FBE]/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-[#7B2FBE] font-bold text-sm">W</span>
@@ -700,9 +699,6 @@ export default function ProductDetailPage() {
                     <p className="font-semibold text-gray-900">Wompi</p>
                     <p className="text-xs text-gray-400">Tarjeta crédito / débito, Nequi, Bancolombia</p>
                   </div>
-                  {!wompiEnabled && (
-                    <span className="ml-auto text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">Próximamente</span>
-                  )}
                 </button>
 
                 <button

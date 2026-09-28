@@ -10,8 +10,6 @@ export const useSiteStore = create((set, get) => ({
   walletCoinValueCop: 3000,
   breBKey: '',
   breBQrImageUrl: '',
-  wompiEnabled: false,
-  wompiPublicKey: '',
   productOrderCommissionRate: 10,
   loaded: false,
 
@@ -29,8 +27,6 @@ export const useSiteStore = create((set, get) => ({
         walletCoinValueCop: Number(settings.wallet_coin_value_cop) || 3000,
         breBKey: settings.bre_b_key || '',
         breBQrImageUrl: settings.bre_b_qr_image_url || '',
-        wompiEnabled: settings.wompi_enabled === true,
-        wompiPublicKey: settings.wompi_public_key || '',
         productOrderCommissionRate: Number(settings.product_order_commission_rate) || 10,
         loaded: true,
       });
@@ -49,8 +45,6 @@ export const useSiteStore = create((set, get) => ({
       wallet_coin_value_cop: get().walletCoinValueCop,
       bre_b_key: get().breBKey,
       bre_b_qr_image_url: get().breBQrImageUrl,
-      wompi_enabled: get().wompiEnabled,
-      wompi_public_key: get().wompiPublicKey,
       product_order_commission_rate: get().productOrderCommissionRate,
     };
     const merged = { ...current, ...patch };
@@ -64,8 +58,6 @@ export const useSiteStore = create((set, get) => ({
       walletCoinValueCop: Number(merged.wallet_coin_value_cop) || 3000,
       breBKey: merged.bre_b_key || '',
       breBQrImageUrl: merged.bre_b_qr_image_url || '',
-      wompiEnabled: merged.wompi_enabled === true,
-      wompiPublicKey: merged.wompi_public_key || '',
       productOrderCommissionRate: Number(merged.product_order_commission_rate) || 10,
     });
   },

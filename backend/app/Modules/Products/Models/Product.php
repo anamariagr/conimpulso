@@ -19,6 +19,7 @@ class Product extends Model
         'images',
         'videos',
         'price',
+        'profit_margin',
         'price_wholesale',
         'minimum_quantity',
         'minimum_wholesale_quantity',
@@ -54,6 +55,7 @@ class Product extends Model
             'settings' => 'array',
             'story' => 'array',
             'price' => 'decimal:2',
+            'profit_margin' => 'decimal:2',
             'price_wholesale' => 'decimal:2',
             'weight' => 'decimal:2',
             'is_featured' => 'boolean',
@@ -127,6 +129,36 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    public function supplies()
+    {
+        return $this->hasMany(ProductSupply::class);
+    }
+
+    public function timeEntries()
+    {
+        return $this->hasMany(ProductTimeEntry::class);
+    }
+
+    public function getTotalSuppliesCostAttribute(): float
+    {
+        return (float) $this->supplies()->sum('total_cost');
+    }
+
+    public function getTotalTimeCostAttribute(): float
+    {
+        return (float) $this->timeEntries()->sum('total_cost');
+    }
+
+    public function getTotalCostAttribute(): float
+    {
+        return round($this->total_supplies_cost + $this->total_time_cost, 2);
+    }
+
+    public function getSuggestedPriceAttribute(): float
+    {
+        return round($this->total_cost * (1 + (float) $this->profit_margin / 100), 2);
     }
 
     public function getAverageRatingAttribute(): float

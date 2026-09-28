@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Minus, Check, X, Wallet, Clock, AlertTriangle, RefreshCw, QrCode, Eye, EyeOff } from 'lucide-react';
+import { Search, Plus, Minus, Check, X, Wallet, Clock, AlertTriangle, RefreshCw, QrCode } from 'lucide-react';
 import api from '../../services/api';
 import { useSiteStore } from '../../stores/siteStore';
 import { SingleImageUploader } from '../../components/forms/ImageUploader';
@@ -37,7 +37,7 @@ export default function WalletView() {
 /* ─── Configuración de pago: llave/QR Bre-B, Wompi ─── */
 function PaymentConfig() {
   const {
-    walletCoinValueCop, breBKey, breBQrImageUrl, wompiEnabled, wompiPublicKey,
+    walletCoinValueCop, breBKey, breBQrImageUrl,
     loaded, fetchSettings, updateSettings,
   } = useSiteStore();
 
@@ -45,10 +45,7 @@ function PaymentConfig() {
     walletCoinValueCop: walletCoinValueCop || 3000,
     breBKey: breBKey || '',
     breBQrImageUrl: breBQrImageUrl || '',
-    wompiEnabled: wompiEnabled || false,
-    wompiPublicKey: wompiPublicKey || '',
   });
-  const [showWompiKey, setShowWompiKey] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { fetchSettings(); }, []);
@@ -61,8 +58,6 @@ function PaymentConfig() {
       walletCoinValueCop: walletCoinValueCop || 3000,
       breBKey: breBKey || '',
       breBQrImageUrl: breBQrImageUrl || '',
-      wompiEnabled: wompiEnabled || false,
-      wompiPublicKey: wompiPublicKey || '',
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
@@ -76,8 +71,6 @@ function PaymentConfig() {
         wallet_coin_value_cop: form.walletCoinValueCop,
         bre_b_key: form.breBKey,
         bre_b_qr_image_url: form.breBQrImageUrl,
-        wompi_enabled: form.wompiEnabled,
-        wompi_public_key: form.wompiPublicKey,
       });
       toast.success('Configuración de pagos guardada');
     } catch {
@@ -124,33 +117,6 @@ function PaymentConfig() {
         />
       </div>
 
-      <div className="border-t border-gray-100 pt-4">
-        <Toggle
-          label="Wompi habilitado"
-          checked={form.wompiEnabled}
-          onChange={(v) => set('wompiEnabled', v)}
-        />
-        <p className="text-xs text-gray-400 mt-1 mb-3">Actívalo cuando tengas la cuenta de Wompi aprobada.</p>
-        {form.wompiEnabled && (
-          <div className="relative">
-            <input
-              type={showWompiKey ? 'text' : 'password'}
-              value={form.wompiPublicKey}
-              onChange={(e) => set('wompiPublicKey', e.target.value)}
-              className="input-field w-full pr-10"
-              placeholder="Llave pública de Wompi"
-            />
-            <button
-              type="button"
-              onClick={() => setShowWompiKey(!showWompiKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              {showWompiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-        )}
-      </div>
-
       <button
         onClick={handleSave}
         disabled={!loaded || saving}
@@ -159,21 +125,6 @@ function PaymentConfig() {
         {!loaded ? 'Cargando...' : saving ? 'Guardando...' : 'Guardar cambios'}
       </button>
     </div>
-  );
-}
-
-function Toggle({ label, checked, onChange }) {
-  return (
-    <label className="flex items-center justify-between cursor-pointer">
-      <span className="text-sm text-gray-700">{label}</span>
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-gray-200'}`}
-      >
-        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
-      </button>
-    </label>
   );
 }
 

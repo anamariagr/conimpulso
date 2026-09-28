@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 export default function SettingsView() {
   const {
     logoUrl, siteName, aiInsightsEnabled, whatsappPhone, callmebotApiKey,
-    walletCoinValueCop, breBKey, breBQrImageUrl, wompiEnabled, wompiPublicKey,
+    walletCoinValueCop, breBKey, breBQrImageUrl,
     productOrderCommissionRate, loaded, fetchSettings, updateSettings,
   } = useSiteStore();
 
@@ -26,8 +26,6 @@ export default function SettingsView() {
       walletCoinValueCop: walletCoinValueCop || 3000,
       breBKey: breBKey || '',
       breBQrImageUrl: breBQrImageUrl || '',
-      wompiEnabled: wompiEnabled || false,
-      wompiPublicKey: wompiPublicKey || '',
       productOrderCommissionRate: productOrderCommissionRate || 10,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -52,8 +50,6 @@ export default function SettingsView() {
     walletCoinValueCop: walletCoinValueCop || 3000,
     breBKey: breBKey || '',
     breBQrImageUrl: breBQrImageUrl || '',
-    wompiEnabled: wompiEnabled || false,
-    wompiPublicKey: wompiPublicKey || '',
     productOrderCommissionRate: productOrderCommissionRate || 10,
   });
   const [showApiKey, setShowApiKey] = useState(false);
@@ -69,8 +65,6 @@ export default function SettingsView() {
         wallet_coin_value_cop: settings.walletCoinValueCop,
         bre_b_key: settings.breBKey,
         bre_b_qr_image_url: settings.breBQrImageUrl,
-        wompi_enabled: settings.wompiEnabled,
-        wompi_public_key: settings.wompiPublicKey,
         product_order_commission_rate: settings.productOrderCommissionRate,
       });
       toast.success('Configuración guardada');
@@ -473,23 +467,6 @@ export default function SettingsView() {
                   onChange={(url) => set('breBQrImageUrl', url)}
                   hint="Imagen del código QR que verán los clientes al elegir Bre-B."
                 />
-              </div>
-              <div className="border-t border-gray-100 pt-4">
-                <Toggle
-                  label="Wompi habilitado"
-                  checked={settings.wompiEnabled}
-                  onChange={(v) => set('wompiEnabled', v)}
-                />
-                <p className="text-xs text-gray-400 mt-1 mb-3">Actívalo cuando tengas la cuenta de Wompi aprobada.</p>
-                {settings.wompiEnabled && (
-                  <input
-                    type="text"
-                    value={settings.wompiPublicKey}
-                    onChange={(e) => set('wompiPublicKey', e.target.value)}
-                    className="input-field w-full"
-                    placeholder="Llave pública de Wompi"
-                  />
-                )}
               </div>
             </div>
           </div>

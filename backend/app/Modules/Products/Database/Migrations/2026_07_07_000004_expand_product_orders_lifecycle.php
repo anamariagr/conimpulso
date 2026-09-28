@@ -9,11 +9,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement(
-            "ALTER TABLE product_orders MODIFY COLUMN status " .
-            "ENUM('pending','confirmed','ordered_producer','shipped','delivered','failed','cancelled') " .
-            "NOT NULL DEFAULT 'pending'"
-        );
+        // ENUM sólo existe en MySQL; en SQLite la columna queda como varchar.
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement(
+                "ALTER TABLE product_orders MODIFY COLUMN status " .
+                "ENUM('pending','confirmed','ordered_producer','shipped','delivered','failed','cancelled') " .
+                "NOT NULL DEFAULT 'pending'"
+            );
+        }
 
         Schema::table('product_orders', function (Blueprint $table) {
             $table->text('message')->nullable()->after('document_id');
@@ -27,11 +30,13 @@ return new class extends Migration
         DB::table('product_orders')->where('status', 'confirmed')->update(['status' => 'paid']);
         DB::table('product_orders')->whereIn('status', ['ordered_producer', 'shipped', 'delivered'])->update(['status' => 'paid']);
 
-        DB::statement(
-            "ALTER TABLE product_orders MODIFY COLUMN status " .
-            "ENUM('pending','paid','failed','cancelled') " .
-            "NOT NULL DEFAULT 'pending'"
-        );
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement(
+                "ALTER TABLE product_orders MODIFY COLUMN status " .
+                "ENUM('pending','paid','failed','cancelled') " .
+                "NOT NULL DEFAULT 'pending'"
+            );
+        }
 
         Schema::table('product_orders', function (Blueprint $table) {
             $table->dropColumn('message');

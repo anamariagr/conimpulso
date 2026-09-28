@@ -75,6 +75,18 @@ export const productService = {
   destroy: (id) => api.delete(`/products/${id}`),
 };
 
+export const inventoryService = {
+  supplies: (productId) => api.get(`/products/${productId}/supplies`),
+  addSupply: (productId, data) => api.post(`/products/${productId}/supplies`, data),
+  updateSupply: (productId, supplyId, data) => api.put(`/products/${productId}/supplies/${supplyId}`, data),
+  deleteSupply: (productId, supplyId) => api.delete(`/products/${productId}/supplies/${supplyId}`),
+  timeEntries: (productId) => api.get(`/products/${productId}/time-entries`),
+  addTimeEntry: (productId, data) => api.post(`/products/${productId}/time-entries`, data),
+  updateTimeEntry: (productId, entryId, data) => api.put(`/products/${productId}/time-entries/${entryId}`, data),
+  deleteTimeEntry: (productId, entryId) => api.delete(`/products/${productId}/time-entries/${entryId}`),
+  costSummary: (productId) => api.get(`/products/${productId}/cost-summary`),
+};
+
 export const categoryService = {
   index: () => api.get('/categories'),
 };

@@ -6,6 +6,7 @@ use App\Modules\Auth\Http\Controllers\Api\PasswordResetController;
 use App\Modules\Shops\Http\Controllers\Api\ShopController;
 use App\Modules\Shops\Http\Controllers\Api\CategoryController;
 use App\Modules\Products\Http\Controllers\Api\ProductController;
+use App\Modules\Products\Http\Controllers\Api\ProductInventoryController;
 use App\Modules\Services\Http\Controllers\Api\ServiceController;
 use App\Modules\B2B\Http\Controllers\Api\B2BController;
 use App\Modules\Leads\Http\Controllers\Api\LeadsController;
@@ -125,6 +126,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+    // Product inventory (supplies, time entries, suggested price)
+    Route::get('/products/{id}/cost-summary', [ProductInventoryController::class, 'costSummary']);
+    Route::get('/products/{id}/supplies', [ProductInventoryController::class, 'suppliesIndex']);
+    Route::post('/products/{id}/supplies', [ProductInventoryController::class, 'suppliesStore']);
+    Route::put('/products/{id}/supplies/{supplyId}', [ProductInventoryController::class, 'suppliesUpdate']);
+    Route::delete('/products/{id}/supplies/{supplyId}', [ProductInventoryController::class, 'suppliesDestroy']);
+    Route::get('/products/{id}/time-entries', [ProductInventoryController::class, 'timeEntriesIndex']);
+    Route::post('/products/{id}/time-entries', [ProductInventoryController::class, 'timeEntriesStore']);
+    Route::put('/products/{id}/time-entries/{entryId}', [ProductInventoryController::class, 'timeEntriesUpdate']);
+    Route::delete('/products/{id}/time-entries/{entryId}', [ProductInventoryController::class, 'timeEntriesDestroy']);
 
     // Purchase requests (buyer → admin)
     Route::post('/purchase-requests', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'store']);

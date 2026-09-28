@@ -25,7 +25,7 @@ export default function EditProductPage() {
   const [notFound, setNotFound] = useState(false);
   const [form, setForm] = useState({
     name: '', description: '', price: '', price_wholesale: '',
-    stock: '', minimum_quantity: '', status: 'draft', allow_quotation: false,
+    stock: '', minimum_quantity: '', fabrication_time: '', status: 'draft', allow_quotation: false,
   });
   const [story, setStory] = useState({});
   const [storyErrors, setStoryErrors] = useState({});
@@ -46,6 +46,7 @@ export default function EditProductPage() {
           price_wholesale:  p.price_wholesale != null ? String(p.price_wholesale) : '',
           stock:            p.stock != null ? String(p.stock) : '',
           minimum_quantity: p.minimum_quantity != null ? String(p.minimum_quantity) : '',
+          fabrication_time: p.fabrication_time != null ? String(p.fabrication_time) : '',
           status:           p.status || 'draft',
           allow_quotation:  p.allow_quotation || false,
         });
@@ -85,6 +86,7 @@ export default function EditProductPage() {
         price_wholesale:  form.price_wholesale ? Number(form.price_wholesale) : undefined,
         stock:            form.stock !== '' ? Number(form.stock) : undefined,
         minimum_quantity: form.minimum_quantity ? Number(form.minimum_quantity) : undefined,
+        fabrication_time: form.fabrication_time ? Number(form.fabrication_time) : undefined,
         status:           form.status,
         allow_quotation:  form.allow_quotation,
       };
@@ -198,6 +200,11 @@ export default function EditProductPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Cantidad mínima</label>
               <input type="number" min="1" value={form.minimum_quantity} onChange={(e) => set('minimum_quantity', e.target.value)} className="input-field w-full" placeholder="1" />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tiempo de fabricación (días)</label>
+            <input type="number" min="0" value={form.fabrication_time} onChange={(e) => set('fabrication_time', e.target.value)} className="input-field w-full" placeholder="Ej: 3" />
+            <p className="text-xs text-gray-400 mt-1">Cuántos días tardas en hacer este producto. Se muestra a los compradores.</p>
           </div>
           <label className="flex items-center gap-3 cursor-pointer select-none">
             <div onClick={() => set('allow_quotation', !form.allow_quotation)} className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.allow_quotation ? 'bg-accent' : 'bg-gray-200'}`}>
