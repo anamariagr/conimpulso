@@ -109,17 +109,18 @@ class BlogController extends Controller
         $post = BlogPost::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'title'   => ['sometimes', 'string', 'max:255'],
-            'excerpt' => ['sometimes', 'nullable', 'string'],
-            'content' => ['sometimes', 'string'],
-            'status'  => ['sometimes', 'in:published,draft,archived'],
+            'title'        => ['sometimes', 'string', 'max:255'],
+            'excerpt'      => ['sometimes', 'nullable', 'string'],
+            'content'      => ['sometimes', 'string'],
+            'status'       => ['sometimes', 'in:published,draft,archived'],
+            'cover_image'  => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
         if ($validator->fails()) {
             return $this->errorResponse('Validation failed', 422, $validator->errors());
         }
 
-        $post->fill($request->only(['title', 'excerpt', 'content', 'status']));
+        $post->fill($request->only(['title', 'excerpt', 'content', 'status', 'cover_image']));
         if ($request->has('status') && $request->status === 'published' && !$post->published_at) {
             $post->published_at = now();
         }
@@ -131,10 +132,11 @@ class BlogController extends Controller
     public function adminCreate(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'title'   => ['required', 'string', 'max:255'],
-            'content' => ['required', 'string'],
-            'excerpt' => ['nullable', 'string'],
-            'status'  => ['sometimes', 'in:published,draft'],
+            'title'       => ['required', 'string', 'max:255'],
+            'content'     => ['required', 'string'],
+            'excerpt'     => ['nullable', 'string'],
+            'status'      => ['sometimes', 'in:published,draft'],
+            'cover_image' => ['nullable', 'string', 'max:500'],
         ]);
 
         if ($validator->fails()) {
@@ -146,6 +148,7 @@ class BlogController extends Controller
             'slug'         => BlogPost::generateUniqueSlug($request->title),
             'excerpt'      => $request->excerpt,
             'content'      => $request->content,
+            'cover_image'  => $request->cover_image,
             'type'         => 'article',
             'status'       => $request->get('status', 'draft'),
             'published_at' => $request->get('status') === 'published' ? now() : null,

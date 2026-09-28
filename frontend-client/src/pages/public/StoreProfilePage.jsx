@@ -200,6 +200,18 @@ export default function StoreProfilePage() {
                 </span>
               )}
 
+              {shop.website && (
+                <a
+                  href={shop.website}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="flex items-center gap-3 text-sm text-accent hover:underline"
+                >
+                  <ExternalLink className="w-4 h-4 flex-shrink-0" />
+                  Sitio web
+                </a>
+              )}
+
               {shop.is_verified ? (
                 <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 rounded-xl px-3 py-2">
                   <ShieldCheck className="w-4 h-4 flex-shrink-0" />

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Eye, Pencil, Trash2, Package, X, CheckCircle, AlertCircle, Filter } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { GalleryUploader } from '../../components/forms/ImageUploader';
 
 export default function ProductsView() {
   const [products, setProducts] = useState([]);
@@ -91,6 +92,7 @@ export default function ProductsView() {
       if (formData.stock !== undefined) payload.stock = Number(formData.stock);
       if (formData.category_id) payload.category_id = formData.category_id;
       if (formData.shop_id) payload.shop_id = formData.shop_id;
+      payload.images = formData.images;
       payload.status = formData.is_active ? 'active' : 'inactive';
 
       if (editingProduct) {
@@ -440,6 +442,13 @@ export default function ProductsView() {
             </div>
 
             <div className="space-y-4">
+              <GalleryUploader
+                value={formData.images}
+                onChange={(images) => setFormData({ ...formData, images })}
+                min={0}
+                label="Fotos del producto"
+                hint="Agrega hasta 10 fotos. La primera imagen será la portada."
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del producto</label>
                 <input

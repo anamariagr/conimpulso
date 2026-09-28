@@ -18,7 +18,7 @@ export default function CreateShopPage() {
   const isEditMode = location.pathname === '/dashboard/store/edit';
   const nextParam = searchParams.get('next');
 
-  const [form, setForm] = useState({ name: '', description: '', city: '', phone: '', email: '' });
+  const [form, setForm] = useState({ name: '', description: '', city: '', phone: '', email: '', website: '' });
   const [logo, setLogo] = useState('');
   const [gallery, setGallery] = useState([]);
   const [story, setStory] = useState({});
@@ -36,7 +36,7 @@ export default function CreateShopPage() {
         if (isEditMode) {
           if (shop) {
             setShopId(shop.id);
-            setForm({ name: shop.name || '', description: shop.description || '', city: shop.city || '', phone: shop.phone || '', email: shop.email || '' });
+            setForm({ name: shop.name || '', description: shop.description || '', city: shop.city || '', phone: shop.phone || '', email: shop.email || '', website: shop.website || '' });
             if (shop.logo) setLogo(shop.logo);
             if (shop.gallery?.length) setGallery(shop.gallery);
             if (shop.story) setStory(shop.story);
@@ -72,6 +72,10 @@ export default function CreateShopPage() {
     if (!form.name.trim()) { setError('El nombre de la tienda es requerido'); return; }
     if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
       setError('El correo electrónico de contacto no es válido');
+      return;
+    }
+    if (form.website.trim() && !/^https?:\/\/.+\..+/.test(form.website.trim())) {
+      setError('El sitio web debe ser una URL válida (ej: https://mitienda.com)');
       return;
     }
     if (!logo) {
@@ -203,6 +207,11 @@ export default function CreateShopPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Correo electrónico</label>
               <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} className="input-field w-full" placeholder="contacto@mitienda.com" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Sitio web</label>
+              <input type="url" value={form.website} onChange={(e) => set('website', e.target.value)} className="input-field w-full" placeholder="https://mitienda.com" />
+              <p className="text-xs text-gray-400 mt-1">Opcional. Se mostrará como enlace en tu perfil público.</p>
             </div>
           </div>
         </div>

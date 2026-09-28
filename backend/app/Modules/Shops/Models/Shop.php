@@ -24,6 +24,7 @@ class Shop extends Model
         'gallery',
         'phone',
         'email',
+        'website',
         'address',
         'city',
         'country',

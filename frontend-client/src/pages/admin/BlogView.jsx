@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Edit2, Archive, ExternalLink, Package, Store, FileText, Loader2, X, Check } from 'lucide-react';
 import api from '../../services/api';
+import { SingleImageUploader } from '../../components/forms/ImageUploader';
 
 const TYPE_LABELS = { product: 'Producto', shop: 'Tienda', article: 'Artículo' };
 const STATUS_COLORS = {
@@ -11,7 +12,7 @@ const STATUS_COLORS = {
 };
 
 function EditModal({ post, onClose, onSaved }) {
-  const [form, setForm] = useState({ title: post.title, excerpt: post.excerpt || '', content: post.content, status: post.status });
+  const [form, setForm] = useState({ title: post.title, excerpt: post.excerpt || '', content: post.content, status: post.status, cover_image: post.cover_image || '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -38,6 +39,13 @@ function EditModal({ post, onClose, onSaved }) {
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">{error}</div>}
+          <SingleImageUploader
+            value={form.cover_image}
+            onChange={(url) => setForm(f => ({...f, cover_image: url}))}
+            label="Imagen de portada"
+            hint="Se muestra en la lista del blog y en la página del post."
+            aspectClass="aspect-video"
+          />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
             <input type="text" value={form.title} onChange={(e) => setForm(f => ({...f, title: e.target.value}))} className="input-field w-full" />
@@ -72,7 +80,7 @@ function EditModal({ post, onClose, onSaved }) {
 }
 
 function NewArticleModal({ onClose, onCreated }) {
-  const [form, setForm] = useState({ title: '', excerpt: '', content: '', status: 'draft' });
+  const [form, setForm] = useState({ title: '', excerpt: '', content: '', status: 'draft', cover_image: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -100,6 +108,13 @@ function NewArticleModal({ onClose, onCreated }) {
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">{error}</div>}
+          <SingleImageUploader
+            value={form.cover_image}
+            onChange={(url) => setForm(f => ({...f, cover_image: url}))}
+            label="Imagen de portada"
+            hint="Se muestra en la lista del blog y en la página del post."
+            aspectClass="aspect-video"
+          />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Título <span className="text-red-500">*</span></label>
             <input type="text" value={form.title} onChange={(e) => setForm(f => ({...f, title: e.target.value}))} className="input-field w-full" placeholder="Título del artículo" autoFocus />
