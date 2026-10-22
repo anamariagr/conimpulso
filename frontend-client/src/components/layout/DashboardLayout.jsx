@@ -214,7 +214,7 @@ export default function DashboardLayout() {
             },
             {
               key: 'advisor',
-              label: 'Ser Asáaor',
+              label: 'Ser Asesor',
               icon: Award,
               className: 'bg-blue-600 hover:bg-blue-700',
               onClick: () => becomeRole('advisor', hasActualAdvisorRole, 'sell_services', '/dashboard/advisors'),
