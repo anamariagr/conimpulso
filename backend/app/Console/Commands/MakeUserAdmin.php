@@ -7,12 +7,20 @@ use Illuminate\Console\Command;
 
 class MakeUserAdmin extends Command
 {
-    protected $signature = 'user:make-admin {email}';
+    protected $signature = 'user:make-admin {email} {role=admin : admin o super_admin}';
 
-    protected $description = 'Asigna el rol admin a un usuario existente por su correo';
+    protected $description = 'Asigna el rol admin o super_admin a un usuario existente por su correo';
 
     public function handle(): int
     {
+        $role = $this->argument('role');
+
+        if (! in_array($role, ['admin', 'super_admin'], true)) {
+            $this->error('El rol debe ser admin o super_admin.');
+
+            return self::FAILURE;
+        }
+
         $user = User::where('email', $this->argument('email'))->first();
 
         if (! $user) {
@@ -21,8 +29,8 @@ class MakeUserAdmin extends Command
             return self::FAILURE;
         }
 
-        $user->syncRoles(['admin']);
-        $this->info("{$user->email} ahora es admin.");
+        $user->syncRoles([$role]);
+        $this->info("{$user->email} ahora es {$role}.");
 
         return self::SUCCESS;
     }
