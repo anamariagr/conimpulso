@@ -105,6 +105,22 @@ export default function DashboardLayout() {
     }
   };
 
+  const canSelfAdmin = user?.email?.toLowerCase() === 'anamariagarcia9709@gmail.com';
+
+  const becomeAdmin = async () => {
+    if (grantingRole) return;
+    setGrantingRole(true);
+    try {
+      await authService.becomeAdmin();
+      await checkAuth();
+      navigate('/admin');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'No se pudo cambiar a administrador');
+    } finally {
+      setGrantingRole(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
@@ -222,6 +238,16 @@ export default function DashboardLayout() {
                       <span>{option.label}</span>
                     </button>
                   ))}
+                {canSelfAdmin && (
+                  <button
+                    onClick={becomeAdmin}
+                    disabled={grantingRole}
+                    className="w-full flex items-center gap-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>Ser Administrador</span>
+                  </button>
+                )}
               </div>
             </div>
           );

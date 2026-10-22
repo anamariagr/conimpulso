@@ -42,6 +42,7 @@ export const authService = {
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
   completeOnboarding: (data) => api.post('/auth/onboarding', data),
+  becomeAdmin: () => api.post('/auth/become-admin'),
   refresh: () => api.post('/auth/refresh'),
   sendResetLink: (data) => api.post('/auth/password/reset-link', data),
   resetPassword: (data) => api.post('/auth/password/reset', data),

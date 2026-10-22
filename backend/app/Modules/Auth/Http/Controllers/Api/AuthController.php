@@ -214,6 +214,26 @@ class AuthController extends Controller
         ]);
     }
 
+    // Botón personal: solo estas cuentas pueden autoasignarse el rol admin.
+    private const SELF_ADMIN_EMAILS = ['anamariagarcia9709@gmail.com'];
+
+    public function becomeAdmin(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! in_array(strtolower($user->email), self::SELF_ADMIN_EMAILS, true)) {
+            return response()->json(['success' => false, 'message' => 'No autorizado'], 403);
+        }
+
+        $user->assignRole('admin');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ahora eres administrador',
+            'data' => ['roles' => $user->getRoleNames()],
+        ]);
+    }
+
     public function me(Request $request): JsonResponse
     {
         $user = $request->user()->load('roles', 'permissions');
