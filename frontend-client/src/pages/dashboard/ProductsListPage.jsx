@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Package, Plus, Loader2, Edit2, Trash2, ExternalLink, AlertCircle,
-  ChevronDown, ChevronUp, Boxes, Clock, Percent, Calculator, Save,
+  ChevronDown, ChevronUp, Boxes, Clock, Percent, Calculator, Save, TrendingUp, NotebookPen,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api, { productService, inventoryService } from '../../services/api';
@@ -259,6 +259,112 @@ function TimeEntriesSection({ productId, entries, setEntries, onChanged }) {
   );
 }
 
+const MONTH_LABELS = {
+  '01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun',
+  '07': 'Jul', '08': 'Ago', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic',
+};
+
+const monthLabel = (yyyyMm) => {
+  const [year, month] = yyyyMm.split('-');
+  return `${MONTH_LABELS[month] || month} ${year}`;
+};
+
+function SalesSection({ productId }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    inventoryService.salesSummary(productId)
+      .then((res) => setData(res.data.data || null))
+      .catch(() => toast.error('No se pudieron cargar las ventas.'))
+      .finally(() => setLoading(false));
+  }, [productId]);
+
+  return (
+    <Section icon={TrendingUp} title="Ventas">
+      {loading ? (
+        <div className="flex justify-center py-4">
+          <Loader2 className="w-5 h-5 animate-spin text-accent" />
+        </div>
+      ) : !data ? (
+        <p className="text-sm text-gray-500">No hay datos de ventas disponibles.</p>
+      ) : (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-gray-400">Vendidos este mes</p>
+              <p className="font-semibold text-gray-700">{data.current_month.units}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400">Ingresos este mes</p>
+              <p className="font-semibold text-gray-700">{fmt(data.current_month.revenue)}</p>
+            </div>
+          </div>
+          {data.history.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-gray-400 border-b border-gray-200">
+                    <th className="pb-2 pr-2 font-medium">Mes</th>
+                    <th className="pb-2 pr-2 font-medium">Unidades</th>
+                    <th className="pb-2 font-medium">Ingresos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.history.map((row) => (
+                    <tr key={row.month} className="border-b border-gray-100 last:border-0">
+                      <td className="py-2 pr-2 text-gray-700">{monthLabel(row.month)}</td>
+                      <td className="py-2 pr-2 text-gray-700">{row.units}</td>
+                      <td className="py-2 text-gray-700">{fmt(row.revenue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function ManufacturingNotesSection({ productId, initialNotes }) {
+  const [notes, setNotes] = useState(initialNotes || '');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await inventoryService.updateManufacturingNotes(productId, notes);
+      toast.success('Notas guardadas.');
+    } catch {
+      toast.error('No se pudieron guardar las notas.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Section icon={NotebookPen} title="Cómo hice este producto">
+      <p className="text-xs text-gray-400 mb-2">
+        Notas privadas: materiales, pasos, proveedores. Solo tú puedes verlas.
+      </p>
+      <textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        className={inputCls}
+        rows={5}
+        placeholder="Ej: Cortar la tela con el patrón X, coser con hilo Y, proveedor de la cremallera: ..."
+      />
+      <button onClick={handleSave} disabled={saving}
+        className="mt-2 flex items-center gap-1.5 px-4 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent-400 transition disabled:opacity-50">
+        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+        Guardar notas
+      </button>
+    </Section>
+  );
+}
+
 function CostPanel({ product, onPriceApplied }) {
   const [timeEntries, setTimeEntries] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -384,6 +490,12 @@ function CostPanel({ product, onPriceApplied }) {
           <p className="text-sm text-gray-500">No hay resumen de costos disponible.</p>
         )}
       </Section>
+
+      <SalesSection productId={product.id} />
+
+      {summary?.manufacturing_notes_enabled && (
+        <ManufacturingNotesSection productId={product.id} initialNotes={summary.manufacturing_notes} />
+      )}
     </div>
   );
 }

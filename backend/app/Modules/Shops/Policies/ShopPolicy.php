@@ -73,6 +73,11 @@ class ShopPolicy
         return $user->hasRole(['super_admin', 'admin']);
     }
 
+    public function toggleManufacturingNotes(User $user): bool
+    {
+        return $user->hasRole(['super_admin', 'admin']);
+    }
+
     public function manageBenefits(User $user): bool
     {
         return $user->hasRole(['super_admin', 'admin']);

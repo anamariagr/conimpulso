@@ -151,6 +151,11 @@ class ProductInventoryController extends Controller
     public function costSummary(Request $request, int $productId): JsonResponse
     {
         $product = $this->findOwnedProduct($request, $productId);
+        $notesEnabled = (bool) $product->shop->manufacturing_notes_enabled;
+
+        if ($notesEnabled) {
+            $product->makeVisible('manufacturing_notes');
+        }
 
         return $this->successResponse([
             'supplies_total' => $product->total_supplies_cost,
@@ -159,6 +164,66 @@ class ProductInventoryController extends Controller
             'profit_margin' => (float) $product->profit_margin,
             'suggested_price' => $product->suggested_price,
             'current_price' => (float) $product->price,
+            'manufacturing_notes_enabled' => $notesEnabled,
+            'manufacturing_notes' => $notesEnabled ? $product->manufacturing_notes : null,
+        ]);
+    }
+
+    // Vendor: free-text notes on how the product is made. Only usable when the
+    // shop has this enabled — an admin-only toggle (see ShopController::toggleManufacturingNotes).
+    public function manufacturingNotesUpdate(Request $request, int $productId): JsonResponse
+    {
+        $product = $this->findOwnedProduct($request, $productId);
+
+        if (!$product->shop->manufacturing_notes_enabled) {
+            return $this->errorResponse('Tu tienda no tiene habilitada esta sección. Pídele a un administrador que la active.', 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'manufacturing_notes' => ['nullable', 'string', 'max:20000'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $product->manufacturing_notes = $request->input('manufacturing_notes');
+        $product->save();
+        $product->makeVisible('manufacturing_notes');
+
+        return $this->successResponse([
+            'manufacturing_notes' => $product->manufacturing_notes,
+        ], 'Notas guardadas');
+    }
+
+    // Vendor: units sold and revenue per month, based on real orders (not the
+    // unused Product::sales_count counter). "Vendido" = order reached at least
+    // 'confirmed' status — pending/failed/cancelled orders don't count.
+    public function salesSummary(Request $request, int $productId): JsonResponse
+    {
+        $product = $this->findOwnedProduct($request, $productId);
+
+        $soldStatuses = ['confirmed', 'ordered_producer', 'shipped', 'delivered'];
+
+        $rows = \App\Modules\Products\Models\ProductOrder::where('product_id', $product->id)
+            ->whereIn('status', $soldStatuses)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, SUM(quantity) as units, SUM(total_amount) as revenue")
+            ->groupBy('month')
+            ->orderByDesc('month')
+            ->limit(12)
+            ->get()
+            ->map(fn ($row) => [
+                'month' => $row->month,
+                'units' => (int) $row->units,
+                'revenue' => (float) $row->revenue,
+            ]);
+
+        $currentMonth = now()->format('Y-m');
+        $current = $rows->firstWhere('month', $currentMonth) ?? ['month' => $currentMonth, 'units' => 0, 'revenue' => 0.0];
+
+        return $this->successResponse([
+            'current_month' => $current,
+            'history' => $rows->values(),
         ]);
     }
 }

@@ -137,6 +137,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products/{id}/time-entries', [ProductInventoryController::class, 'timeEntriesStore']);
     Route::put('/products/{id}/time-entries/{entryId}', [ProductInventoryController::class, 'timeEntriesUpdate']);
     Route::delete('/products/{id}/time-entries/{entryId}', [ProductInventoryController::class, 'timeEntriesDestroy']);
+    Route::get('/products/{id}/sales-summary', [ProductInventoryController::class, 'salesSummary']);
+    Route::put('/products/{id}/manufacturing-notes', [ProductInventoryController::class, 'manufacturingNotesUpdate']);
 
     // Purchase requests (buyer → admin)
     Route::post('/purchase-requests', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'store']);
@@ -376,6 +378,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::put('/shops/{id}/suspend', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'suspend']);
     Route::put('/shops/{id}/featured', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'toggleFeatured']);
     Route::put('/shops/{id}/verified', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'toggleVerified']);
+    Route::put('/shops/{id}/manufacturing-notes', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'toggleManufacturingNotes']);
     Route::put('/shops/{id}', [App\Modules\Shops\Http\Controllers\Api\ShopController::class, 'adminUpdate']);
 
     // Admin messages

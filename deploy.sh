@@ -16,6 +16,10 @@ cd ..
 echo "Building Docker containers..."
 docker-compose build
 
+# Start the application and Laravel scheduler before running migrations.
+echo "Starting application and scheduler..."
+docker-compose up -d app scheduler
+
 # Run migrations
 echo "Running migrations..."
 docker-compose exec app php artisan migrate --force

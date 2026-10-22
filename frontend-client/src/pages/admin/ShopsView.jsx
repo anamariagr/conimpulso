@@ -295,6 +295,7 @@ function EditModal({ shop: initialShop, onClose, onSave }) {
     status: initialShop.status || 'pending',
     is_featured: initialShop.is_featured || false,
     is_verified: initialShop.is_verified || false,
+    manufacturing_notes_enabled: initialShop.manufacturing_notes_enabled || false,
   });
   const [logo, setLogo] = useState(initialShop.logo || '');
   const [gallery, setGallery] = useState(Array.isArray(initialShop.gallery) ? initialShop.gallery : []);
@@ -316,6 +317,7 @@ function EditModal({ shop: initialShop, onClose, onSave }) {
           status: s.status || 'pending',
           is_featured: s.is_featured || false,
           is_verified: s.is_verified || false,
+          manufacturing_notes_enabled: s.manufacturing_notes_enabled || false,
         });
         setLogo(s.logo || '');
         setGallery(Array.isArray(s.gallery) ? s.gallery : []);
@@ -492,6 +494,21 @@ function EditModal({ shop: initialShop, onClose, onSave }) {
                 </div>
                 <span className="text-sm font-medium text-gray-700">Verificada</span>
               </label>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <div
+                  onClick={() => set('manufacturing_notes_enabled', !form.manufacturing_notes_enabled)}
+                  className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${form.manufacturing_notes_enabled ? 'bg-purple-500' : 'bg-gray-200'}`}
+                >
+                  <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${form.manufacturing_notes_enabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Sección "Cómo hice el producto"</span>
+              </label>
+              <p className="text-xs text-gray-400 mt-1 ml-12">
+                Habilita notas privadas de manufactura en los productos de esta tienda.
+              </p>
             </div>
           </div>
 

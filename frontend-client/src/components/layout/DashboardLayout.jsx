@@ -298,7 +298,7 @@ export default function DashboardLayout() {
                 <p className="text-gray-500">Cargando...</p>
               </div>
             </div>
-          )}x
+          )}
 
           <Outlet />
         </div>

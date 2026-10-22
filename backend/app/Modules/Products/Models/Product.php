@@ -41,6 +41,13 @@ class Product extends Model
         'allow_custom_order',
         'settings',
         'story',
+        'manufacturing_notes',
+    ];
+
+    // Privado: solo el dueño de la tienda debe verlo (nunca en respuestas públicas).
+    // Los controladores del panel del vendedor usan makeVisible() explícitamente.
+    protected $hidden = [
+        'manufacturing_notes',
     ];
 
     protected function casts(): array

@@ -85,6 +85,9 @@ export const inventoryService = {
   updateTimeEntry: (productId, entryId, data) => api.put(`/products/${productId}/time-entries/${entryId}`, data),
   deleteTimeEntry: (productId, entryId) => api.delete(`/products/${productId}/time-entries/${entryId}`),
   costSummary: (productId) => api.get(`/products/${productId}/cost-summary`),
+  salesSummary: (productId) => api.get(`/products/${productId}/sales-summary`),
+  updateManufacturingNotes: (productId, manufacturing_notes) =>
+    api.put(`/products/${productId}/manufacturing-notes`, { manufacturing_notes }),
 };
 
 export const categoryService = {

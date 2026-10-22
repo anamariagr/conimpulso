@@ -23,6 +23,25 @@ services:
       - mysql
       - redis
 
+  # Laravel task scheduler (includes the CCB registration link monitor)
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: ../docker/php/Dockerfile
+    container_name: nexuslab-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan schedule:work
+    volumes:
+      - ./backend:/var/www/html
+    environment:
+      - PHP_MEMORY_LIMIT=512M
+    networks:
+      - nexuslab-network
+    depends_on:
+      - mysql
+      - redis
+
   # NGINX Web Server
   nginx:
     image: nginx:alpine

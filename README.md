@@ -66,3 +66,9 @@ php artisan test
 ```bash
 ./deploy.sh
 ```
+
+### CCB registration link alerts
+
+The backend checks the CCB commercial fairs page every 15 minutes from 9:00 a.m. to 2:00 p.m. (Bogotá time). It collects every HTTP(S) URL from `Registro` links in `td > p > a` elements and emails only when that set of links changes. Alert emails include every newly detected form URL. The first successful check stores a baseline without sending an email.
+
+For real inbox delivery, configure a provider in `backend/.env`. Resend needs `MAIL_MAILER=resend`, `RESEND_API_KEY`, and a verified `MAIL_FROM_ADDRESS`. Gmail SMTP needs `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_SCHEME=smtp`, `MAIL_USERNAME=chillunik@gmail.com`, `MAIL_PASSWORD` set to a Google App Password, and `MAIL_FROM_ADDRESS=chillunik@gmail.com`. MailHog is only a local development inbox and does not deliver to Gmail. `CCB_REGISTRATION_ALERT_EMAIL` defaults to `chillunik@gmail.com`. `deploy.sh` rebuilds the PHP image and starts both `app` and `scheduler`; the scheduler must stay running. The image includes the DOM extension required by the page parser.

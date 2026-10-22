@@ -4,6 +4,13 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
+// Check for new or changed Microsoft Forms links on the CCB "Registro" buttons.
+Schedule::command('ccb:watch-registration-link')
+    ->everyFifteenMinutes()
+    ->between('09:00', '14:00')
+    ->timezone('America/Bogota')
+    ->withoutOverlapping();
+
 // Cleanup inactive users - every day at 2am
 Schedule::job(new \App\Jobs\CleanupInactiveUsersJob())->dailyAt('02:00');
 

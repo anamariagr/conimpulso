@@ -47,6 +47,8 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Detrás de Railway/Vercel: respetar X-Forwarded-Proto/Host para que url() genere https
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

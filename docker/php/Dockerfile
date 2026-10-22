@@ -27,6 +27,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install \
     pdo_mysql \
     pdo_pgsql \
+    dom \
     mbstring \
     exif \
     pcntl \
@@ -35,6 +36,9 @@ RUN docker-php-ext-install \
     zip \
     opcache \
     intl
+
+# Keep the extension loader config valid; runtime OPcache options live in php.ini.
+RUN printf 'zend_extension=opcache\n' > /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 # Install Redis extension
 RUN pecl install redis && docker-php-ext-enable redis

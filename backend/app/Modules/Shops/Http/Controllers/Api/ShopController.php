@@ -379,6 +379,21 @@ class ShopController extends Controller
         return $this->successResponse($shop, $shop->is_verified ? 'Tienda verificada' : 'Verificación removida');
     }
 
+    // Only admins can grant a shop access to the private "manufacturing notes"
+    // section on their products (see ProductInventoryController).
+    public function toggleManufacturingNotes(int $id): JsonResponse
+    {
+        $this->authorize('toggleManufacturingNotes', Shop::class);
+
+        $shop = Shop::findOrFail($id);
+        $shop->manufacturing_notes_enabled = !$shop->manufacturing_notes_enabled;
+        $shop->save();
+
+        return $this->successResponse($shop, $shop->manufacturing_notes_enabled
+            ? 'Sección de manufactura habilitada'
+            : 'Sección de manufactura deshabilitada');
+    }
+
     public function adminStore(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -437,6 +452,7 @@ class ShopController extends Controller
             'city'        => ['sometimes', 'nullable', 'string', 'max:100'],
             'is_featured' => ['sometimes', 'boolean'],
             'is_verified' => ['sometimes', 'boolean'],
+            'manufacturing_notes_enabled' => ['sometimes', 'boolean'],
             'logo'        => ['sometimes', 'nullable', 'string', 'max:500'],
             'gallery'     => ['sometimes', 'nullable', 'array'],
         ]);

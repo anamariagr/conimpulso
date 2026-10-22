@@ -22,6 +22,10 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'ccb_registration_alert' => [
+        'email' => env('CCB_REGISTRATION_ALERT_EMAIL', 'chillunik@gmail.com'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

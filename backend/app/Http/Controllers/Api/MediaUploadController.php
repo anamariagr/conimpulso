@@ -52,7 +52,7 @@ class MediaUploadController extends Controller
         Storage::putFileAs('public/uploads/' . $type . 's', $file, $filename);
 
         // Use the API file-serve route — works without storage:link and without nginx config
-        $publicUrl = url('/api/files/' . $type . 's/' . $filename);
+        $publicUrl = '/api/files/' . $type . 's/' . $filename; // relativa: no depende del host/esquema
 
         return response()->json([
             'success' => true,
@@ -79,7 +79,7 @@ class MediaUploadController extends Controller
             foreach (Storage::files($dir) as $file) {
                 $filename = basename($file);
                 $items[] = [
-                    'url'      => url('/api/files/' . $folder . '/' . $filename),
+                    'url'      => '/api/files/' . $folder . '/' . $filename,
                     'filename' => $filename,
                     'folder'   => $folder,
                     'size'     => Storage::size($file),
