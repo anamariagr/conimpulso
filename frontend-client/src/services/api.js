@@ -23,8 +23,28 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Normaliza URLs de archivos: las relativas (/api/files/...) y las guardadas como
+// http://api.conimpulso.com/... se resuelven contra el origen https de la API.
+const API_ORIGIN = /^https?:\/\//.test(API_URL) ? new URL(API_URL).origin : '';
+
+const fixMediaUrls = (value) => {
+  if (typeof value === 'string') {
+    if (API_ORIGIN && value.startsWith('/api/files/')) return API_ORIGIN + value;
+    if (value.startsWith('http://api.conimpulso.com/')) return value.replace('http://', 'https://');
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(fixMediaUrls);
+  if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+    for (const key of Object.keys(value)) value[key] = fixMediaUrls(value[key]);
+  }
+  return value;
+};
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data && typeof response.data === 'object') fixMediaUrls(response.data);
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
