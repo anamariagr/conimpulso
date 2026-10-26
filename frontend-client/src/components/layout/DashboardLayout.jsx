@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import {
   LayoutDashboard,
   Package,
+  Boxes,
   ShoppingBag,
   MessageSquare,
   FileText,
@@ -26,7 +27,7 @@ import {
 
 export default function DashboardLayout() {
   const { user, logout, isVendor, isAdvisor, viewAsVendor, viewAsAdvisor, clearActiveRole, setActiveRole, checkAuth } = useAuthStore();
-  const { logoUrl, siteName, aiInsightsEnabled } = useSiteStore();
+  const { logoUrl, siteName, aiInsightsEnabled, inventoryModuleEnabled } = useSiteStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +56,7 @@ export default function DashboardLayout() {
   // Vendor-only menu items
   const vendorMenuItems = [
     { icon: Package, label: 'Productos', href: '/dashboard/products' },
+    ...(inventoryModuleEnabled ? [{ icon: Boxes, label: 'Inventario', href: '/dashboard/inventory' }] : []),
     { icon: Store, label: 'Mi Tienda', href: '/dashboard/store' },
     { icon: TrendingUp, label: 'Analíticas', href: '/dashboard/analytics' },
   ];

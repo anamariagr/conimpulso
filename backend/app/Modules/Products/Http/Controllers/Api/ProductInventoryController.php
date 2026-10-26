@@ -105,6 +105,7 @@ class ProductInventoryController extends Controller
 
         $validator = Validator::make($request->all(), [
             'description' => ['required', 'string', 'max:255'],
+            'type' => ['sometimes', 'in:elaboration,assembly'],
             'minutes' => ['required', 'integer', 'min:1'],
             'hourly_rate' => ['required', 'numeric', 'min:0'],
         ]);
@@ -125,6 +126,7 @@ class ProductInventoryController extends Controller
 
         $validator = Validator::make($request->all(), [
             'description' => ['sometimes', 'required', 'string', 'max:255'],
+            'type' => ['sometimes', 'in:elaboration,assembly'],
             'minutes' => ['sometimes', 'required', 'integer', 'min:1'],
             'hourly_rate' => ['sometimes', 'required', 'numeric', 'min:0'],
         ]);
@@ -224,6 +226,61 @@ class ProductInventoryController extends Controller
         return $this->successResponse([
             'current_month' => $current,
             'history' => $rows->values(),
+        ]);
+    }
+
+    // Vendor: all the shop's products as one inventory table with cost/profit figures.
+    // Reuses the same supplies/time-entry data as the per-product cost panel, loaded in
+    // two queries (no N+1) and computed in PHP.
+    public function overview(Request $request): JsonResponse
+    {
+        $products = Product::whereHas('shop', fn ($q) => $q->where('user_id', $request->user()->id))
+            ->with(['supplies:id,product_id,total_cost', 'timeEntries:id,product_id,type,minutes,total_cost'])
+            ->orderBy('name')
+            ->get();
+
+        $rows = $products->map(function (Product $p) {
+            $materials = (float) $p->supplies->sum('total_cost');
+            $labor = (float) $p->timeEntries->sum('total_cost');
+            $elaborationMin = (int) $p->timeEntries->where('type', '!=', 'assembly')->sum('minutes');
+            $assemblyMin = (int) $p->timeEntries->where('type', 'assembly')->sum('minutes');
+            $totalMin = $elaborationMin + $assemblyMin;
+            $cost = round($materials + $labor, 2);
+            $price = (float) $p->price;
+            $profit = round($price - $cost, 2);
+            $stock = (int) $p->stock;
+
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->slug,
+                'image' => $p->images[0] ?? null,
+                'status' => $p->status,
+                'stock' => $stock,
+                'price' => $price,
+                'profit_margin' => (float) $p->profit_margin,
+                'materials_cost' => round($materials, 2),
+                'labor_cost' => round($labor, 2),
+                'elaboration_minutes' => $elaborationMin,
+                'assembly_minutes' => $assemblyMin,
+                'total_cost' => $cost,
+                'unit_profit' => $profit,
+                'margin_pct' => $price > 0 ? round($profit / $price * 100, 1) : null,
+                'profit_per_hour' => $totalMin > 0 ? round($profit / ($totalMin / 60), 2) : null,
+                'stock_cost_value' => round($cost * $stock, 2),
+                'stock_potential_profit' => round($profit * $stock, 2),
+            ];
+        })->values();
+
+        return $this->successResponse([
+            'products' => $rows,
+            'totals' => [
+                'products' => $rows->count(),
+                'units' => $rows->sum('stock'),
+                'stock_cost_value' => round($rows->sum('stock_cost_value'), 2),
+                'stock_retail_value' => round($rows->sum(fn ($r) => $r['price'] * $r['stock']), 2),
+                'stock_potential_profit' => round($rows->sum('stock_potential_profit'), 2),
+            ],
         ]);
     }
 }

@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 export default function SettingsView() {
   const {
-    logoUrl, siteName, aiInsightsEnabled, whatsappPhone, callmebotApiKey,
+    logoUrl, siteName, aiInsightsEnabled, inventoryModuleEnabled, whatsappPhone, callmebotApiKey,
     walletCoinValueCop, breBKey, breBQrImageUrl,
     productOrderCommissionRate, loaded, fetchSettings, updateSettings,
   } = useSiteStore();
@@ -21,6 +21,7 @@ export default function SettingsView() {
       ...prev,
       appName: siteName || 'ConImpulso',
       aiInsights: aiInsightsEnabled,
+      inventoryModule: inventoryModuleEnabled,
       whatsappPhone: whatsappPhone || '3115728852',
       callmebotApiKey: callmebotApiKey || '',
       walletCoinValueCop: walletCoinValueCop || 3000,
@@ -45,6 +46,7 @@ export default function SettingsView() {
     welcomeEmail: true,
     orderNotifications: true,
     aiInsights: aiInsightsEnabled,
+    inventoryModule: inventoryModuleEnabled,
     whatsappPhone: whatsappPhone || '3115728852',
     callmebotApiKey: callmebotApiKey || '',
     walletCoinValueCop: walletCoinValueCop || 3000,
@@ -60,6 +62,7 @@ export default function SettingsView() {
     try {
       await updateSettings({
         ai_insights_enabled: settings.aiInsights,
+        inventory_module_enabled: settings.inventoryModule,
         whatsapp_phone: settings.whatsappPhone,
         callmebot_api_key: settings.callmebotApiKey,
         wallet_coin_value_cop: settings.walletCoinValueCop,
@@ -325,6 +328,12 @@ export default function SettingsView() {
                 onChange={(v) => set('aiInsights', v)}
               />
               <p className="text-xs text-gray-400">Muestra la sección de análisis con IA en el dashboard de los vendedores.</p>
+              <Toggle
+                label="Módulo de inventario y costos"
+                checked={settings.inventoryModule}
+                onChange={(v) => set('inventoryModule', v)}
+              />
+              <p className="text-xs text-gray-400">Activa para todos los vendedores la sección Inventario: cantidades, costos de material y tiempos, y ganancia por producto.</p>
             </div>
           </div>
 

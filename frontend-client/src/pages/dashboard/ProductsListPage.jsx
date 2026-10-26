@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api, { productService, inventoryService } from '../../services/api';
+import { useSiteStore } from '../../stores/siteStore';
 
 const STATUS_LABELS = {
   active:   { label: 'Activo',   cls: 'bg-green-100 text-green-700' },
@@ -165,7 +166,7 @@ function SuppliesSection({ productId, timeEntries, onChanged }) {
 
 function TimeEntriesSection({ productId, entries, setEntries, onChanged }) {
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ description: '', minutes: '', hourly_rate: '' });
+  const [form, setForm] = useState({ description: '', type: 'elaboration', minutes: '', hourly_rate: '' });
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -173,11 +174,12 @@ function TimeEntriesSection({ productId, entries, setEntries, onChanged }) {
     try {
       await inventoryService.addTimeEntry(productId, {
         description: form.description,
+        type: form.type,
         minutes: Number(form.minutes),
         hourly_rate: Number(form.hourly_rate),
       });
       toast.success('Tiempo de creación agregado.');
-      setForm({ description: '', minutes: '', hourly_rate: '' });
+      setForm({ description: '', type: 'elaboration', minutes: '', hourly_rate: '' });
       const res = await inventoryService.timeEntries(productId);
       setEntries(res.data.data || []);
       onChanged();
@@ -208,6 +210,7 @@ function TimeEntriesSection({ productId, entries, setEntries, onChanged }) {
             <thead>
               <tr className="text-left text-xs text-gray-400 border-b border-gray-200">
                 <th className="pb-2 pr-2 font-medium">Descripción</th>
+                <th className="pb-2 pr-2 font-medium">Tipo</th>
                 <th className="pb-2 pr-2 font-medium">Minutos</th>
                 <th className="pb-2 pr-2 font-medium">Tarifa/hora</th>
                 <th className="pb-2 pr-2 font-medium">Costo</th>
@@ -218,6 +221,7 @@ function TimeEntriesSection({ productId, entries, setEntries, onChanged }) {
               {entries.map((t) => (
                 <tr key={t.id} className="border-b border-gray-100 last:border-0">
                   <td className="py-2 pr-2 text-gray-700">{t.description}</td>
+                  <td className="py-2 pr-2 text-gray-700">{t.type === 'assembly' ? 'Ensamblaje' : 'Elaboración'}</td>
                   <td className="py-2 pr-2 text-gray-700">{t.minutes}</td>
                   <td className="py-2 pr-2 text-gray-700">{fmt(t.hourly_rate)}</td>
                   <td className="py-2 pr-2 text-gray-700">{fmt((Number(t.minutes) / 60) * Number(t.hourly_rate))}</td>
@@ -240,6 +244,12 @@ function TimeEntriesSection({ productId, entries, setEntries, onChanged }) {
         <div className="col-span-2">
           <input required placeholder="Descripción" value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })} className={inputCls} />
+        </div>
+        <div className="col-span-2 md:col-span-4">
+          <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={inputCls}>
+            <option value="elaboration">Elaboración</option>
+            <option value="assembly">Ensamblaje</option>
+          </select>
         </div>
         <div>
           <input required type="number" min="0" placeholder="Minutos" value={form.minutes}
@@ -365,7 +375,7 @@ function ManufacturingNotesSection({ productId, initialNotes }) {
   );
 }
 
-function CostPanel({ product, onPriceApplied }) {
+export function CostPanel({ product, onPriceApplied }) {
   const [timeEntries, setTimeEntries] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -505,6 +515,7 @@ function ProductRow({ product, onDelete, onStockSaved, onPriceApplied }) {
   const [deleting, setDeleting] = useState(false);
   const [stock, setStock] = useState(product.stock ?? 0);
   const [savingStock, setSavingStock] = useState(false);
+  const inventoryModuleEnabled = useSiteStore((st) => st.inventoryModuleEnabled);
 
   const image = product.images?.[0];
   const price = Number(product.price);
@@ -605,13 +616,13 @@ function ProductRow({ product, onDelete, onStockSaved, onPriceApplied }) {
           >
             <Edit2 className="w-4 h-4" />
           </Link>
-          <button
+          {inventoryModuleEnabled && <button
             onClick={() => setExpanded(!expanded)}
             className="p-2 text-gray-400 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
             title={expanded ? 'Ocultar detalle de costos' : 'Ver detalle de costos'}
           >
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
+          </button>}
           <button
             onClick={handleDelete}
             disabled={deleting}
@@ -623,7 +634,7 @@ function ProductRow({ product, onDelete, onStockSaved, onPriceApplied }) {
         </div>
       </div>
 
-      {expanded && (
+      {inventoryModuleEnabled && expanded && (
         <CostPanel product={product} onPriceApplied={onPriceApplied} />
       )}
     </div>

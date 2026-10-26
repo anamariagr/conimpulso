@@ -20,6 +20,7 @@ import ServicesPage from './pages/public/ServicesPage';
 import StoresPage from './pages/public/StoresPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ProductsListPage from './pages/dashboard/ProductsListPage';
+import InventoryPage from './pages/dashboard/InventoryPage';
 import OrdersListPage from './pages/dashboard/OrdersListPage';
 import AnalyticsPage from './pages/dashboard/AnalyticsPage';
 import StorePage from './pages/dashboard/StorePage';
@@ -145,6 +146,7 @@ function App() {
           >
             <Route index element={<DashboardPage />} />
             <Route path="products" element={<ProductsListPage />} />
+            <Route path="inventory" element={<InventoryPage />} />
             <Route path="products/new" element={<NewProductGatePage />} />
             <Route path="products/create" element={<CreateProductPage />} />
             <Route path="products/:id/edit" element={<EditProductPage />} />

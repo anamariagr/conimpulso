@@ -105,6 +105,7 @@ export const inventoryService = {
   addTimeEntry: (productId, data) => api.post(`/products/${productId}/time-entries`, data),
   updateTimeEntry: (productId, entryId, data) => api.put(`/products/${productId}/time-entries/${entryId}`, data),
   deleteTimeEntry: (productId, entryId) => api.delete(`/products/${productId}/time-entries/${entryId}`),
+  overview: () => api.get('/inventory/overview'),
   costSummary: (productId) => api.get(`/products/${productId}/cost-summary`),
   salesSummary: (productId) => api.get(`/products/${productId}/sales-summary`),
   updateManufacturingNotes: (productId, manufacturing_notes) =>

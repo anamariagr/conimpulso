@@ -9,6 +9,7 @@ class ProductTimeEntry extends Model
     protected $fillable = [
         'product_id',
         'description',
+        'type',
         'minutes',
         'hourly_rate',
         'total_cost',

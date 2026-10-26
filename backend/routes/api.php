@@ -129,17 +129,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
     // Product inventory (supplies, time entries, suggested price)
-    Route::get('/products/{id}/cost-summary', [ProductInventoryController::class, 'costSummary']);
-    Route::get('/products/{id}/supplies', [ProductInventoryController::class, 'suppliesIndex']);
-    Route::post('/products/{id}/supplies', [ProductInventoryController::class, 'suppliesStore']);
-    Route::put('/products/{id}/supplies/{supplyId}', [ProductInventoryController::class, 'suppliesUpdate']);
-    Route::delete('/products/{id}/supplies/{supplyId}', [ProductInventoryController::class, 'suppliesDestroy']);
-    Route::get('/products/{id}/time-entries', [ProductInventoryController::class, 'timeEntriesIndex']);
-    Route::post('/products/{id}/time-entries', [ProductInventoryController::class, 'timeEntriesStore']);
-    Route::put('/products/{id}/time-entries/{entryId}', [ProductInventoryController::class, 'timeEntriesUpdate']);
-    Route::delete('/products/{id}/time-entries/{entryId}', [ProductInventoryController::class, 'timeEntriesDestroy']);
-    Route::get('/products/{id}/sales-summary', [ProductInventoryController::class, 'salesSummary']);
-    Route::put('/products/{id}/manufacturing-notes', [ProductInventoryController::class, 'manufacturingNotesUpdate']);
+    // Gateado por el interruptor global inventory_module_enabled (Admin → Ajustes)
+    Route::middleware('inventory.module')->group(function () {
+        Route::get('/products/{id}/cost-summary', [ProductInventoryController::class, 'costSummary']);
+        Route::get('/products/{id}/supplies', [ProductInventoryController::class, 'suppliesIndex']);
+        Route::post('/products/{id}/supplies', [ProductInventoryController::class, 'suppliesStore']);
+        Route::put('/products/{id}/supplies/{supplyId}', [ProductInventoryController::class, 'suppliesUpdate']);
+        Route::delete('/products/{id}/supplies/{supplyId}', [ProductInventoryController::class, 'suppliesDestroy']);
+        Route::get('/products/{id}/time-entries', [ProductInventoryController::class, 'timeEntriesIndex']);
+        Route::post('/products/{id}/time-entries', [ProductInventoryController::class, 'timeEntriesStore']);
+        Route::put('/products/{id}/time-entries/{entryId}', [ProductInventoryController::class, 'timeEntriesUpdate']);
+        Route::delete('/products/{id}/time-entries/{entryId}', [ProductInventoryController::class, 'timeEntriesDestroy']);
+        Route::get('/products/{id}/sales-summary', [ProductInventoryController::class, 'salesSummary']);
+        Route::put('/products/{id}/manufacturing-notes', [ProductInventoryController::class, 'manufacturingNotesUpdate']);
+        Route::get('/inventory/overview', [ProductInventoryController::class, 'overview']);
+    });
 
     // Purchase requests (buyer → admin)
     Route::post('/purchase-requests', [\App\Modules\Products\Http\Controllers\Api\PurchaseRequestController::class, 'store']);
